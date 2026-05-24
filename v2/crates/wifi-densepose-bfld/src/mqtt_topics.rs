@@ -48,6 +48,49 @@ impl TopicMessage {
     }
 }
 
+/// Abstract MQTT publisher boundary. The crate ships only the trait + a
+/// capture-impl for tests; the production rumqttc-backed impl lands in a
+/// follow-up iter behind a `mqtt` feature gate.
+///
+/// `publish` is synchronous so callers can hold a `&mut self` without an
+/// async runtime; the rumqttc wrapper drives a tokio task internally.
+pub trait Publish {
+    /// Error type — typically the broker's transport error.
+    type Error;
+    /// Publish a single rendered message. Implementations may buffer.
+    fn publish(&mut self, msg: &TopicMessage) -> Result<(), Self::Error>;
+}
+
+/// Capture-impl for unit tests. Stores every published message in order.
+#[derive(Debug, Default)]
+pub struct CapturePublisher {
+    /// Every `publish()` call appends to this vec.
+    pub published: Vec<TopicMessage>,
+}
+
+impl Publish for CapturePublisher {
+    type Error = core::convert::Infallible;
+    fn publish(&mut self, msg: &TopicMessage) -> Result<(), Self::Error> {
+        self.published.push(msg.clone());
+        Ok(())
+    }
+}
+
+/// Publish every topic message rendered from `event`. Returns the number of
+/// messages actually published (zero for Raw / Derived class events). Errors
+/// short-circuit — the publisher state at error time may have partial output.
+pub fn publish_event<P: Publish>(
+    publisher: &mut P,
+    event: &BfldEvent,
+) -> Result<usize, P::Error> {
+    let mut count = 0;
+    for msg in render_events(event) {
+        publisher.publish(&msg)?;
+        count += 1;
+    }
+    Ok(count)
+}
+
 /// Render an event into the per-entity MQTT messages it should publish. Returns
 /// an empty vec for events that fail the class gate (e.g., raw class 0).
 #[must_use]

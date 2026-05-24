@@ -41,7 +41,7 @@ pub use emitter::{BfldEmitter, SensingInputs};
 #[cfg(feature = "std")]
 pub use event::BfldEvent;
 #[cfg(feature = "std")]
-pub use mqtt_topics::{render_events, TopicMessage};
+pub use mqtt_topics::{publish_event, render_events, CapturePublisher, Publish, TopicMessage};
 pub use embedding::{IdentityEmbedding, EMBEDDING_DIM};
 pub use embedding_ring::{EmbeddingRing, RING_CAPACITY};
 #[cfg(feature = "std")]
