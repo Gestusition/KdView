@@ -130,6 +130,25 @@ cross-subject acceptance gate (§4, ≥6 pts) is **unlikely to be met without ne
 capture** (fleet: `cognitum-seed-1` + multi-room, see `CLAUDE.local.md`). Recommend re-scoping
 phase 1 around data collection before further loss-stack engineering.
 
+### 3.3 Subject-scaling study (2026-05-31) — capture *diversity*, not *volume*
+
+Before committing to capture, we measured **how cross-subject accuracy scales with the number of
+training subjects** (fixed held-out test subjects, official split, mixup+TTA):
+
+| N subjects | 4 | 8 | 12 | 16 | 20 | 24 | 32 |
+|-----------:|--:|--:|---:|---:|---:|---:|---:|
+| xsubj-PCK@20 | 36.7 | 57.7 | 58.3 | 61.1 | 62.7 | 63.3 | **63.7** |
+
+The curve **saturates**: 4→8 subjects = **+21 pts**, but 24→32 = **+0.45 pts**. Asymptote ≈ 64–65%,
+still ~19 pts under in-domain. **Key correction to the "more data" recommendation:** simply capturing
+*more people from the same distribution* will **not** close the gap — subject-count returns vanish
+past ~16–20 subjects. The residual is **device/room/protocol shift** (MM-Fi's cross-subject split is
+partly cross-environment by construction). **Re-scoped phase-1 capture target: maximize DIVERSITY
+(rooms, devices, antenna geometries, traffic protocols), not headcount** — and pair it with few-shot
+target-domain adaptation (a handful of labeled frames from the deployment room), which the saturation
+curve implies will beat any amount of additional source subjects. This makes the encoder's
+*domain-invariance* objective (vs the failed subject-invariance one) the design priority.
+
 ## 4. Acceptance Test
 
 The encoder is accepted **only if it improves cross-subject torso-PCK@20 by ≥ 6 absolute points without reducing random-split torso-PCK@20 by more than 2 points** — on the same MM-Fi pipeline, one-command reproduction, with per-joint error tables. Results land as AetherArena witness rows (ADR-149), nothing published until reviewed.
