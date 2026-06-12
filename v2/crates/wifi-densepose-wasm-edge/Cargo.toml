@@ -11,12 +11,31 @@ categories = ["embedded", "wasm", "science"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
+# The lib's libtest harness does not understand criterion CLI flags
+# (`--warm-up-time` etc.), so exclude it from `cargo bench` — only the criterion
+# bench target below should receive bench args (ADR-163).
+bench = false
+
+# ADR-163: host-measured process_frame latency benches (closes the ADR-160
+# "criterion benches for process_frame budget claims" deferred item — HOST only;
+# the ESP32-S3 WASM3 budget remains unmeasured, see the bench header).
+# `std` is required (criterion is a host crate); the crate is workspace-EXCLUDED
+# so run from the crate dir: `cargo bench --features std`.
+[[bench]]
+name = "process_frame_bench"
+harness = false
+required-features = ["std"]
 
 [dependencies]
 # no_std math
 libm = "0.2"
 # SHA-256 for RVF build hash (optional, used by builder)
 sha2 = { version = "0.10", optional = true, default-features = false }
+
+[dev-dependencies]
+# Host-only latency regression benches (ADR-163). Pinned to match the rest of
+# the workspace's bench crates.
+criterion = { version = "0.5", features = ["html_reports"] }
 
 [features]
 default = ["default-pipeline"]
