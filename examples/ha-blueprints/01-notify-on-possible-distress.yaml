@@ -7,7 +7,7 @@ blueprint:
     reason payload so the recipient knows why the alert fired.
     Part of the ADR-115 §3.12 starter blueprint set.
   domain: automation
-  source_url: https://github.com/ruvnet/RuView/blob/main/examples/ha-blueprints/01-notify-on-possible-distress.yaml
+  source_url: https://github.com/Gestusition/KdView/blob/main/examples/ha-blueprints/01-notify-on-possible-distress.yaml
   input:
     distress_entity:
       name: Possible distress binary_sensor

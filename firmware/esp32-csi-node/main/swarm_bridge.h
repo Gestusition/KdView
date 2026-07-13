@@ -1,8 +1,8 @@
 /**
  * @file swarm_bridge.h
- * @brief ADR-066: ESP32 Swarm Bridge — Cognitum Seed coordinator client.
+ * @brief ADR-066: ESP32 client for an operator-managed swarm gateway.
  *
- * Registers this node with a Cognitum Seed, sends periodic heartbeats,
+ * Registers this node with a compatible gateway, sends periodic heartbeats,
  * and pushes happiness vectors for cross-zone analytics.
  * Runs as a FreeRTOS task on Core 0.
  */
@@ -19,8 +19,8 @@
 
 /** Swarm bridge configuration. */
 typedef struct {
-    char     seed_url[64];     /**< Cognitum Seed base URL (e.g. "http://192.168.1.10:8080"). */
-    char     seed_token[64];   /**< Bearer token for Seed WiFi API auth (from pairing). */
+    char     gateway_url[64];   /**< Compatible gateway base URL. */
+    char     gateway_token[64]; /**< Optional Bearer token for gateway authentication. */
     char     zone_name[16];    /**< Zone name for this node (e.g. "bedroom"). */
     uint16_t heartbeat_sec;    /**< Heartbeat interval in seconds (default 30). */
     uint16_t ingest_sec;       /**< Happiness ingest interval in seconds (default 5). */
@@ -29,11 +29,11 @@ typedef struct {
 
 /**
  * Initialize the swarm bridge and start the background task.
- * Registers this node with the Cognitum Seed on first successful POST.
+ * Registers this node with the configured gateway on first successful POST.
  *
  * @param cfg      Swarm bridge configuration.
  * @param node_id  This node's identifier (from NVS).
- * @return ESP_OK on success, ESP_ERR_INVALID_ARG if seed_url is empty.
+ * @return ESP_OK on success, ESP_ERR_INVALID_ARG if gateway_url is empty.
  */
 esp_err_t swarm_bridge_init(const swarm_config_t *cfg, uint8_t node_id);
 

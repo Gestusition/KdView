@@ -61,12 +61,22 @@
       color: #446688;
     }
 
-    /* Stats.js panel positioning */
+    /* Local FPS meter positioning */
     #stats-container {
       position: absolute;
       top: 40px;
       right: 140px;
       z-index: 200;
+    }
+    .local-fps-meter {
+      min-width: 74px;
+      padding: 6px 8px;
+      border: 1px solid rgba(0, 204, 255, 0.35);
+      border-radius: 4px;
+      background: rgba(0, 10, 20, 0.85);
+      color: #00ccff;
+      font: 11px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+      text-align: center;
     }
   </style>
 </head>
@@ -80,11 +90,11 @@
       </div>
       <div class="loading-status" id="loading-status">Initializing...</div>
     </div>
-    <!-- Stats.js container -->
+    <!-- Local FPS meter container -->
     <div id="stats-container"></div>
   </div>
 
-  <!-- Three.js r160 dropped examples/js/ UMD builds. Load via importmap and
+  <!-- Three.js r160 dropped examples/js/ UMD builds. Load the checked-in module and
        expose THREE + OrbitControls as a mutable global so the existing
        component modules (scene.js, body-model.js, …) keep working without
        a wider refactor. Note: `import * as THREE` returns a frozen Module
@@ -93,13 +103,11 @@
   <script type="importmap">
   {
     "imports": {
-      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      "three": "./vendor/three/three.module.min.js",
+      "three/addons/": "./vendor/three/addons/"
     }
   }
   </script>
-  <!-- Stats.js for performance monitoring -->
-  <script src="https://unpkg.com/stats.js@0.17.0/build/stats.min.js"></script>
 
   <!-- All app code lives in one module so global THREE is installed before
        the component modules run. Two separate module scripts would race
@@ -150,13 +158,26 @@
       }, 700);
     }
 
-    // -- Initialize Stats.js --
+    // -- Initialize local FPS meter --
     function initStats() {
-      const stats = new Stats();
-      stats.showPanel(0); // FPS panel
-      stats.dom.style.position = 'relative';
-      document.getElementById('stats-container').appendChild(stats.dom);
-      return stats;
+      const dom = document.createElement('div');
+      dom.className = 'local-fps-meter';
+      dom.textContent = '-- FPS';
+      document.getElementById('stats-container').appendChild(dom);
+      let frames = 0;
+      let sampledAt = performance.now();
+      return {
+        begin() {},
+        end() {
+          frames += 1;
+          const now = performance.now();
+          if (now - sampledAt >= 1000) {
+            dom.textContent = `${Math.round(frames * 1000 / (now - sampledAt))} FPS`;
+            frames = 0;
+            sampledAt = now;
+          }
+        },
+      };
     }
 
     // -- Main Initialization --
@@ -188,9 +209,9 @@
 
         // 6. Data processor
         state.dataProcessor = new DataProcessor();
-        setLoadingProgress(80, 'Setting up Stats.js...');
+        setLoadingProgress(80, 'Setting up performance meter...');
 
-        // 7. Stats.js
+        // 7. Local FPS meter
         state.stats = initStats();
         setLoadingProgress(85, 'Connecting to server...');
 
@@ -231,7 +252,7 @@
 
     // -- Main Update Loop (called every frame) --
     function mainUpdate(delta, elapsed) {
-      // Stats.js begin
+      // FPS sample begin
       if (state.stats) state.stats.begin();
 
       // Determine data source
@@ -284,7 +305,7 @@
         });
       }
 
-      // Stats.js end
+      // FPS sample end
       if (state.stats) state.stats.end();
     }
 

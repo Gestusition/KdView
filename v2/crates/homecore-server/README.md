@@ -120,8 +120,8 @@ export RUST_LOG="homecore=debug,homecore_api=info"
 
 ## HOMECORE-UI dashboard (ADR-131)
 
-This binary also serves the **HOMECORE-UI** — the complete operational dashboard
-for the two-tier Cognitum stack (v0 Appliance → SEEDs → ESP32 nodes) — at
+This binary also serves the **HOMECORE-UI** — the complete local operational dashboard
+for HOMECORE services, optional gateways, and ESP32 nodes — at
 `/homecore`, alongside the HA-compat `/api` surface. It is a zero-dependency,
 no-build-step vanilla TS/JS + CSS frontend living in `ui/`:
 
@@ -130,7 +130,7 @@ cargo run -p homecore-server          # then open http://localhost:8123/homecore
 ```
 
 It drives the live `/api` + `/api/websocket` (`subscribe_events`) endpoints; panels
-backed by services not in this binary (SEED HTTPS API, calibration ADR-151,
+backed by services not in this binary (optional gateway API, calibration ADR-151,
 federation ADR-105) render against a DEMO-flagged contract-conformant mock until
 those endpoints land (ADR-131 §7.1). Frontend tests + benchmark run under plain
 `node` (no `npm install`):
@@ -201,4 +201,4 @@ homecore-server (orchestration binary)
 - [ADR-126: HOMECORE Home Assistant Port (master)](../../docs/adr/ADR-126-homecore-home-assistant-port.md)
 - [README — wifi-densepose](../../../README.md)
 - [Dockerfile (planned P2)](Dockerfile.planned)
-- [Docker Hub image (planned P2)](https://hub.docker.com/r/ruvnet/homecore-server)
+- Container publishing, when enabled, is owned by the KdView repository's GHCR workflows.

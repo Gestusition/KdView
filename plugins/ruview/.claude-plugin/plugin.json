@@ -3,10 +3,10 @@
   "description": "End-to-end RuView (WiFi-DensePose) toolkit for Claude Code: onboarding, ESP32 hardware setup, configuration, sensing applications, model training, advanced multistatic sensing, witness verification, BFLD privacy layer, and rvAgent + RVF agentic flows — from practical to advanced.",
   "version": "0.3.0",
   "author": {
-    "name": "ruvnet",
-    "url": "https://github.com/ruvnet/RuView"
+    "name": "Gestusition",
+    "url": "https://github.com/Gestusition/KdView"
   },
-  "homepage": "https://github.com/ruvnet/RuView",
+  "homepage": "https://github.com/Gestusition/KdView",
   "license": "MIT",
   "keywords": [
     "ruview",
@@ -22,8 +22,8 @@
   ],
   "mcpServers": {
     "rvagent": {
-      "command": "npx",
-      "args": ["-y", "@ruvnet/rvagent"],
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/start-local-rvagent.mjs"],
       "env": {
         "RVAGENT_SENSING_URL": "http://localhost:3000"
       }

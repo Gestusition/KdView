@@ -13,7 +13,7 @@ edition = "2021"
 license = "MIT"
 authors = ["rUv <ruv@ruv.net>", "HOMECORE Contributors"]
 description = "HOMECORE voice/intent pipeline + ruflo agent bridge (ADR-133 P1 scaffold)"
-repository = "https://github.com/ruvnet/RuView"
+repository = "https://github.com/Gestusition/KdView"
 
 [lib]
 name = "homecore_assist"

@@ -6,7 +6,7 @@ blueprint:
     home self-protect without requiring user input at the door.
     Part of the ADR-115 §3.12 starter blueprint set.
   domain: automation
-  source_url: https://github.com/ruvnet/RuView/blob/main/examples/ha-blueprints/08-auto-arm-security-when-not-active.yaml
+  source_url: https://github.com/Gestusition/KdView/blob/main/examples/ha-blueprints/08-auto-arm-security-when-not-active.yaml
   input:
     room_active_group:
       name: Group of room_active binary_sensors (one per room)

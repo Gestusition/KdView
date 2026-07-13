@@ -5,7 +5,7 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.rust
-    image: ruvnet/wifi-densepose:latest
+    image: ${KDVIEW_IMAGE:-ghcr.io/gestusition/kdview:latest}
     ports:
       - "3000:3000"   # REST API
       - "3001:3001"   # WebSocket
@@ -44,9 +44,10 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.python
-    image: ruvnet/wifi-densepose:python
+    image: ${KDVIEW_PYTHON_IMAGE:-ghcr.io/gestusition/kdview:python}
     ports:
       - "8765:8765"   # WebSocket
       - "8080:8080"   # UI
     environment:
       - PYTHONUNBUFFERED=1
+      - WIFI_DENSEPOSE_WS_HOST=0.0.0.0

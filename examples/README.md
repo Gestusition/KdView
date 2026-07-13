@@ -59,7 +59,7 @@ python examples/ruview_live.py --csi COM7 --mmwave none
 
 | Example | Stack | What It Does |
 |---------|-------|-------------|
-| [**frontend/**](frontend/) | Lit 3 + TypeScript + Vite | HOMECORE web UI — Home Assistant–style dashboard for the sensing stack (ADR-131). Mirrors the cognitum-v0 appliance design system. |
+| [**frontend/**](frontend/) | Lit 3 + TypeScript + Vite | HOMECORE web UI — local Home Assistant–style dashboard for the sensing stack (ADR-131). |
 
 ```bash
 cd examples/frontend

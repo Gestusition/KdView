@@ -2,13 +2,15 @@
 
 | Field | Value |
 |---|---|
-| **Status** | Proposed (2026-04-29) |
+| **Status** | Proposed (2026-04-29); preserved in KdView |
 | **Date** | 2026-04-29 |
 | **Authors** | ruv |
 | **Related** | ADR-092 (nvsim dashboard Pages deployment), ADR-059 (live ESP32 CSI pipeline), ADR-079 (camera ground-truth training) |
 | **Branch** | `feat/pointcloud-pages-demo` |
 
 ---
+
+> **KdView disposition:** The point-cloud viewer remains part of KdView's preserved WiFi visualization surface alongside the dashboard, Observatory, pose fusion, `viz.html`, Three.js gallery, and mobile client. Source and active Pages references use `Gestusition/KdView`; upstream RuView references below describe historical proposal context.
 
 ## 1. Context
 
@@ -24,7 +26,7 @@ fused camera-depth + WiFi CSI + mmWave point cloud produced by the
   "▶ Live 3D Point Cloud" link points at the moved-content section in
   `docs/readme-details.md`, not at a hosted demo. The two sibling demos
   (Live Observatory, Dual-Modal Pose Fusion) are already hosted at
-  `https://ruvnet.github.io/RuView/` and `…/pose-fusion.html`.
+  `https://gestusition.github.io/KdView/` and `…/pose-fusion.html`.
 
 This is an asymmetry: a first-time visitor can preview the WiFi pose
 demo and the Observatory in one click, but cannot preview the point
@@ -45,7 +47,7 @@ Ship **one** viewer that auto-selects its transport from URL parameters,
 and publish it to `gh-pages/pointcloud/` alongside the other demos:
 
 1. **Default mode** — when the viewer is opened with no query parameters
-   on `https://ruvnet.github.io/RuView/pointcloud/`, present a "▶ Enable
+   on `https://gestusition.github.io/KdView/pointcloud/`, present a "▶ Enable
    camera" CTA. On click the viewer requests webcam access, runs
    **MediaPipe Face Mesh** in-browser (~30 fps, 478 refined landmarks),
    and renders the visitor's own face as a point cloud — the closest
@@ -70,7 +72,7 @@ and publish it to `gh-pages/pointcloud/` alongside the other demos:
    This is the **integrated-ESP32** path: the user runs
    `ruview-pointcloud serve --bind 127.0.0.1:9880` locally with an
    ESP32-S3 streaming CSI to UDP port 3333, then opens
-   `https://ruvnet.github.io/RuView/pointcloud/?backend=http://127.0.0.1:9880`.
+   `https://gestusition.github.io/KdView/pointcloud/?backend=http://127.0.0.1:9880`.
    The hosted Pages viewer becomes a thin client for the local Rust
    fusion pipeline (camera depth + WiFi CSI + mmWave) without a clone
    or rebuild. The viewer also exposes a "📡 Connect ESP32" button that
@@ -166,7 +168,7 @@ and nvsim deployments.
 |---|---|
 | `v2/crates/wifi-densepose-pointcloud/src/viewer.html` | Add URL-param transport selector (`backend`, `live`), synthetic frame generator, demo-fallback path, transport-aware mode badge. ~120 LOC added, no removed behavior. |
 | `.github/workflows/pointcloud-pages.yml` | New workflow: stage viewer to `_site/pointcloud/index.html`, deploy to `gh-pages/pointcloud/` with `keep_files: true`. Triggers on viewer changes and on manual dispatch. |
-| `README.md` | Already updated — `▶ Live 3D Point Cloud` link will be retargeted to `https://ruvnet.github.io/RuView/pointcloud/` once the first deploy succeeds. (Tracked separately, not blocking this ADR.) |
+| `README.md` | Already updated — `▶ Live 3D Point Cloud` targets `https://gestusition.github.io/KdView/pointcloud/`. |
 | `docs/adr/README.md` | ADR index — add ADR-094 row. |
 
 ## 5. Acceptance Gates
@@ -176,17 +178,17 @@ This ADR is **Implemented** when all of the following hold:
 1. Pushing to `main` with a viewer change triggers
    `pointcloud-pages.yml`, which deploys to `gh-pages/pointcloud/` in
    under 60 seconds.
-2. `https://ruvnet.github.io/RuView/pointcloud/` loads, shows the
+2. `https://gestusition.github.io/KdView/pointcloud/` loads, shows the
    "Enable camera" CTA, and on accept renders the visitor's face as a
    point cloud with badge `● DEMO Your Face (MediaPipe)` and non-zero
    splat + frame counts. On camera denial, falls back to the
    procedural scene with badge `● DEMO Synthetic`.
-3. Existing demos at `https://ruvnet.github.io/RuView/` and
+3. Existing demos at `https://gestusition.github.io/KdView/` and
    `…/pose-fusion.html` and `…/nvsim/` are still reachable after the
    first deploy (smoke-tested manually).
-4. `https://ruvnet.github.io/RuView/pointcloud/?live=1` shows the
+4. `https://gestusition.github.io/KdView/pointcloud/?live=1` shows the
    `● OFFLINE` panel (because no same-origin backend exists on Pages).
-5. `https://ruvnet.github.io/RuView/pointcloud/?backend=https://example.invalid`
+5. `https://gestusition.github.io/KdView/pointcloud/?backend=https://example.invalid`
    falls back to demo within one poll interval (~500 ms) without
    throwing in the console.
 6. Running `./target/release/ruview-pointcloud serve` locally and

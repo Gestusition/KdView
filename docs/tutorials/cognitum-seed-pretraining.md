@@ -1,4 +1,6 @@
-# ESP32 CSI to Cognitum Seed Pretraining Pipeline
+# Historical ESP32 CSI to Cognitum Seed Pretraining Pipeline
+
+> **Historical upstream tutorial:** this document preserves the original appliance-specific validation path and the `seed_*` compatibility identifiers used by its bridge. KdView does not require or promote that product architecture. For current deployments, use an operator-managed local gateway as described in [the user guide](../user-guide.md#optional-local-persistence-gateway-adr-069).
 
 A beginner-friendly tutorial for collecting WiFi CSI data with ESP32 nodes
 and building a pre-trained model using the Cognitum Seed edge intelligence appliance.
@@ -35,13 +37,11 @@ entire workflow uses Python and pre-built firmware binaries.
 
 ### Hardware
 
-| Item | Quantity | Approx. Cost | Notes |
-|------|----------|-------------|-------|
-| ESP32-S3 (8MB flash) | 2 | ~$9 each | Must be S3 variant -- original ESP32 and C3 are not supported (single-core, cannot run CSI DSP) |
-| Cognitum Seed (Pi Zero 2 W) | 1 | ~$15 | Available at [cognitum.one](https://cognitum.one) |
-| USB-C data cables | 3 | ~$3 each | Must be **data** cables, not charge-only |
-
-**Total cost: ~$36**
+| Item | Quantity | Notes |
+|------|----------|-------|
+| ESP32-S3 (8MB flash) | 2 | Must be S3 variant -- original ESP32 and C3 are not supported (single-core, cannot run CSI DSP) |
+| Historical Pi Zero 2 W gateway | 1 | Required only to reproduce the archived appliance-specific path |
+| USB-C data cables | 3 | Must be **data** cables, not charge-only |
 
 ### Software
 
@@ -897,9 +897,8 @@ Scale to 3-4 ESP32 nodes for better spatial coverage. Each node gets a
 unique `--node-id` and all target the same host laptop. The Seed's kNN
 graph naturally clusters vectors by node and sensing state.
 
-### Cognitum Seed Resources
+### Historical gateway interface
 
-- [cognitum.one](https://cognitum.one) -- Hardware and firmware information
 - Seed API: 98 HTTPS endpoints with bearer token authentication
 - MCP proxy: 114 tools accessible via JSON-RPC 2.0 for AI assistant integration
 

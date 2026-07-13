@@ -9,12 +9,12 @@
  *   --live          Listen on UDP for real-time CSI frames
  *   --file FILE     Read from a .csi.jsonl recording
  *   --ascii         Print ASCII spectrogram visualization
- *   --ingest        Send 128-dim embeddings to Cognitum Seed
+ *   --ingest        Send 128-dim embeddings to an operator-managed vector gateway
  *   --knn K         Find K most similar past spectrograms
  *
  * Usage:
  *   node scripts/csi-spectrogram.js --file data/recordings/pretrain-1775182186.csi.jsonl --ascii
- *   node scripts/csi-spectrogram.js --live --port 5006 --ingest --seed-url https://169.254.42.1:8443
+ *   node scripts/csi-spectrogram.js --live --port 5006 --ingest --gateway-url http://127.0.0.1:8080
  *   node scripts/csi-spectrogram.js --file data/recordings/pretrain-1775182186.csi.jsonl --knn 5
  *
  * ADR: docs/adr/ADR-076-csi-spectrogram-embeddings.md
@@ -27,6 +27,7 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const { parseArgs } = require('util');
+const { selectGatewayHttpClient } = require('./gateway-http-client');
 
 // ---------------------------------------------------------------------------
 // CLI
@@ -39,7 +40,10 @@ const { values: args } = parseArgs({
     ascii:    { type: 'boolean', default: false },
     ingest:   { type: 'boolean', default: false },
     knn:      { type: 'string', short: 'k' },
-    'seed-url':  { type: 'string', default: 'https://169.254.42.1:8443' },
+    'gateway-url': { type: 'string', default: '' },
+    'gateway-token': { type: 'string', default: '' },
+    // Compatibility aliases for pre-decoupling automation.
+    'seed-url':  { type: 'string', default: '' },
     'seed-token': { type: 'string', default: '' },
     window:   { type: 'string', short: 'w', default: '20' },
     stride:   { type: 'string', short: 's', default: '10' },
@@ -361,23 +365,28 @@ function cosineSimilarity(a, b) {
 }
 
 // ---------------------------------------------------------------------------
-// Cognitum Seed Ingest
+// Operator-managed vector gateway ingest
 // ---------------------------------------------------------------------------
 
 /**
- * Send a 128-dim embedding to Cognitum Seed's RVF vector store.
+ * Send a 128-dim embedding to a compatible RVF vector store.
  * @param {Float32Array} embedding
  * @param {object} meta
  */
-async function ingestToSeed(embedding, meta) {
-  const seedUrl = args['seed-url'];
-  const token = args['seed-token'] || process.env.SEED_TOKEN;
+async function ingestToGateway(embedding, meta) {
+  const gatewayUrl = args['gateway-url'] || args['seed-url'];
+  const token = args['gateway-token'] || args['seed-token'] ||
+    process.env.RUVIEW_GATEWAY_TOKEN || process.env.SEED_TOKEN;
+  if (!gatewayUrl) {
+    console.error('[gateway] No endpoint provided (--gateway-url)');
+    return;
+  }
   if (!token) {
-    console.error('[seed] No token provided (--seed-token or $SEED_TOKEN)');
+    console.error('[gateway] No token provided (--gateway-token or $RUVIEW_GATEWAY_TOKEN)');
     return;
   }
 
-  const https = require('https');
+  const { url: gatewayBaseUrl, client: gatewayHttp } = selectGatewayHttpClient(gatewayUrl);
   const payload = JSON.stringify({
     store: 'csi-spectrograms',
     vectors: [{
@@ -394,8 +403,8 @@ async function ingestToSeed(embedding, meta) {
   });
 
   return new Promise((resolve, reject) => {
-    const url = new URL('/v1/vectors/upsert', seedUrl);
-    const req = https.request(url, {
+    const url = new URL('/v1/vectors/upsert', gatewayBaseUrl);
+    const req = gatewayHttp.request(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -410,7 +419,7 @@ async function ingestToSeed(embedding, meta) {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve(JSON.parse(body));
         } else {
-          reject(new Error(`Seed HTTP ${res.statusCode}: ${body}`));
+          reject(new Error(`Gateway HTTP ${res.statusCode}: ${body}`));
         }
       });
     });
@@ -514,13 +523,13 @@ async function processFile(filePath) {
         }
       }
 
-      // Cognitum Seed ingest
+      // Optional vector-gateway ingest
       if (args.ingest) {
         try {
-          await ingestToSeed(embedding, meta);
-          if (!JSON_OUTPUT) console.log(`  -> ingested to Seed`);
+          await ingestToGateway(embedding, meta);
+          if (!JSON_OUTPUT) console.log(`  -> ingested to gateway`);
         } catch (err) {
-          console.error(`  -> Seed ingest failed: ${err.message}`);
+          console.error(`  -> Gateway ingest failed: ${err.message}`);
         }
       }
 
@@ -622,9 +631,9 @@ async function processLive() {
 
       if (args.ingest) {
         try {
-          await ingestToSeed(embedding, meta);
+          await ingestToGateway(embedding, meta);
         } catch (err) {
-          console.error(`  -> Seed ingest failed: ${err.message}`);
+          console.error(`  -> Gateway ingest failed: ${err.message}`);
         }
       }
 
@@ -637,7 +646,7 @@ async function processLive() {
     console.log(`[live] Listening for CSI on UDP ${addr.address}:${addr.port}`);
     console.log(`[live] Window: ${WINDOW_SIZE} frames, stride: ${STRIDE}, embed dim: ${EMBED_DIM}`);
     if (KNN_K > 0) console.log(`[live] kNN search: k=${KNN_K}`);
-    if (args.ingest) console.log(`[live] Ingesting to Cognitum Seed at ${args['seed-url']}`);
+    if (args.ingest) console.log(`[live] Ingesting to gateway at ${args['gateway-url'] || args['seed-url']}`);
   });
 
   server.bind(PORT);

@@ -54,7 +54,7 @@ export function applianceHealth() {
     uptime_s: 824510,
     services: [
       { name: 'ruview-mcp-brain', port: 9876, status: 'running' },
-      { name: 'cognitum-rvf-agent', port: 9004, status: 'running' },
+      { name: 'ruview-vector-agent', port: 9004, status: 'running' },
       { name: 'ruvector-hailo-worker', port: 50051, status: 'running' },
     ],
     event_rate: spark(120, 40),
@@ -280,7 +280,7 @@ export function recentEvents(n = 40) {
 // ── Settings (§4.10) ────────────────────────────────────────────────
 export function settings() {
   return {
-    mqtt: { broker: 'mqtt://cognitum-v0:1883', user: 'homecore', mdns: '_ruview-ha._tcp', connected: true },
+    mqtt: { broker: 'mqtt://local-gateway:1883', user: 'homecore', mdns: '_ruview-ha._tcp', connected: true },
     tokens: [
       { name: 'ios-companion', last_used: ago(120), created: ago(8000000) },
       { name: 'node-red', last_used: ago(60000), created: ago(20000000) },

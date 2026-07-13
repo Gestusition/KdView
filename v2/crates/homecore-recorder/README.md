@@ -5,7 +5,7 @@ SQLite state-history recorder for HOMECORE with Home Assistant-compatible schema
 [![Crates.io](https://img.shields.io/crates/v/homecore-recorder.svg)](https://crates.io/crates/homecore-recorder)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![MSRV: 1.89+](https://img.shields.io/badge/MSRV-1.89%2B-purple.svg)
-[![Tests](https://img.shields.io/badge/tests-14%20passing-brightgreen.svg)](https://github.com/ruvnet/RuView)
+[![Tests](https://img.shields.io/badge/tests-14%20passing-brightgreen.svg)](https://github.com/Gestusition/KdView)
 [![ADR-132](https://img.shields.io/badge/ADR-132-orange.svg)](../../docs/adr/ADR-132-homecore-recorder-history-semantic-search.md)
 
 **P1 release**: SQLite database with Home Assistant-compatible schema for persistent state history. **P2 (feature-gated)**: ruvector HNSW semantic index for natural-language queries ("show me all kitchen devices that were warm at 3 PM").

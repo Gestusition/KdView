@@ -1,7 +1,6 @@
 ---
 name: ruview-applications
-description: Run RuView sensing applications — presence/occupancy, breathing & heart rate, activity & fall detection, 17-keypoint pose estimation (WiFlow), sleep monitoring & apnea screening, environment mapping, Mass Casualty Assessment (MAT), and the 3D point-cloud fusion demo. Use when someone wants to actually *do* something with a working RuView setup.
-allowed-tools: Bash Read Write Edit Glob Grep
+description: Run KdView's RuView sensing applications for occupancy, vital signs, activity, falls, pose estimation, sleep, environment mapping, Mass Casualty Assessment, and point-cloud fusion. Use after a simulator or live ESP32 source is working.
 ---
 
 # RuView Applications
@@ -15,7 +14,7 @@ What RuView can sense, and how to run each one. Assumes you have either the Dock
 | **Presence / occupancy** | Detect people through walls, count them, track entries/exits (trained model + PIR fusion, ~0.012 ms latency) | sensing-server live mode; `examples/environment/` |
 | **Vital signs** | Breathing 6–30 BPM (bandpass 0.1–0.5 Hz), heart rate 40–120 BPM (bandpass 0.8–2.0 Hz), contactless while sleeping/sitting | `wifi-densepose-vitals` crate (ADR-021); `examples/medical/` |
 | **Activity recognition** | Walking, sitting, gestures, falls — from temporal CSI patterns | RuvSense `gesture.rs` (DTW), `pose_tracker.rs`; `scripts/gait-analyzer.js` |
-| **Pose estimation** | 17 COCO keypoints via WiFlow architecture; dual-modal webcam+WiFi fusion demo | `cargo run -p wifi-densepose-sensing-server` + pose-fusion demo (ADR-059); see `ruview-model-training` to train |
+| **Pose estimation** | 17 COCO keypoints via WiFlow architecture; dual-modal webcam + WiFi fusion | `cargo run -p wifi-densepose-sensing-server`; open `/ui/pose-fusion.html`; see `ruview-model-training` to train |
 | **Sleep monitoring** | Overnight monitoring, sleep-stage classification, apnea screening | `examples/sleep/`; `scripts/apnea-detector.js` |
 | **Environment mapping** | RF fingerprinting identifies rooms, detects moved furniture, spots new objects | sensing-server `--build-index env`; RuvSense `field_model.rs`, `cross_room.rs` |
 | **Mass Casualty Assessment (MAT)** | Disaster survivor detection — find people in rubble/smoke | `wifi-densepose-mat` crate; `docs/wifi-mat-user-guide.md`; `examples/medical/` |
@@ -26,12 +25,12 @@ What RuView can sense, and how to run each one. Assumes you have either the Dock
 
 ```bash
 # Docker demo — everything, simulated CSI
-docker run -p 3000:3000 ruvnet/wifi-densepose:latest    # http://localhost:3000
+docker run -p 3000:3000 ghcr.io/gestusition/kdview:latest    # /ui/index.html, /ui/observatory.html, /ui/pose-fusion.html, /ui/viz.html
 
 # Live sensing server (consumes ESP32 UDP CSI)
 cd v2 && cargo run -p wifi-densepose-sensing-server
 
-# Live RF room scan (Cognitum Seed on :5006)
+# Live RF room scan and local learning helpers (:5006)
 node scripts/rf-scan.js --port 5006
 node scripts/snn-csi-processor.js --port 5006
 
@@ -48,6 +47,8 @@ node scripts/csi-spectrogram.js
 node scripts/csi-graph-visualizer.js
 ```
 
+Preserved visualization clients: dashboard `ui/index.html`, Observatory `ui/observatory.html`, pose fusion `ui/pose-fusion.html`, `ui/viz.html`, point-cloud viewer `v2/crates/wifi-densepose-pointcloud/src/viewer.html`, Three.js gallery `examples/three.js/`, and mobile client `ui/mobile/`.
+
 ## Picking the right modality
 
 - **Through a wall, no line of sight** → presence + activity; expect ≤5 m depth (Fresnel-zone geometry).
@@ -55,7 +56,7 @@ node scripts/csi-graph-visualizer.js
 - **Need skeletons** → pose (WiFlow). Camera-free works but is modest; camera-supervised gets 92.9% PCK@20 — train it (`ruview-model-training`).
 - **Search & rescue** → MAT (`docs/wifi-mat-user-guide.md`).
 - **"What changed in this room?"** → environment mapping / RF fingerprint index.
-- **Best spatial accuracy** → 2+ ESP32 nodes + cross-viewpoint fusion (`ruview-advanced-sensing`), optionally + Cognitum Seed.
+- **Best spatial accuracy** → 2+ ESP32 nodes + cross-viewpoint fusion (`ruview-advanced-sensing`); use an operator-managed gateway only when persistence or retrieval is needed.
 
 ## Examples directory map
 

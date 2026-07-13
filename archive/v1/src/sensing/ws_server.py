@@ -24,6 +24,7 @@ import asyncio
 import json
 import logging
 import math
+import os
 import signal
 import socket
 import struct
@@ -49,7 +50,7 @@ logger = logging.getLogger(__name__)
 # Configuration
 # ---------------------------------------------------------------------------
 
-HOST = "localhost"
+HOST = os.environ.get("WIFI_DENSEPOSE_WS_HOST", "localhost")
 PORT = 8765
 TICK_INTERVAL = 0.5  # seconds between broadcasts
 SIGNAL_FIELD_GRID = 20  # NxN grid for signal field visualization

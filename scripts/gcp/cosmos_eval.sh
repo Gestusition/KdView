@@ -47,6 +47,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 GCP_USER="${GCP_USER:-$(gcloud config get-value account 2>/dev/null | cut -d@ -f1)}"
+GCP_PROJECT="${GCP_PROJECT:-$(gcloud config get-value project 2>/dev/null || true)}"
 REMOTE="${GCP_USER}@${INSTANCE_IP}"
 SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=20 -o BatchMode=yes"
 LOCAL_SCRIPTS_DIR="$(cd "$(dirname "$0")/../.." && pwd)/scripts"
@@ -62,7 +63,7 @@ log() { echo "[cosmos_eval] $*"; }
 log "Checking SSH connectivity to $REMOTE ..."
 if ! ssh $SSH_OPTS "$REMOTE" "echo ok" &>/dev/null; then
   echo "ERROR: Cannot SSH to $REMOTE" >&2
-  echo "       Ensure the instance is running: gcloud compute instances list --project=cognitum-20260110" >&2
+  echo "       Ensure the instance is running: gcloud compute instances list --project=${GCP_PROJECT:-<configured-project>}" >&2
   exit 1
 fi
 log "SSH connection OK"

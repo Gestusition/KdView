@@ -1,7 +1,6 @@
 ---
 name: ruview-cli-api
-description: Use the RuView `wifi-densepose` CLI binary (incl. MAT scan/status/zones/survivors/alerts/export subcommands), the REST API (`wifi-densepose-api`, Axum), and the browser/WASM build (`wifi-densepose-wasm`, `wifi-densepose-wasm-edge`). Use when integrating RuView into another program, scripting it from the shell, exposing it over HTTP, or shipping it to the browser / ESP32-WASM3.
-allowed-tools: Bash Read Write Edit Glob Grep
+description: Use KdView's `wifi-densepose` CLI, Axum REST API, complete WiFi browser/mobile interface set, and WASM builds. Use when scripting RuView compatibility surfaces, integrating another program, exposing sensing over HTTP, or building browser and ESP32-WASM3 targets.
 ---
 
 # RuView CLI, API & WASM
@@ -43,9 +42,10 @@ Use `--simulate` for testing without hardware. Background and user guide: `docs/
 Library crate (`v2/crates/wifi-densepose-api/src/lib.rs`) — the Axum router/handlers; configured via the `wifi-densepose-config` crate. It's wired into the server binaries (e.g. the sensing server / Docker image), not a standalone `cargo run` target by itself.
 
 ```bash
-# Easiest way to exercise it: the Docker image exposes the API + dashboard on :3000
-docker run -p 3000:3000 ruvnet/wifi-densepose:latest
-# Then hit the HTTP endpoints (see the API module / docs for routes) and open http://localhost:3000
+# Easiest way to exercise it: the container exposes the API + WiFi UIs on :3000
+docker run -p 3000:3000 ghcr.io/gestusition/kdview:latest
+# Then hit the HTTP endpoints and open /ui/index.html, /ui/observatory.html,
+# /ui/pose-fusion.html, or /ui/viz.html
 
 # v1 Python service config reference: example.env, pyproject.toml (archive/v1/)
 ```
@@ -62,7 +62,7 @@ When embedding the API crate in your own binary, take the router from `wifi_dens
   ```
   See `v2/crates/wifi-densepose-wasm/README.md` for the exported surface.
 - **`wifi-densepose-wasm-edge`** — 60 edge modules (609 tests) that compile to `wasm32-unknown-unknown` and run on ESP32-S3 via WASM3; shared utils in `src/vendor_common.rs`. These are the ADR-041 edge-intelligence modules in WASM form.
-- Browser demos: pose-fusion (ADR-059), point-cloud (ADR-094) — deployed via GitHub Pages from the WASM build.
+- Preserved clients: `ui/index.html` dashboard, `ui/observatory.html`, `ui/pose-fusion.html`, `ui/viz.html`, `v2/crates/wifi-densepose-pointcloud/src/viewer.html`, `examples/three.js/`, and `ui/mobile/`.
 
 ## 4. Where it fits
 

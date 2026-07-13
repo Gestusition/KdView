@@ -13,7 +13,7 @@ edition = "2021"
 license = "MIT"
 authors = ["rUv <ruv@ruv.net>", "HOMECORE Contributors"]
 description = "Rust state machine + event bus + service registry — the foundation of the HOMECORE Home Assistant port (ADR-127)"
-repository = "https://github.com/ruvnet/RuView"
+repository = "https://github.com/Gestusition/KdView"
 
 [lib]
 name = "homecore"

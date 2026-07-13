@@ -8,9 +8,9 @@
 #    3. Rust workspace tests (cargo test --workspace --no-default-features)
 #    4. PyO3 BFLD binding (cargo check -p wifi-densepose-py)
 #    5. ADR-125 §2.1.d invariant — identity_risk_score never crosses
-#    6. Published crates.io tarball SHAs
-#    7. Published npm packages
-#    8. Published Docker image multi-arch manifest
+#    6. Local Cargo package inventory
+#    7. Local npm package build + pack
+#    8. Fork-owned GHCR image multi-arch manifest
 #    9. Embedded HOMECORE binary in the Docker image (homecore-server)
 #
 #  Usage:
@@ -224,22 +224,21 @@ if [ $RUN_INVARIANT -eq 1 ]; then
 fi
 
 # ------------------------------------------------------------------
-# PHASE 6: Published crates.io packages
+# PHASE 6: Local Cargo package inventory
 # ------------------------------------------------------------------
 if [ $RUN_CRATES -eq 1 ]; then
-    phase 6 "Published crates.io packages"
-    if command -v curl >/dev/null 2>&1; then
+    phase 6 "Local Cargo package inventory"
+    if command -v cargo >/dev/null 2>&1; then
         crates_expected=( "wifi-densepose-core" "wifi-densepose-signal" \
                          "wifi-densepose-sensing-server" "wifi-densepose-hardware" \
                          "wifi-densepose-nn" "wifi-densepose-bfld" "wifi-densepose-vitals" \
                          "wifi-densepose-wifiscan" "wifi-densepose-train" \
                          "cog-ha-matter" "cog-person-count" "cog-pose-estimation" )
+        metadata="$(cd "$V2_DIR" && cargo metadata --no-deps --format-version 1 2>/dev/null || true)"
         ok=0; miss=0
         for crate in "${crates_expected[@]}"; do
-            ver=$(curl -sf "https://crates.io/api/v1/crates/$crate" 2>/dev/null \
-                  | $PYTHON -c 'import sys,json; print(json.load(sys.stdin).get("crate",{}).get("max_version","?"))' 2>/dev/null) || ver=""
-            if [ -n "$ver" ] && [ "$ver" != "?" ]; then
-                echo "    $crate $ver"
+            if printf '%s' "$metadata" | $PYTHON -c 'import json,sys; wanted=sys.argv[1]; d=json.load(sys.stdin); raise SystemExit(0 if any(p.get("name")==wanted for p in d.get("packages",[])) else 1)' "$crate"; then
+                echo "    $crate"
                 ok=$((ok+1))
             else
                 echo -e "    ${YELLOW}miss${RESET} $crate"
@@ -247,41 +246,38 @@ if [ $RUN_CRATES -eq 1 ]; then
             fi
         done
         if [ "$miss" -eq 0 ]; then
-            note_pass "Phase 6: $ok/$ok crates on crates.io"
+            note_pass "Phase 6: $ok/$ok expected crates present in the local workspace"
         else
             note_fail "Phase 6: $miss of ${#crates_expected[@]} crates missing"
         fi
     else
-        note_skip "Phase 6: curl not available"
+        note_skip "Phase 6: cargo not available"
     fi
 fi
 
 # ------------------------------------------------------------------
-# PHASE 7: Published npm packages
+# PHASE 7: Local npm package
 # ------------------------------------------------------------------
 if [ $RUN_NPM -eq 1 ]; then
-    phase 7 "Published npm packages (@ruvnet/rvagent)"
-    if command -v curl >/dev/null 2>&1; then
-        ver=$(curl -sf "https://registry.npmjs.org/@ruvnet/rvagent" 2>/dev/null \
-              | $PYTHON -c 'import sys,json; print(json.load(sys.stdin).get("dist-tags",{}).get("latest","?"))' 2>/dev/null) || ver=""
-        if [ -n "$ver" ] && [ "$ver" != "?" ]; then
-            echo "    @ruvnet/rvagent  $ver"
-            note_pass "Phase 7: @ruvnet/rvagent v$ver on npm"
+    phase 7 "Local rvagent package build + pack"
+    if command -v npm >/dev/null 2>&1 && [ -f "$SCRIPT_DIR/tools/ruview-mcp/package.json" ]; then
+        if (cd "$SCRIPT_DIR/tools/ruview-mcp" && npm run build --silent && npm pack --dry-run --json >/dev/null); then
+            note_pass "Phase 7: local rvagent builds and packs from this checkout"
         else
-            note_fail "Phase 7: @ruvnet/rvagent not on registry"
+            note_fail "Phase 7: local rvagent build or pack failed"
         fi
     else
-        note_skip "Phase 7: curl not available"
+        note_skip "Phase 7: npm or local rvagent package not available"
     fi
 fi
 
 # ------------------------------------------------------------------
-# PHASE 8: Docker Hub multi-arch manifest
+# PHASE 8: Fork-owned GHCR multi-arch manifest
 # ------------------------------------------------------------------
 if [ $RUN_DOCKER -eq 1 ]; then
-    phase 8 "Docker Hub multi-arch manifest (ruvnet/wifi-densepose:latest)"
+    phase 8 "Fork-owned GHCR multi-arch manifest (ghcr.io/gestusition/kdview:latest)"
     if command -v docker >/dev/null 2>&1; then
-        manifest="$(docker manifest inspect ruvnet/wifi-densepose:latest 2>&1 || true)"
+        manifest="$(docker manifest inspect ghcr.io/gestusition/kdview:latest 2>&1 || true)"
         archs="$( { echo "$manifest" | $PYTHON -c 'import sys,json
 try:
   d=json.loads(sys.stdin.read())
@@ -306,7 +302,7 @@ fi
 if [ $RUN_HOMECORE -eq 1 ]; then
     phase 9 "HOMECORE binary in Docker image (homecore-server --help)"
     if command -v docker >/dev/null 2>&1; then
-        help_out="$(docker run --rm --entrypoint /app/homecore-server ruvnet/wifi-densepose:latest --help 2>&1)" || help_out=""
+        help_out="$(docker run --rm --entrypoint /app/homecore-server ghcr.io/gestusition/kdview:latest --help 2>&1)" || help_out=""
         if echo "$help_out" | grep -q "0.0.0.0:8123"; then
             note_pass "Phase 9: homecore-server present, binds :8123 by default"
         elif [ -n "$help_out" ]; then

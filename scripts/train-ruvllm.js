@@ -1577,7 +1577,7 @@ async function main() {
     console.log(`  LoRA adapter: ${loraPath}`);
   }
 
-  // 9d: RVF (RuVector Format) — JSONL for Cognitum Seed ingest
+  // 9d: RVF (RuVector Format) — portable JSONL for compatible vector-store ingest
   const rvfPath = path.join(CONFIG.outputDir, 'model.rvf.jsonl');
   const rvfLines = [
     JSON.stringify({ type: 'metadata', ...exportModel.metadata }),

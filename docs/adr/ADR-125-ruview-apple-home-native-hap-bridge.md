@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | Proposed |
+| **Status** | **Partially superseded in KdView** — the HAP/Matter bridge design remains applicable; Cognitum Seed packaging is historical. |
 | **Date** | 2026-05-25 |
 | **Deciders** | ruv |
 | **Codename** | **APPLE-FABRIC** — RuView speaks HomeKit directly so Apple HomePod / Apple TV act as the discovery + automation surface with zero Home-Assistant middle layer |
@@ -10,6 +10,8 @@
 | **Tracking issue** | TBD |
 
 ---
+
+> **KdView disposition:** New deployments run the bridge on an operator-managed local gateway. Seed/appliance names below document the original proposal and compatibility surface; they are not a required product dependency. Runnable container examples use the current KdView image.
 
 ## 1. Context
 
@@ -81,7 +83,7 @@ Concretely:
 3. The same Docker image that ships `sensing-server` and `cog-ha-matter` ships the new advertiser as a third entrypoint:
 
 ```bash
-docker run --network host ruvnet/wifi-densepose:latest hap-accessory --privacy-mode
+docker run --network host ghcr.io/gestusition/kdview:latest hap-accessory --privacy-mode
 ```
 
 `--network host` (or a macvlan bridge) is required because HAP pairing depends on the accessory and the controller seeing each other's mDNS broadcasts on the same L2 segment — same constraint Home Assistant's HomeKit Bridge has.
@@ -243,13 +245,13 @@ The advertiser is a separate entrypoint — pulling it out is `docker run` witho
 ```bash
 # 1. Start a sensing server (simulated source so the test runs anywhere)
 docker run -d --name rs -p 3000:3000 -e CSI_SOURCE=simulated \
-    ruvnet/wifi-densepose:latest
+    ghcr.io/gestusition/kdview:latest
 
 # 2. Launch the HAP advertiser sidecar in privacy mode
 docker run -d --name hap --network host \
     -v /var/lib/ruview-hap:/var/lib/ruview-hap \
     -e RUVIEW_BFLD_PRIVACY_CLASS=2 \
-    ruvnet/wifi-densepose:latest hap-accessory --privacy-mode
+    ghcr.io/gestusition/kdview:latest hap-accessory --privacy-mode
 
 # 3. From a Mac on the same LAN: should see RuView Sense as HAP
 dns-sd -B _hap._tcp local.   # expect: "RuView Sense" within 30 s

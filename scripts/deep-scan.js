@@ -181,7 +181,7 @@ function report() {
   console.log('  Known devices transmitting WiFi in range:');
   console.log('    • Your router (ruv.net) — strongest signal, channel 5');
   console.log('    • HP M255 LaserJet — WiFi Direct on channel 5, ~2m away');
-  console.log('    • Cognitum Seed — if plugged in (Pi Zero 2W)');
+  console.log('    • Optional local gateway — if configured');
   console.log('    • 2x ESP32-S3 — the sensing nodes themselves');
   console.log('    • Your laptop/desktop — connected to ruv.net');
   console.log('  Neighbor devices (through walls):');

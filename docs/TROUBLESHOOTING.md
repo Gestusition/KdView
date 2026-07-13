@@ -172,7 +172,7 @@ docker compose -f docker/docker-compose.yml up sensing-server
 
 **Root cause:** Edge tiers 1 and 2 enable the on-device DSP pipeline on Core 1. In the affected build, the `edge_dsp` task ran a tight per-frame loop without yielding, so the FreeRTOS task watchdog tripped on Core 1 and panicked. Tier 0 is passthrough only and doesn't activate the pipeline, so the watchdog never fires there.
 
-**Fix:** Flash the [v0.4.3.1-esp32](https://github.com/ruvnet/RuView/releases/tag/v0.4.3.1-esp32) release or later — the DSP task yield fixes have shipped on `main` since the build in the report.
+**Fix:** Flash the [v0.4.3.1-esp32](https://github.com/Gestusition/KdView/releases/tag/v0.4.3.1-esp32) release or later — the DSP task yield fixes have shipped on `main` since the build in the report.
 
 ```bash
 # Verify what version you're on (look for "App version" in serial output on boot)

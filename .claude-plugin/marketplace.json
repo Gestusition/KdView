@@ -2,8 +2,8 @@
   "name": "ruview",
   "description": "RuView Marketplace: Claude Code + Codex plugins for WiFi sensing — configuration, applications, model training, and onboarding, from practical to advanced",
   "owner": {
-    "name": "ruvnet",
-    "url": "https://github.com/ruvnet/RuView"
+    "name": "Gestusition",
+    "url": "https://github.com/Gestusition/KdView"
   },
   "plugins": [
     {

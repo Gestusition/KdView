@@ -29,6 +29,8 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
+  STAGING_URL: ${{ vars.STAGING_URL }}
+  PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
 
 jobs:
   # Pre-deployment checks
@@ -42,8 +44,6 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      with:
-        submodules: recursive
 
     - name: Determine deployment environment
       id: determine-env
@@ -84,12 +84,15 @@ jobs:
     if: needs.pre-deployment.outputs.deploy_env == 'staging'
     environment:
       name: staging
-      url: https://staging.wifi-densepose.com
+      url: ${{ vars.STAGING_URL }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      with:
-        submodules: recursive
+
+    - name: Validate fork-owned staging URL
+      run: |
+        test -n "$STAGING_URL" || { echo "Set the STAGING_URL repository variable"; exit 1; }
+        case "$STAGING_URL" in https://*) ;; *) echo "STAGING_URL must use https://"; exit 1;; esac
 
     - name: Set up kubectl
       uses: azure/setup-kubectl@v3
@@ -117,12 +120,12 @@ jobs:
     - name: Run smoke tests
       run: |
         sleep 30
-        curl -f https://staging.wifi-densepose.com/health || exit 1
-        curl -f https://staging.wifi-densepose.com/api/v1/info || exit 1
+        curl -f "$STAGING_URL/health" || exit 1
+        curl -f "$STAGING_URL/api/v1/info" || exit 1
 
     - name: Run integration tests against staging
       run: |
-        python -m pytest tests/integration/ --base-url=https://staging.wifi-densepose.com -v
+        python -m pytest tests/integration/ --base-url="$STAGING_URL" -v
 
   # Deploy to production
   deploy-production:
@@ -132,12 +135,15 @@ jobs:
     if: needs.pre-deployment.outputs.deploy_env == 'production' || (github.ref == 'refs/tags/v*' && needs.deploy-staging.result == 'success')
     environment:
       name: production
-      url: https://wifi-densepose.com
+      url: ${{ vars.PRODUCTION_URL }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      with:
-        submodules: recursive
+
+    - name: Validate fork-owned production URL
+      run: |
+        test -n "$PRODUCTION_URL" || { echo "Set the PRODUCTION_URL repository variable"; exit 1; }
+        case "$PRODUCTION_URL" in https://*) ;; *) echo "PRODUCTION_URL must use https://"; exit 1;; esac
 
     - name: Set up kubectl
       uses: azure/setup-kubectl@v3
@@ -196,8 +202,8 @@ jobs:
 
     - name: Production smoke tests
       run: |
-        curl -f https://wifi-densepose.com/health || exit 1
-        curl -f https://wifi-densepose.com/api/v1/info || exit 1
+        curl -f "$PRODUCTION_URL/health" || exit 1
+        curl -f "$PRODUCTION_URL/api/v1/info" || exit 1
 
     - name: Cleanup old deployment
       run: |
@@ -260,23 +266,24 @@ jobs:
   post-deployment:
     name: Post-deployment Monitoring
     runs-on: ubuntu-latest
-    needs: [deploy-staging, deploy-production]
+    needs: [pre-deployment, deploy-staging, deploy-production]
     if: always() && (needs.deploy-staging.result == 'success' || needs.deploy-production.result == 'success')
     steps:
     - name: Monitor deployment health
       run: |
         ENV="${{ needs.pre-deployment.outputs.deploy_env }}"
         if [[ "$ENV" == "production" ]]; then
-          BASE_URL="https://wifi-densepose.com"
+          BASE_URL="$PRODUCTION_URL"
         else
-          BASE_URL="https://staging.wifi-densepose.com"
+          BASE_URL="$STAGING_URL"
         fi
+        test -n "$BASE_URL" || { echo "Deployment URL repository variable is not configured"; exit 1; }
         
         # Monitor for 5 minutes
         for i in {1..10}; do
           echo "Health check $i/10"
-          curl -f $BASE_URL/health || exit 1
-          curl -f $BASE_URL/api/v1/status || exit 1
+          curl -f "$BASE_URL/health" || exit 1
+          curl -f "$BASE_URL/api/v1/status" || exit 1
           sleep 30
         done
 
@@ -285,7 +292,7 @@ jobs:
       with:
         script: |
           const deployEnv = '${{ needs.pre-deployment.outputs.deploy_env }}';
-          const environmentUrl = deployEnv === 'production' ? 'https://wifi-densepose.com' : 'https://staging.wifi-densepose.com';
+          const environmentUrl = deployEnv === 'production' ? '${{ vars.PRODUCTION_URL }}' : '${{ vars.STAGING_URL }}';
           
           const { data: deployment } = await github.rest.repos.createDeploymentStatus({
             owner: context.repo.owner,
@@ -300,7 +307,7 @@ jobs:
   notify:
     name: Notify Deployment Status
     runs-on: ubuntu-latest
-    needs: [deploy-staging, deploy-production, post-deployment]
+    needs: [pre-deployment, deploy-staging, deploy-production, post-deployment]
     if: always()
     steps:
     - name: Notify Slack on success
@@ -313,7 +320,7 @@ jobs:
           🚀 Deployment successful!
           Environment: ${{ needs.pre-deployment.outputs.deploy_env }}
           Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.pre-deployment.outputs.image_tag }}
-          URL: https://${{ needs.pre-deployment.outputs.deploy_env == 'production' && 'wifi-densepose.com' || 'staging.wifi-densepose.com' }}
+          URL: ${{ needs.pre-deployment.outputs.deploy_env == 'production' && vars.PRODUCTION_URL || vars.STAGING_URL }}
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 

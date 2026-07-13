@@ -24,7 +24,7 @@ COPY vendor/rufield/ /vendor/rufield/
 # Build release binaries:
 #   - sensing-server with `mqtt` feature so the HA-DISCO MQTT publisher
 #     (ADR-115) is wired in (auto-discovery topics flow to Home Assistant)
-#   - cog-ha-matter, the ADR-116 Cognitum cog that wraps HA-DISCO +
+#   - cog-ha-matter, the ADR-116 integration service that wraps HA-DISCO +
 #     HA-MIND + mDNS + embedded broker for Home Assistant / Matter
 #   - homecore-server, the ADRs-126-134 HOMECORE native Rust port of
 #     Home Assistant (HA-wire-compat REST + WebSocket on :8123,

@@ -7,9 +7,9 @@ description: Explore and prototype rvAgent + RVF integration for RuView agentic 
 
 Surface area for wiring `vendor/ruvector/crates/rvAgent/` into RuView so the existing sensing pipeline becomes the substrate an agentic flow can read, reason about, and respond to.
 
-## Quickstart — published MCP server (`@ruvnet/rvagent` v0.1.0)
+## Quickstart — repository-local MCP server
 
-Installing this plugin registers `@ruvnet/rvagent` as an MCP server. On activation, Claude Code spawns `npx -y @ruvnet/rvagent` and exposes its tools directly:
+Installing this plugin registers the source under `tools/ruview-mcp/` as an MCP server. On activation, Claude Code runs `plugins/ruview/scripts/start-local-rvagent.mjs`, which installs from the checked-in lockfile if needed, builds the local source, and exposes its tools directly. It does not download the historical `@ruvnet/rvagent` package.
 
 | Tool | Purpose |
 |------|---------|
@@ -23,7 +23,7 @@ Installing this plugin registers `@ruvnet/rvagent` as an MCP server. On activati
 
 Override the sensing-server URL via the `RVAGENT_SENSING_URL` env var (default `http://localhost:3000`). Source lives at `tools/ruview-mcp/`; ADR-124 captures the design.
 
-Smoke-check the wiring: `npm view @ruvnet/rvagent version` should return `0.1.0` (or newer).
+Smoke-check the wiring from the repository root with `node --check plugins/ruview/scripts/start-local-rvagent.mjs`, then `cd tools/ruview-mcp && npm ci && npm run build && npm test`.
 
 ## When to use this skill
 

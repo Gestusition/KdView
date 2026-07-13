@@ -2,6 +2,8 @@
 
 Covers every way to build, run, and deploy the system -- from a zero-hardware verification to a full ESP32 mesh with 3D visualization.
 
+> Canonical source and release metadata live at [Gestusition/KdView](https://github.com/Gestusition/KdView). Historical RuView package, protocol, and model identifiers remain unchanged for compatibility.
+
 ---
 
 ## Table of Contents

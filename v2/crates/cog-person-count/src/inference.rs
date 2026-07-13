@@ -314,12 +314,19 @@ fn pick_device() -> Device {
 }
 
 fn default_weights_path() -> Option<std::path::PathBuf> {
-    let candidates = [
-        std::path::PathBuf::from("/var/lib/cognitum/apps/person-count/count_v1.safetensors"),
+    // Prefer operator-configured and KdView-local paths. The final historical
+    // path is read-only migration compatibility for an existing installation.
+    let mut candidates = Vec::new();
+    if let Ok(root) = std::env::var("RUVIEW_APPS_DIR") {
+        candidates.push(std::path::PathBuf::from(root).join("person-count/count_v1.safetensors"));
+    }
+    candidates.extend([
+        std::path::PathBuf::from("/var/lib/ruview/apps/person-count/count_v1.safetensors"),
         std::path::PathBuf::from("./count_v1.safetensors"),
         std::path::PathBuf::from("./cog/artifacts/count_v1.safetensors"),
         std::path::PathBuf::from("v2/crates/cog-person-count/cog/artifacts/count_v1.safetensors"),
         std::path::PathBuf::from("crates/cog-person-count/cog/artifacts/count_v1.safetensors"),
-    ];
+        std::path::PathBuf::from("/var/lib/cognitum/apps/person-count/count_v1.safetensors"),
+    ]);
     candidates.into_iter().find(|p| p.exists())
 }

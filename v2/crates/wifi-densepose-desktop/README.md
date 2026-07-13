@@ -95,11 +95,11 @@ The UI follows a dark professional theme with the following design tokens:
 
 ## Download
 
-Pre-built binaries are available on the [Releases](https://github.com/ruvnet/RuView/releases) page.
+Pre-built binaries are available on the [KdView Releases](https://github.com/Gestusition/KdView/releases) page.
 
 | Platform | Download | Status |
 |----------|----------|--------|
-| Windows x64 | [v0.3.0-alpha](https://github.com/ruvnet/RuView/releases/tag/v0.3.0-desktop-alpha) | Debug build |
+| Windows x64 | [v0.3.0-alpha](https://github.com/Gestusition/KdView/releases/tag/v0.3.0-desktop-alpha) | Debug build |
 | macOS | — | Planned |
 | Linux | — | Planned |
 
@@ -109,8 +109,8 @@ The current release is a **debug build** that loads the frontend from a local Vi
 
 ```bash
 # 1. Clone the repo (or download just the ui/ folder)
-git clone https://github.com/ruvnet/RuView.git
-cd RuView/v2/crates/wifi-densepose-desktop/ui
+git clone https://github.com/Gestusition/KdView.git
+cd KdView/v2/crates/wifi-densepose-desktop/ui
 
 # 2. Install frontend dependencies
 npm install

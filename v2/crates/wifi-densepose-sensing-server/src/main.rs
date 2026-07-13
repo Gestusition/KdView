@@ -203,17 +203,17 @@ struct Args {
     calibrate: bool,
 
     // ---------------------------------------------------------------
-    // ADR-102: Edge Module Registry — surface the canonical Cognitum
-    // cog catalog via `GET /api/v1/edge/registry`.
+    // Edge Module Registry — surface the open module catalog via
+    // `GET /api/v1/edge/registry`.
     // ---------------------------------------------------------------
-    /// Override the upstream URL for the edge module registry. Set to a
-    /// mirror or local file://... URL for air-gapped deployments. Empty
-    /// string or --no-edge-registry disables the endpoint entirely.
+    /// Override the built-in edge module registry with a remote mirror URL.
+    /// The default is compiled into the binary and makes no network request.
+    /// An empty string or --no-edge-registry disables the endpoint entirely.
     #[arg(
         long,
         value_name = "URL",
         env = "RUVIEW_EDGE_REGISTRY_URL",
-        default_value = "https://storage.googleapis.com/cognitum-apps/app-registry.json"
+        default_value = "builtin://wifi-densepose/open-edge-registry.json"
     )]
     edge_registry_url: String,
 
@@ -5070,7 +5070,7 @@ struct EdgeRegistryParams {
     refresh: Option<String>,
 }
 
-/// GET /api/v1/edge/registry — surfaces the canonical Cognitum cog catalog.
+/// GET /api/v1/edge/registry — surfaces the open edge module catalog.
 ///
 /// See ADR-102 (`docs/adr/ADR-102-edge-module-registry.md`) for the design
 /// + trust model + security review.
@@ -5081,7 +5081,7 @@ async fn edge_registry_endpoint(
     Query(params): Query<EdgeRegistryParams>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, Json<serde_json::Value>)> {
     let Some(reg) = reg else {
-        // --no-edge-registry, or upstream URL empty.
+        // --no-edge-registry, or configured source empty.
         return Err((
             StatusCode::NOT_FOUND,
             Json(serde_json::json!({
@@ -7426,17 +7426,17 @@ async fn main() {
         runtime_config.dedup_factor
     );
 
-    // ADR-102: optional Edge Module Registry. None when --no-edge-registry
-    // is set (or when the URL is empty); otherwise we construct one with
-    // the configured TTL. The fetch happens lazily on first request.
+    // Optional Edge Module Registry. None when --no-edge-registry is set (or
+    // when the source is empty). The default source is a compiled-in asset;
+    // an operator-provided URL retains lazy remote fetch + TTL caching.
     let edge_registry: Option<
         std::sync::Arc<wifi_densepose_sensing_server::edge_registry::EdgeRegistry>,
     > = if args.no_edge_registry || args.edge_registry_url.is_empty() {
-        info!("Edge module registry: DISABLED (--no-edge-registry or empty URL)");
+        info!("Edge module registry: DISABLED (--no-edge-registry or empty source)");
         None
     } else {
         info!(
-            "Edge module registry: enabled — upstream={} ttl={}s",
+            "Edge module registry: enabled — source={} ttl={}s",
             args.edge_registry_url, args.edge_registry_ttl_secs
         );
         Some(std::sync::Arc::new(
@@ -7741,10 +7741,9 @@ async fn main() {
         // Vital sign endpoints
         .route("/api/v1/vital-signs", get(vital_signs_endpoint))
         .route("/api/v1/edge-vitals", get(edge_vitals_endpoint))
-        // ADR-102: Edge Module Registry — surfaces the canonical Cognitum cog
-        // catalog (`https://storage.googleapis.com/cognitum-apps/app-registry.json`)
-        // with in-process TTL cache + stale-on-error fallback. Disabled when
-        // --no-edge-registry is set (returns 404).
+        // Edge Module Registry — serves the built-in open catalog by default.
+        // Operator-configured mirrors use TTL caching + stale-on-error fallback;
+        // --no-edge-registry disables the endpoint (returns 404).
         .route("/api/v1/edge/registry", get(edge_registry_endpoint))
         .route("/api/v1/wasm-events", get(wasm_events_endpoint))
         // RVF model container info
@@ -7842,7 +7841,7 @@ async fn main() {
         .expect("Failed to bind HTTP port");
     info!("HTTP server listening on {http_addr}");
     info!(
-        "Open http://localhost:{}/ui/index.html in your browser",
+        "Open http://localhost:{}/ui/index.html in your browser (Observatory: /ui/observatory.html)",
         args.http_port
     );
 

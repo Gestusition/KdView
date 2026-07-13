@@ -1,7 +1,7 @@
 //! Validate the BFLD entry exists in the workspace-root CHANGELOG.md.
 //! `cog-ha-matter`, `wifi-densepose-sensing-server`, and the pip wheel
 //! ship under their own release cadence; the workspace CHANGELOG is the
-//! one canonical record an operator scans when upgrading a Cognitum Seed.
+//! one canonical record an operator scans when upgrading a local gateway.
 
 #![cfg(feature = "std")]
 

@@ -1,7 +1,7 @@
 {
-  "name": "@ruvnet/homecore-frontend",
+  "name": "@gestusition/kdview-homecore-frontend",
   "version": "0.1.0-alpha.0",
-  "description": "HOMECORE web UI — Lit + TypeScript + Vite, cognitum-v0 design system",
+  "description": "KdView HOMECORE web UI — Lit + TypeScript + Vite, local-first design system",
   "type": "module",
   "scripts": {
     "dev": "vite",

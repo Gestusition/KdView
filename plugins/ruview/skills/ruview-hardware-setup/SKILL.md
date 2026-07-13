@@ -1,7 +1,6 @@
 ---
 name: ruview-hardware-setup
-description: ESP32-S3 / ESP32-C6 firmware build, flash, WiFi provisioning, and serial monitoring for RuView CSI sensing nodes. Use when setting up physical hardware, reflashing a node, or debugging a device that isn't streaming CSI.
-allowed-tools: Bash Read Write Edit Glob Grep
+description: Build, flash, provision, and monitor ESP32-S3 and ESP32-C6 firmware for KdView's RuView CSI sensing nodes. Use when setting up hardware, reflashing a node, or debugging CSI streaming.
 ---
 
 # RuView Hardware Setup
@@ -79,7 +78,7 @@ python firmware/esp32-csi-node/provision.py --port COM8 \
 python firmware/esp32-csi-node/provision.py --port COM8 --channel 6 --filter-mac AA:BB:CC:DD:EE:FF
 ```
 
-`--help` lists the full flag set (TDM mesh slotting, edge tier, detection thresholds, vitals window, hop channels, Cognitum Seed, swarm intervals) — see the `ruview-configure` skill for the table. **Gotcha (issue #391):** flashing replaces the *entire* `csi_cfg` NVS namespace — any key not on the CLI is erased; pass the full set you want. On Windows, `provision.py --help` needs `PYTHONUTF8=1` to print (non-ASCII in the help text).
+`--help` lists the full flag set (TDM mesh slotting, edge tier, detection thresholds, vitals window, hop channels, optional gateway compatibility flags, swarm intervals) — see the `ruview-configure` skill for the table. **Gotcha (issue #391):** flashing replaces the *entire* `csi_cfg` NVS namespace — any key not on the CLI is erased; pass the full set you want. On Windows, `provision.py --help` needs `PYTHONUTF8=1` to print (non-ASCII in the help text).
 
 ## 4. Confirm CSI stream
 

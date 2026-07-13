@@ -6,7 +6,7 @@ blueprint:
     restores the original setpoint after a debounce window. Sourced from
     ADR-122 §2.6.
   domain: automation
-  source_url: https://github.com/ruvnet/RuView/blob/main/v2/crates/cog-ha-matter/blueprints/bfld/motion-hvac.yaml
+  source_url: https://github.com/Gestusition/KdView/blob/main/v2/crates/cog-ha-matter/blueprints/bfld/motion-hvac.yaml
   input:
     bfld_motion:
       name: BFLD Motion sensor

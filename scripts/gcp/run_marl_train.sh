@@ -34,6 +34,7 @@ DRONES="${3:-4}"
 PROFILE="${4:-sar}"
 
 GCP_USER="${GCP_USER:-$(gcloud config get-value account 2>/dev/null | cut -d@ -f1)}"
+GCP_PROJECT="${GCP_PROJECT:-$(gcloud config get-value project 2>/dev/null || true)}"
 REMOTE="${GCP_USER}@${INSTANCE_IP}"
 LOCAL_V2_DIR="$(cd "$(dirname "$0")/../.." && pwd)/v2"
 OUTPUT_DIR="./out/gcp-checkpoints/marl"
@@ -56,7 +57,7 @@ log "Checking SSH connectivity to $REMOTE ..."
 if ! ssh $SSH_OPTS "$REMOTE" "echo ok" &>/dev/null; then
   echo "ERROR: Cannot SSH to $REMOTE" >&2
   echo "       Ensure the instance is running and your SSH key is authorized." >&2
-  echo "       Try: gcloud compute ssh <INSTANCE_NAME> --project=cognitum-20260110" >&2
+  echo "       Try: gcloud compute ssh <INSTANCE_NAME> --project=${GCP_PROJECT:-<configured-project>}" >&2
   exit 1
 fi
 log "SSH connection OK"

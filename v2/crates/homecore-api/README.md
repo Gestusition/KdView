@@ -5,7 +5,7 @@ Home Assistant-compatible REST + WebSocket API for HOMECORE state and events.
 [![Crates.io](https://img.shields.io/crates/v/homecore-api.svg)](https://crates.io/crates/homecore-api)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![MSRV: 1.89+](https://img.shields.io/badge/MSRV-1.89%2B-purple.svg)
-[![Tests](https://img.shields.io/badge/tests-18%20passing-brightgreen.svg)](https://github.com/ruvnet/RuView)
+[![Tests](https://img.shields.io/badge/tests-18%20passing-brightgreen.svg)](https://github.com/Gestusition/KdView)
 [![ADR-130](https://img.shields.io/badge/ADR-130-orange.svg)](../../docs/adr/ADR-130-homecore-api-rest-websocket.md)
 
 Wire-compatible Axum REST + WebSocket server that mirrors Home Assistant's `/api/` routes. Ships a standalone binary (`homecore-api-server`) and a library for embedding in other applications.

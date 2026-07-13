@@ -5,7 +5,7 @@ Migration tooling for importing Home Assistant configuration, entities, and secr
 [![Crates.io](https://img.shields.io/crates/v/homecore-migrate.svg)](https://crates.io/crates/homecore-migrate)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![MSRV: 1.89+](https://img.shields.io/badge/MSRV-1.89%2B-purple.svg)
-[![Tests](https://img.shields.io/badge/tests-19%20passing-brightgreen.svg)](https://github.com/ruvnet/RuView)
+[![Tests](https://img.shields.io/badge/tests-19%20passing-brightgreen.svg)](https://github.com/Gestusition/KdView)
 [![ADR-165](https://img.shields.io/badge/ADR-165-orange.svg)](../../docs/adr/ADR-165-homecore-migrate-from-home-assistant.md)
 
 Parse and inspect Home Assistant's `.storage/` directory, entity registry, device registry, secrets, and automations. Convert existing HA configurations for import into HOMECORE (full conversion in P2).

@@ -1,6 +1,6 @@
 /**
  * `<hc-app-shell>` — top-level layout: sticky header + horizontal sidenav + content slot.
- * Page shell mirrors cognitum-v0's appbar + wrap layout (ADR-131 §3).
+ * Page shell implements the local HOMECORE appbar + wrap layout (ADR-131 §3).
  */
 
 import { LitElement, html, css } from 'lit';

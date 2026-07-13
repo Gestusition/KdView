@@ -6,7 +6,7 @@ blueprint:
     doesn't blast full lights. Restores when sleeping flips off.
     Part of the ADR-115 §3.12 starter blueprint set.
   domain: automation
-  source_url: https://github.com/ruvnet/RuView/blob/main/examples/ha-blueprints/02-dim-hallway-when-sleeping.yaml
+  source_url: https://github.com/Gestusition/KdView/blob/main/examples/ha-blueprints/02-dim-hallway-when-sleeping.yaml
   input:
     sleeping_entity:
       name: Someone sleeping binary_sensor

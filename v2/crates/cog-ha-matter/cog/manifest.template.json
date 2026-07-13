@@ -1,7 +1,7 @@
 {
   "id": "ha-matter",
   "version": "{{VERSION}}",
-  "binary_url": "https://storage.googleapis.com/cognitum-apps/cogs/{{ARCH}}/cog-ha-matter-{{ARCH}}",
+  "binary_url": "https://github.com/Gestusition/KdView/releases/download/cog-ha-matter-v{{VERSION}}/cog-ha-matter-{{ARCH}}",
   "binary_bytes": 0,
   "binary_sha256": "",
   "binary_signature": "",

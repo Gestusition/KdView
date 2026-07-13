@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * @ruvnet/rvagent — RuView MCP Server
+ * KdView SENSE-BRIDGE MCP Server
  *
  * Exposes RuView's WiFi-DensePose sensing capabilities as Model Context Protocol
  * (MCP) tools that Claude Code, Cursor, Codex, and other MCP-compatible agents
@@ -24,7 +24,7 @@
  * advertised is what is enforced.
  *
  * To register with Claude Code:
- *   claude mcp add ruview -- npx -y @ruvnet/rvagent
+ *   claude mcp add ruview -- node tools/ruview-mcp/dist/index.js
  *
  * See ADR-104 for the original design rationale and ADR-264 for the npm
  * deep-review this layout implements.
@@ -126,9 +126,9 @@ export const TOOLS: ToolDef[] = [
   {
     name: "ruview_registry_list",
     description:
-      "List cogs from the Cognitum edge module registry (ADR-102). " +
-      "Fetches /api/v1/edge/registry from the sensing-server, which proxies the " +
-      "canonical GCS catalog (105 cogs, 11 categories). Supports category filter and search.",
+      "List modules from KdView's bundled edge-module registry (ADR-102). " +
+      "Fetches /api/v1/edge/registry from the sensing-server, which serves the " +
+      "checked-in offline catalog. Supports category filtering and search.",
     schema: registryListSchema,
     handler: (args, config) =>
       registryList(args as Parameters<typeof registryList>[0], config),
@@ -353,14 +353,14 @@ async function main(): Promise<void> {
 
   // Log to stderr so it doesn't interfere with the MCP stdio protocol.
   process.stderr.write(
-    `[@ruvnet/rvagent] Server v${PACKAGE_VERSION} started. ` +
+    `[kdview/rvagent-local] Server v${PACKAGE_VERSION} started. ` +
       `Sensing server: ${config.sensingServerUrl}.${httpNote}\n`
   );
 }
 
 // CLI guard: boot the server only when this module is the entrypoint — invoked
 // as the `rvagent` / `ruview-mcp` bin or `node dist/index.js`. Importing it as a
-// library (`import { buildServer } from "@ruvnet/rvagent"`) must NOT side-effect
+// library (including via the retained compatibility package ID) must NOT side-effect
 // connect a StdioServerTransport to the consumer's stdin/stdout. Realpath both
 // sides because npm's bin shim is a symlink and passes a non-normalized,
 // possibly case-skewed argv[1] on Windows (mirrors harness/ruview/bin/cli.js).

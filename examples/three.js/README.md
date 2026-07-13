@@ -71,7 +71,7 @@ plus a synthetic CSI driver.
 
 ## Open issues
 
-- [#583](https://github.com/ruvnet/RuView/issues/583) — head/face tracking
+- [Historical upstream #583](https://github.com/ruvnet/RuView/issues/583) — head/face tracking
   fidelity in `05-skinned-realtime.html`. Recommended fix: swap MediaPipe
   Pose Heavy for MediaPipe Holistic (same API, adds 468-point face mesh +
   hand landmarks for proper PnP head pose and finger curl tracking).

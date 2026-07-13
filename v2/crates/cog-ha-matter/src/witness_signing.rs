@@ -1,7 +1,7 @@
 //! `witness_signing` — Ed25519 signature layer over the witness chain.
 //!
 //! ADR-116 §2.2: every state transition must be signed by the
-//! Seed so a downstream auditor can prove the chain wasn't
+//! node so a downstream auditor can prove the chain wasn't
 //! retroactively assembled. The chain primitive
 //! (`witness::WitnessChain`) handles hash linkage; this module
 //! adds the cryptographic attestation.
@@ -31,16 +31,15 @@
 //!
 //! ## Key management
 //!
-//! Out of scope for this module. The cog runtime reads the Seed's
-//! Ed25519 signing key from the Cognitum control plane's secure
-//! key store (separate concern). Tests use a fixed-bytes seed for
-//! determinism — never check in real Seed keys here.
+//! Out of scope for this module. The runtime reads the node's Ed25519
+//! signing key from a local secure key store (separate concern). Tests use
+//! a fixed-byte seed for determinism — never check in real signing keys here.
 
 use ed25519_dalek::{Signature, Signer, SigningKey, VerifyingKey};
 
 use crate::witness::{canonical_bytes, WitnessEvent};
 
-/// Sign a witness event with the Seed's Ed25519 key. Returns the
+/// Sign a witness event with the node's Ed25519 key. Returns the
 /// 64-byte Ed25519 signature over the event's canonical bytes —
 /// the same bytes `witness::hash_event` hashes, so a verifier that
 /// already trusts the hash chain only needs one extra check.
@@ -56,7 +55,7 @@ pub fn sign_event(event: &WitnessEvent, key: &SigningKey) -> Signature {
 }
 
 /// Verify an Ed25519 signature against a witness event using the
-/// Seed's public key. `Ok(())` iff the signature is valid for the
+/// node's public key. `Ok(())` iff the signature is valid for the
 /// event's canonical bytes under this key.
 ///
 /// Uses `verify_strict` (not the permissive `Verifier::verify`) on

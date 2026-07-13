@@ -18,7 +18,7 @@ import { api, entityProvenance } from '../api.js';
 export default {
   meta: { title: 'Entities' },
   async render(root, ctx) {
-    root.appendChild(sectionHeader('Entity & State Browser', 'Live /api/states — every entity, grouped by domain, with SEED provenance'));
+    root.appendChild(sectionHeader('Entity & State Browser', 'Live /api/states — every entity, grouped by domain, with gateway provenance'));
 
     // ── lag indicator (broadcast channel vs 4,096 capacity) ─────────
     const lagHost = h('.flex.spread.mb');

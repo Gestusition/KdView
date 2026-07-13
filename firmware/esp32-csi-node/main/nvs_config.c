@@ -302,14 +302,22 @@ void nvs_config_load(nvs_config_t *cfg)
                  cfg->filter_mac[3], cfg->filter_mac[4], cfg->filter_mac[5]);
     }
 
-    /* ADR-066: Swarm bridge */
-    len = sizeof(cfg->seed_url);
-    if (nvs_get_str(handle, "seed_url", cfg->seed_url, &len) != ESP_OK) {
-        cfg->seed_url[0] = '\0';  /* Disabled by default */
+    /* ADR-066: Swarm bridge. Prefer neutral keys written by current tooling,
+     * then fall back to legacy Seed keys so already-provisioned boards retain
+     * their complete gateway capability after a firmware update. */
+    len = sizeof(cfg->gateway_url);
+    if (nvs_get_str(handle, "gateway_url", cfg->gateway_url, &len) != ESP_OK) {
+        len = sizeof(cfg->gateway_url);
+        if (nvs_get_str(handle, "seed_url", cfg->gateway_url, &len) != ESP_OK) {
+            cfg->gateway_url[0] = '\0';  /* Disabled by default */
+        }
     }
-    len = sizeof(cfg->seed_token);
-    if (nvs_get_str(handle, "seed_token", cfg->seed_token, &len) != ESP_OK) {
-        cfg->seed_token[0] = '\0';
+    len = sizeof(cfg->gateway_token);
+    if (nvs_get_str(handle, "gateway_token", cfg->gateway_token, &len) != ESP_OK) {
+        len = sizeof(cfg->gateway_token);
+        if (nvs_get_str(handle, "seed_token", cfg->gateway_token, &len) != ESP_OK) {
+            cfg->gateway_token[0] = '\0';
+        }
     }
     len = sizeof(cfg->zone_name);
     if (nvs_get_str(handle, "zone_name", cfg->zone_name, &len) != ESP_OK) {

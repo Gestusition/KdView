@@ -20,12 +20,14 @@ sources:
   - https://community.st.com/t5/stm32-summit-q-a/what-is-the-usual-cost-for-a-matter-certification/td-p/652346
   - https://github.com/p01di/esp32c6-thread-border-router
   - https://libraries.io/npm/ruvllm-esp32
-  - https://github.com/ruvnet/RuView/blob/main/docs/adr/ADR-069-cognitum-seed-csi-pipeline.md
+  - https://github.com/Gestusition/KdView/blob/main/docs/adr/ADR-069-cognitum-seed-csi-pipeline.md
   - https://www.matteralpha.com/news/home-assistant-2025-12-adds-enhancements-to-matter-sensor-doorlock-and-covering
   - https://docs.nordicsemi.com/bundle/ncs-3.1.0/page/nrf/protocols/matter/getting_started/testing/thread_one_otbr.html
 ---
 
 # ADR-116 Research Dossier: Home Assistant + Matter Integration as a Cognitum Seed Cog
+
+> **Historical upstream research:** The Cognitum Seed assumptions in this dossier describe the environment evaluated when the research was written. They are not a current KdView product dependency. KdView retains the protocol, Matter, MQTT, and Home Assistant findings for implementation reference and targets operator-managed local gateways for new deployments.
 
 **Research question**: How far can we take HA + Matter integration for WiFi-DensePose / RuView, specifically packaged as a Cognitum Seed cog running on the ESP32-S3 Seed appliance?
 
@@ -128,7 +130,7 @@ The cog runs as a long-lived process on the Seed (aarch64 binary, supervised by 
 
 **MQTT to local HA is the lower-risk, faster path**: it requires no Matter SDK linkage, no CSA certification, and reuses the existing HA-DISCO logic. Matter direct publishing requires the Seed to hold a valid Fabric certificate (obtained through the commissioning flow with the user's HA or Apple Home controller), manage operational credentials, and handle rekey events. The overhead is manageable on the Seed (S3 processor + Pi aarch64 appliance stack), but the development and QA cost is 3-4x higher. The recommended architecture is: **MQTT as primary, Matter as secondary** — matching ADR-115's dual-protocol decision but now native to the cog.
 
-**Key sources**: [ADR-069 CSI pipeline](https://github.com/ruvnet/RuView/blob/main/docs/adr/ADR-069-cognitum-seed-csi-pipeline.md), [ESP32 Matter Bridge example](https://project-chip.github.io/connectedhomeip-doc/examples/bridge-app/esp32/README.html), [Tasmota Matter internals](https://tasmota.github.io/docs/Matter-Internals/), [cognitum-v0 fleet stack].
+**Key sources**: [ADR-069 CSI pipeline](https://github.com/Gestusition/KdView/blob/main/docs/adr/ADR-069-cognitum-seed-csi-pipeline.md), [ESP32 Matter Bridge example](https://project-chip.github.io/connectedhomeip-doc/examples/bridge-app/esp32/README.html), [Tasmota Matter internals](https://tasmota.github.io/docs/Matter-Internals/), [cognitum-v0 fleet stack].
 
 ---
 

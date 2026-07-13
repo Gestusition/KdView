@@ -2,16 +2,16 @@
 """
 Publish WiFi-DensePose pre-trained models to HuggingFace Hub.
 
-Retrieves the HuggingFace API token from Google Cloud Secrets,
-then uploads model files from dist/models/ to a HuggingFace repo.
+Uses HF_TOKEN when available, or retrieves it from a configured Google Cloud
+Secret Manager project, then uploads model files to an explicitly selected
+HuggingFace repository.
 
 Prerequisites:
-    - gcloud CLI authenticated with access to cognitum-20260110
     - pip install huggingface_hub google-cloud-secret-manager
 
 Usage:
-    python scripts/publish-huggingface.py
-    python scripts/publish-huggingface.py --repo ruvnet/wifi-densepose-pretrained --version v0.5.4
+    HF_REPO=owner/model HF_TOKEN=hf_xxxxx python scripts/publish-huggingface.py
+    python scripts/publish-huggingface.py --repo owner/model --version v0.5.4
     python scripts/publish-huggingface.py --dry-run
     python scripts/publish-huggingface.py --token hf_xxxxx  # skip GCloud lookup
 """
@@ -36,7 +36,7 @@ EXPECTED_FILES = [
 
 
 def get_token_from_gcloud(
-    project: str = "cognitum-20260110",
+    project: str,
     secret: str = "HUGGINGFACE_API_KEY",
 ) -> str:
     """Retrieve HuggingFace token from Google Cloud Secret Manager."""
@@ -205,8 +205,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--repo",
-        default="ruvnet/wifi-densepose-pretrained",
-        help="HuggingFace repo ID (default: ruvnet/wifi-densepose-pretrained)",
+        default=os.environ.get("HF_REPO", ""),
+        help="HuggingFace repo ID (or set HF_REPO)",
     )
     parser.add_argument(
         "--version",
@@ -220,8 +220,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--project",
-        default="cognitum-20260110",
-        help="GCloud project ID (default: cognitum-20260110)",
+        default=os.environ.get("GCP_PROJECT", ""),
+        help="GCloud project ID used only when HF_TOKEN is unset",
     )
     parser.add_argument(
         "--secret",
@@ -230,8 +230,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--token",
-        default="",
-        help="HuggingFace token (skip GCloud lookup if provided)",
+        default=os.environ.get("HF_TOKEN", ""),
+        help="HuggingFace token (or set HF_TOKEN; skips GCloud lookup)",
     )
     parser.add_argument(
         "--dry-run",
@@ -240,6 +240,8 @@ def main() -> None:
     )
 
     args = parser.parse_args()
+    if not args.repo:
+        parser.error("--repo or HF_REPO is required")
     model_dir = Path(args.model_dir)
     version = args.version or auto_version()
 
@@ -254,6 +256,8 @@ def main() -> None:
     elif args.token:
         token = args.token
     else:
+        if not args.project:
+            parser.error("set HF_TOKEN, or provide --project/GCP_PROJECT for secret lookup")
         print(f"Retrieving HuggingFace token from GCloud ({args.project})...")
         token = get_token_from_gcloud(project=args.project, secret=args.secret)
         print("Token retrieved.")

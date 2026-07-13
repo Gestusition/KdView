@@ -5,7 +5,7 @@ blueprint:
     after a configurable hold period of continuous non-presence. Sourced
     from ADR-122 §2.6 of the wifi-densepose / RuView repository.
   domain: automation
-  source_url: https://github.com/ruvnet/RuView/blob/main/v2/crates/cog-ha-matter/blueprints/bfld/presence-lighting.yaml
+  source_url: https://github.com/Gestusition/KdView/blob/main/v2/crates/cog-ha-matter/blueprints/bfld/presence-lighting.yaml
   input:
     bfld_presence:
       name: BFLD Presence sensor

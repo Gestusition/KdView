@@ -1,6 +1,6 @@
 # AGENTS.md — RuView (WiFi-DensePose)
 
-Project rules for Codex (and any agent) working in the `ruvnet/RuView` / `wifi-densepose` repo. Mirrors the Claude Code `ruview` plugin.
+Project rules for Codex (and any agent) working in the `Gestusition/KdView` / `wifi-densepose` repo. Mirrors the Claude Code `ruview` plugin.
 
 ## What this repo is
 

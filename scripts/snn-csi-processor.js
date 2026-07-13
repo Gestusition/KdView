@@ -16,9 +16,9 @@
  *   --learning-rate <n>  STDP a_plus/a_minus (default: 0.005)
  *   --hidden <n>         Hidden layer neurons (default: 64)
  *   --no-learn           Disable STDP (freeze weights)
- *   --send-vectors       Forward spike vectors to Cognitum Seed
- *   --seed-host <host>   Cognitum Seed host (default: localhost)
- *   --seed-port <n>      Cognitum Seed port (default: 5007)
+ *   --send-vectors       Forward spike vectors to an operator-managed gateway
+ *   --gateway-host <host>  Gateway host (default: localhost)
+ *   --gateway-port <n>     Gateway port (default: 5007)
  *   --quiet              Suppress visualization, print only JSON
  *
  * Requires: @ruvector/spiking-neural (vendored or npm)
@@ -64,8 +64,8 @@ function parseArgs() {
     hidden: 64,
     learn: true,
     sendVectors: false,
-    seedHost: 'localhost',
-    seedPort: 5007,
+    gatewayHost: 'localhost',
+    gatewayPort: 5007,
     quiet: false,
   };
   for (let i = 0; i < args.length; i++) {
@@ -76,8 +76,10 @@ function parseArgs() {
       case '--hidden':      opts.hidden = parseInt(args[++i], 10); break;
       case '--no-learn':    opts.learn = false; break;
       case '--send-vectors': opts.sendVectors = true; break;
-      case '--seed-host':   opts.seedHost = args[++i]; break;
-      case '--seed-port':   opts.seedPort = parseInt(args[++i], 10); break;
+      case '--gateway-host':
+      case '--seed-host':   opts.gatewayHost = args[++i]; break;
+      case '--gateway-port':
+      case '--seed-port':   opts.gatewayPort = parseInt(args[++i], 10); break;
       case '--quiet':       opts.quiet = true; break;
       case '--help': case '-h':
         console.log(`SNN-CSI Processor (spiking-neural v${snnVersion || '?'})`);
@@ -87,9 +89,9 @@ function parseArgs() {
         console.log('  --learning-rate <n>  STDP rate (default: 0.005)');
         console.log('  --hidden <n>         Hidden neurons (default: 64)');
         console.log('  --no-learn           Freeze STDP weights');
-        console.log('  --send-vectors       Forward to Cognitum Seed');
-        console.log('  --seed-host <host>   Seed host (default: localhost)');
-        console.log('  --seed-port <n>      Seed port (default: 5007)');
+        console.log('  --send-vectors          Forward to a vector gateway');
+        console.log('  --gateway-host <host>   Gateway host (default: localhost)');
+        console.log('  --gateway-port <n>      Gateway port (default: 5007)');
         console.log('  --quiet              JSON-only output');
         process.exit(0);
     }
@@ -319,11 +321,11 @@ function main() {
   let totalSpikes = 0;
   const SIM_STEPS_PER_FRAME = 5; // Run 5ms of SNN simulation per CSI frame
 
-  // Optional: Cognitum Seed forwarding socket
-  let seedSocket = null;
+  // Optional operator-managed gateway forwarding socket.
+  let gatewaySocket = null;
   if (opts.sendVectors) {
-    seedSocket = dgram.createSocket('udp4');
-    console.log(`  Forwarding spike vectors to ${opts.seedHost}:${opts.seedPort}`);
+    gatewaySocket = dgram.createSocket('udp4');
+    console.log(`  Forwarding spike vectors to ${opts.gatewayHost}:${opts.gatewayPort}`);
   }
 
   // UDP listener
@@ -412,8 +414,8 @@ function main() {
       renderVisualization(smoothed, stats, frameCount, opts);
     }
 
-    // Forward spike vector to Cognitum Seed
-    if (seedSocket) {
+    // Forward spike vector to the configured gateway.
+    if (gatewaySocket) {
       const vectorBuf = Buffer.alloc(4 + OUTPUT_NEURONS * 4); // 4-byte header + float32 array
       vectorBuf.writeUInt16LE(0x534E, 0); // 'SN' magic
       vectorBuf.writeUInt8(OUTPUT_NEURONS, 2);
@@ -421,7 +423,7 @@ function main() {
       for (let i = 0; i < OUTPUT_NEURONS; i++) {
         vectorBuf.writeFloatLE(smoothed[i], 4 + i * 4);
       }
-      seedSocket.send(vectorBuf, opts.seedPort, opts.seedHost);
+      gatewaySocket.send(vectorBuf, opts.gatewayPort, opts.gatewayHost);
     }
   });
 
@@ -467,7 +469,7 @@ function main() {
       console.log(`  Final weights: mean=${w.mean.toFixed(3)} min=${w.min.toFixed(3)} max=${w.max.toFixed(3)}`);
     }
     server.close();
-    if (seedSocket) seedSocket.close();
+    if (gatewaySocket) gatewaySocket.close();
     process.exit(0);
   });
 }

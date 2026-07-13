@@ -11,7 +11,7 @@ edition = "2021"
 license = "MIT"
 authors = ["rUv <ruv@ruv.net>", "HOMECORE Contributors"]
 description = "Apple Home HomeKit Accessory Protocol bridge — ADR-125 P1 scaffold"
-repository = "https://github.com/ruvnet/wifi-densepose"
+repository = "https://github.com/Gestusition/KdView"
 
 [lib]
 name = "homecore_hap"

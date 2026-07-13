@@ -16,7 +16,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [
-    { name = "rUv", email = "ruv@ruv.net" },
+    { name = "KdView Contributors" },
 ]
 keywords = [
     "wifi", "csi", "pose-estimation", "vital-signs",
@@ -57,12 +57,12 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/ruvnet/RuView"
-Repository = "https://github.com/ruvnet/RuView"
-Issues = "https://github.com/ruvnet/RuView/issues"
-Documentation = "https://github.com/ruvnet/RuView/tree/main/docs"
-"ADR-117 (modernization plan)" = "https://github.com/ruvnet/RuView/blob/main/docs/adr/ADR-117-pip-wifi-densepose-modernization.md"
-"Release notes (v0.7.0)" = "https://github.com/ruvnet/RuView/blob/main/docs/releases/v0.7.0-mqtt-matter.md"
+Homepage = "https://github.com/Gestusition/KdView"
+Repository = "https://github.com/Gestusition/KdView"
+Issues = "https://github.com/Gestusition/KdView/issues"
+Documentation = "https://github.com/Gestusition/KdView/tree/main/docs"
+"ADR-117 (modernization plan)" = "https://github.com/Gestusition/KdView/blob/main/docs/adr/ADR-117-pip-wifi-densepose-modernization.md"
+"Release notes (v0.7.0)" = "https://github.com/Gestusition/KdView/blob/main/docs/releases/v0.7.0-mqtt-matter.md"
 
 # Console-script entry points wired up in P5 once the CLI shim exists.
 # [project.scripts]

@@ -7,7 +7,7 @@ blueprint:
     sniffer in range, unusual propagation). Sourced from ADR-122 §2.6 and
     ADR-121 §2.4.
   domain: automation
-  source_url: https://github.com/ruvnet/RuView/blob/main/v2/crates/cog-ha-matter/blueprints/bfld/identity-risk-anomaly.yaml
+  source_url: https://github.com/Gestusition/KdView/blob/main/v2/crates/cog-ha-matter/blueprints/bfld/identity-risk-anomaly.yaml
   input:
     bfld_identity_risk:
       name: BFLD Identity Risk sensor

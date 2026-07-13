@@ -5,26 +5,20 @@ Operations doc for the `.github/workflows/pip-release.yml` CI workflow.
 ## Auth
 
 The workflow uses one GitHub Actions secret named `PYPI_API_TOKEN`.
-It's a project-token issued by the rUv PyPI account with upload
-scope for both `wifi-densepose` and `ruview`.
+The published `wifi-densepose` and `ruview` names are stable compatibility
+identifiers. A maintainer must use a PyPI project token authorized for both.
 
 ## Refreshing the token
 
-The canonical copy of the token lives in GCP Secret Manager,
-project `cognitum-20260110`, entry name `PYPI_TOKEN`. To push a
-fresh copy into GitHub Actions:
+Store the token in a maintainer-controlled secret manager. Set or rotate the
+GitHub Actions secret only in the canonical fork:
 
 ```bash
-gcloud secrets versions access latest \
-    --secret=PYPI_TOKEN \
-    --project=cognitum-20260110 \
-  | tr -d '\r\n\xef\xbb\xbf' \
-  | gh secret set PYPI_API_TOKEN --repo ruvnet/RuView
+gh secret set PYPI_API_TOKEN --repo Gestusition/KdView
 ```
 
-The `tr` step strips any BOM / CRLF that PowerShell pipes or
-Windows editors may have introduced — without it, twine fails with
-`UnicodeEncodeError: 'latin-1' codec can't encode character '﻿'`.
+Paste the token through the interactive prompt. Do not pipe it through logs,
+shell history, repository files, or CI output.
 
 ## Triggering a release
 
@@ -57,8 +51,7 @@ Per ADR-117 §7.3, the tombstone publishes first so it claims the
 
 - **Q3** (ADR-117 §11.3) — generate `expected_features_v2.sha256`
   from the v2 Rust pipeline before any v2 publish.
-- **OIDC Trusted Publisher** — not used. The workflow is token-based;
-  this is a deliberate choice to keep the secret refresh entirely in
-  GCP. If the project migrates to OIDC later, remove `password:`
+- **OIDC Trusted Publisher** — not used. The workflow is token-based.
+  If the project migrates to OIDC later, remove `password:`
   from `pypa/gh-action-pypi-publish` calls and add the publisher
   registration on pypi.org.

@@ -58,12 +58,11 @@ pub const ORIGIN_NAME: &str = "wifi-densepose-sensing-server";
 
 /// Stable manufacturer string written into every HA discovery payload's
 /// `device` block.
-pub const MANUFACTURER: &str = "ruvnet";
+pub const MANUFACTURER: &str = "KdView";
 
 /// Stable `support_url` written into every HA discovery payload's `origin`
-/// block. Resolves to the HACS Python integration's follow-on repository
-/// per ADR-115 §9.3.
-pub const SUPPORT_URL: &str = "https://github.com/ruvnet/hass-wifi-densepose";
+/// block. Points operators at the canonical fork's issue tracker.
+pub const SUPPORT_URL: &str = "https://github.com/Gestusition/KdView/issues";
 
 /// Stable HA discovery topic prefix default. Maintainer-accepted in
 /// ADR-115 §9.2 — ship Home Assistant's own default rather than a

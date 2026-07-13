@@ -1,11 +1,10 @@
-//! Edge Module Registry — surfaces the canonical Cognitum cog catalog at
-//! `https://storage.googleapis.com/cognitum-apps/app-registry.json` through
-//! the sensing-server's HTTP surface. See ADR-102 for the design and trust
-//! model; see ADR-100 for the underlying cog binary trust model.
+//! Edge Module Registry — surfaces an open, compiled-in module catalog through
+//! the sensing-server's HTTP API. The default path is fully offline; operators
+//! may opt into a remote mirror with `--edge-registry-url`.
 //!
-//! On-demand fetch + in-process TTL cache. Stale-while-error semantics: if
-//! the upstream is unreachable but we have a cached copy, return the cached
-//! copy with `stale: true` rather than 503.
+//! Both built-in and remote sources use the same in-process TTL cache. Remote
+//! mirrors retain stale-while-error semantics: if the mirror is unreachable
+//! but a cached copy exists, return it with `stale: true` rather than 503.
 
 use std::io::Read;
 use std::sync::RwLock;
@@ -15,17 +14,19 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 
-/// Canonical upstream registry URL. Overridable via CLI for air-gapped or
-/// mirror deployments.
-pub const DEFAULT_UPSTREAM_URL: &str =
-    "https://storage.googleapis.com/cognitum-apps/app-registry.json";
+/// Stable source identifier for the open registry compiled into the binary.
+pub const BUILTIN_REGISTRY_URL: &str = "builtin://wifi-densepose/open-edge-registry.json";
 
-/// Default cache TTL — the registry updates on a roughly-weekly cadence;
-/// one hour of staleness is fine.
+/// Default registry source. The historical constant name is retained for API
+/// compatibility, but the value now identifies the built-in offline asset.
+pub const DEFAULT_UPSTREAM_URL: &str = BUILTIN_REGISTRY_URL;
+
+const BUILTIN_REGISTRY_BYTES: &[u8] = include_bytes!("../assets/open-edge-registry.json");
+
+/// Default cache TTL for parsed registry responses and remote mirrors.
 pub const DEFAULT_TTL_SECS: u64 = 3600;
 
-/// Wire request timeout. The registry is ~50–200 KB; on a healthy network
-/// it lands in well under a second.
+/// Wire request timeout for an explicitly configured remote mirror.
 pub const DEFAULT_FETCH_TIMEOUT_SECS: u64 = 10;
 
 /// Response shape served by `GET /api/v1/edge/registry`. Documented in
@@ -74,12 +75,20 @@ pub enum FetcherError {
     TooLarge(usize),
 }
 
-/// Cap on the response size to avoid pathological upstream responses
-/// chewing through memory. 8 MiB is generous — the v2.1.0 registry is well
-/// under 200 KB.
+/// Cap on remote response size to avoid pathological mirrors consuming
+/// unbounded memory. 8 MiB leaves ample room for the technical catalog.
 pub const MAX_PAYLOAD_BYTES: usize = 8 * 1024 * 1024;
 
-/// Live `ureq`-backed fetcher.
+/// Fetcher for the open registry included at compile time.
+struct BuiltinFetcher;
+
+impl Fetcher for BuiltinFetcher {
+    fn fetch(&self, _url: &str) -> Result<Vec<u8>, FetcherError> {
+        Ok(BUILTIN_REGISTRY_BYTES.to_vec())
+    }
+}
+
+/// Live `ureq`-backed fetcher for operator-configured mirrors.
 pub struct UreqFetcher {
     timeout: Duration,
 }
@@ -120,7 +129,13 @@ impl Fetcher for UreqFetcher {
 
 impl EdgeRegistry {
     pub fn new(upstream_url: impl Into<String>, ttl: Duration) -> Self {
-        Self::with_fetcher(upstream_url, ttl, Box::new(UreqFetcher::default()))
+        let upstream_url = upstream_url.into();
+        let fetcher: Box<dyn Fetcher> = if upstream_url == BUILTIN_REGISTRY_URL {
+            Box::new(BuiltinFetcher)
+        } else {
+            Box::new(UreqFetcher::default())
+        };
+        Self::with_fetcher(upstream_url, ttl, fetcher)
     }
 
     pub fn with_fetcher(
@@ -146,11 +161,11 @@ impl EdgeRegistry {
             }
         }
 
-        // Either no cache, expired, or forced refresh — try upstream.
+        // Either no cache, expired, or forced refresh — load the configured source.
         match self.fetch_and_cache() {
             Ok(entry) => Ok(self.response_from(&entry, false)),
             Err(e) => {
-                // Upstream failed — serve stale if available.
+                // A remote source failed — serve stale if available.
                 if let Some(entry) = self.any_cache_snapshot() {
                     Ok(self.response_from(&entry, true))
                 } else {
@@ -178,7 +193,7 @@ impl EdgeRegistry {
     fn fetch_and_cache(&self) -> Result<CachedEntry, FetcherError> {
         let bytes = self.fetcher.fetch(&self.upstream_url)?;
         let payload: Value = serde_json::from_slice(&bytes)
-            .map_err(|e| FetcherError::Network(format!("invalid upstream JSON: {e}")))?;
+            .map_err(|e| FetcherError::Network(format!("invalid registry JSON: {e}")))?;
         let mut hasher = Sha256::new();
         hasher.update(&bytes);
         let upstream_sha256 = hex_encode(&hasher.finalize());
@@ -261,7 +276,41 @@ mod tests {
     }
 
     #[test]
-    fn first_call_hits_upstream_and_caches() {
+    fn builtin_default_is_available_offline_with_open_metadata() {
+        let reg = EdgeRegistry::new(DEFAULT_UPSTREAM_URL, Duration::from_secs(3600));
+        let resp = reg.get(false).expect("built-in registry");
+
+        assert!(!resp.stale);
+        assert_eq!(resp.upstream_url, BUILTIN_REGISTRY_URL);
+        assert_eq!(resp.registry["version"], "1.0.0");
+        let cogs = resp.registry["cogs"].as_array().expect("cogs array");
+        assert_eq!(resp.registry["module_count"].as_u64(), Some(64));
+        assert_eq!(cogs.len(), 64);
+        assert_eq!(cogs[0]["id"], "gesture");
+        assert_eq!(resp.upstream_sha256.len(), 64);
+
+        let wire = serde_json::to_value(&resp).expect("wire response");
+        for field in [
+            "fetched_at",
+            "ttl_seconds",
+            "stale",
+            "upstream_url",
+            "upstream_sha256",
+            "registry",
+        ] {
+            assert!(wire.get(field).is_some(), "missing response field {field}");
+        }
+
+        for module in cogs {
+            let object = module.as_object().expect("module object");
+            for omitted in ["author", "license", "rating", "downloads"] {
+                assert!(!object.contains_key(omitted), "unexpected field {omitted}");
+            }
+        }
+    }
+
+    #[test]
+    fn remote_first_call_fetches_then_uses_fresh_cache() {
         let fetcher = MockFetcher::new(vec![Ok(sample_payload())]);
         let reg = EdgeRegistry::with_fetcher(
             "http://test.invalid/registry.json",
@@ -271,6 +320,7 @@ mod tests {
         let resp = reg.get(false).expect("get");
         assert!(!resp.stale);
         assert_eq!(resp.registry["version"], "2.1.0");
+        assert_eq!(resp.upstream_url, "http://test.invalid/registry.json");
         assert_eq!(fetcher.call_count.load(Ordering::SeqCst), 1);
         // Second call within TTL — no new fetch.
         let _ = reg.get(false).expect("get");
@@ -278,7 +328,7 @@ mod tests {
     }
 
     #[test]
-    fn ttl_expiry_triggers_refetch() {
+    fn remote_ttl_expiry_triggers_refetch() {
         let fetcher = MockFetcher::new(vec![Ok(sample_payload()), Ok(sample_payload())]);
         let reg = EdgeRegistry::with_fetcher(
             "http://test.invalid/registry.json",
@@ -292,7 +342,7 @@ mod tests {
     }
 
     #[test]
-    fn force_refresh_bypasses_fresh_cache() {
+    fn remote_force_refresh_bypasses_fresh_cache() {
         let fetcher = MockFetcher::new(vec![Ok(sample_payload()), Ok(sample_payload())]);
         let reg = EdgeRegistry::with_fetcher(
             "http://test.invalid/registry.json",
@@ -305,7 +355,7 @@ mod tests {
     }
 
     #[test]
-    fn stale_serve_on_upstream_failure_after_cached_success() {
+    fn remote_failure_serves_stale_cached_success() {
         // First call succeeds and populates the cache. Second call hits upstream
         // failure but we still have a cached copy — should serve it with stale=true.
         let fetcher = MockFetcher::new(vec![
@@ -326,7 +376,7 @@ mod tests {
     }
 
     #[test]
-    fn no_cache_no_upstream_returns_error() {
+    fn remote_failure_without_cache_returns_error() {
         let fetcher = MockFetcher::new(vec![Err(FetcherError::Network("down".into()))]);
         let reg = EdgeRegistry::with_fetcher(
             "http://test.invalid/registry.json",
@@ -341,7 +391,7 @@ mod tests {
     }
 
     #[test]
-    fn upstream_invalid_json_is_treated_as_error() {
+    fn remote_invalid_json_is_treated_as_error() {
         let fetcher = MockFetcher::new(vec![Ok(b"not json".to_vec())]);
         let reg = EdgeRegistry::with_fetcher(
             "http://test.invalid/registry.json",
@@ -350,13 +400,13 @@ mod tests {
         );
         let err = reg.get(false).expect_err("invalid json");
         match err {
-            FetcherError::Network(msg) => assert!(msg.contains("invalid upstream JSON")),
+            FetcherError::Network(msg) => assert!(msg.contains("invalid registry JSON")),
             other => panic!("unexpected error: {other:?}"),
         }
     }
 
     #[test]
-    fn upstream_sha256_is_deterministic() {
+    fn remote_sha256_is_deterministic() {
         let fetcher = MockFetcher::new(vec![Ok(sample_payload())]);
         let reg = EdgeRegistry::with_fetcher(
             "http://test.invalid/registry.json",

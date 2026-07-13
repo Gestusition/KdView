@@ -1,79 +1,54 @@
 # cog-ha-matter Release Checklist
 
-Mechanical steps to publish a new version. **Everything local-side is
-automated; the four "🔑 USER ACTION" blocks below are the only manual
-gates.** Each one is a credential-bearing step the cog/ pipeline cannot
-do on its own.
-
-## 1. Pre-release (local)
+## 1. Validate locally
 
 ```sh
-# Bump version in v2/crates/cog-ha-matter/Cargo.toml then:
-cargo test -p cog-ha-matter --no-default-features --lib   # 64+ tests must pass
-cargo check -p cog-ha-matter --no-default-features        # green
+cargo test -p cog-ha-matter --no-default-features --lib
+cargo check -p cog-ha-matter --no-default-features
 ```
 
 ## 2. Tag the release
 
 ```sh
-git tag cog-ha-matter-v$(cargo pkgid -p cog-ha-matter | sed -E 's/.*#//')
-git push origin --tags
+version=$(cargo pkgid -p cog-ha-matter | sed -E 's/.*#//')
+git tag "cog-ha-matter-v$version"
+git push origin "cog-ha-matter-v$version"
 ```
 
-The push fires `.github/workflows/cog-ha-matter-release.yml` which:
+The tag starts `.github/workflows/cog-ha-matter-release.yml`, which:
 
-  * builds `cog-ha-matter-x86_64` + `cog-ha-matter-arm` (cross-compiled
-    via apt-installed `gcc-aarch64-linux-gnu`)
-  * computes SHA-256 sidecars
-  * runs the Ed25519 sign step **if** `COGNITUM_OWNER_SIGNING_KEY` is set
-  * uploads workflow artifacts (always — these are downloadable from
-    the run page)
-  * uploads to `gs://cognitum-apps/cogs/{arch}/` **if** the org var
-    `HAS_GCP_CREDENTIALS == 'true'` and the `GCP_CREDENTIALS` secret is set
+- reruns the library tests and package check;
+- builds `cog-ha-matter-x86_64` and `cog-ha-matter-arm`;
+- emits SHA-256 sidecars;
+- optionally emits Ed25519 signatures when the repository's
+  `RELEASE_SIGNING_KEY` secret is configured;
+- retains per-architecture workflow artifacts for 14 days; and
+- creates or updates the matching GitHub Release with every generated asset.
 
-## 3. Update app-registry.json
+A manual workflow dispatch validates and builds the same artifacts but does not
+publish a GitHub Release because it is not associated with a version tag.
 
-Take `cog/app-registry-entry.json` from this directory, fill in the
-post-build values, and PR it into the [`cognitum-one`](https://github.com/ruvnet/cognitum-one)
-repo at `app-registry.json`.
-
-Values to fill in:
-
-  * `version` — bump to match the new tag
-  * `sha256` — paste from the workflow artifact's `.sha256` sidecar
-  * `binary_size` — bytes of the binary (`wc -c < cog-ha-matter-x86_64`)
-
-## 🔑 USER ACTION items (cannot be automated)
-
-| # | What | Why this can't be automated |
-|---|---|---|
-| 1 | Set the `HAS_GCP_CREDENTIALS` org variable to `true` and provision the `GCP_CREDENTIALS` GitHub Actions secret with a service-account JSON that has `storage.objectAdmin` on `gs://cognitum-apps/cogs/` | Requires org-admin access + a GCP project owner's signoff |
-| 2 | Provision `COGNITUM_OWNER_SIGNING_KEY` GitHub secret with the Ed25519 private key in PEM form | Long-lived secret material; humans must rotate it; same blocker for cog-pose-estimation |
-| 3 | `gcloud auth login` (only if running `make upload` locally instead of via CI) | Browser OAuth flow |
-| 4 | File a PR in `cognitum-one` against `app-registry.json` adding the entry from `cog/app-registry-entry.json` | Cross-repo write requires the user's GitHub auth + reviewer signoff |
-
-## Post-release verification
-
-Once the cognitum-one PR merges and the cache rolls over (~hourly):
+## 3. Verify the published release
 
 ```sh
-curl -sS https://storage.googleapis.com/cognitum-apps/app-registry.json \
-  | jq '.[] | select(.id == "ha-matter")'
+tag="cog-ha-matter-v$(cargo pkgid -p cog-ha-matter | sed -E 's/.*#//')"
+gh release view "$tag"
+
+tmp=$(mktemp -d)
+gh release download "$tag" --dir "$tmp"
+(
+  cd "$tmp"
+  for checksum in *.sha256; do
+    binary="${checksum%.sha256}"
+    printf '%s  %s\n' "$(cat "$checksum")" "$binary" | sha256sum --check -
+  done
+)
 ```
 
-Should print the new entry. On the Seed UI, the cog appears under
-**Settings → Cogs → building → Home Assistant + Matter Bridge**.
+## Replacing a bad artifact
 
-## Reverting a bad release
-
-Cogs ship via GCS object versioning (per ADR-100). To roll back:
-
-```sh
-gsutil ls -a gs://cognitum-apps/cogs/x86_64/cog-ha-matter-x86_64
-# Pick the previous generation, then:
-gsutil cp gs://cognitum-apps/cogs/x86_64/cog-ha-matter-x86_64#<generation> \
-          gs://cognitum-apps/cogs/x86_64/cog-ha-matter-x86_64
-```
-
-Then PR a `version` bump in `cognitum-one`'s `app-registry.json` so
-Seeds know to refetch.
+Fix the build at the same commit, delete the failed workflow run's release
+assets if necessary, and rerun the tag workflow. The publish job uploads assets
+with `--clobber`, so a deterministic rebuild replaces the matching filenames.
+If code changed, publish a new patch version instead of mutating an existing
+release.

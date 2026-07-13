@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+> KdView is maintained at [Gestusition/KdView](https://github.com/Gestusition/KdView). Older entries intentionally retain upstream RuView repository, package, container, hardware, and release identifiers as historical provenance; they do not define current KdView distribution or product dependencies.
+
 ### Changed
+- **Canonical repository and distribution metadata moved to `Gestusition/KdView`.** Active clone, issue, release, source, Pages, and container documentation now targets the KdView fork. Published `@ruvnet/*`, `ruv*`, RVF, ADR-018, and `seed_*` identifiers remain unchanged where compatibility or benchmark provenance requires them. The historical Cognitum-specific appliance architecture is superseded by operator-managed local gateway guidance.
+- **nvsim and vendor-hardware promotion removed without reducing WiFi sensing capability.** The unrelated nvsim dashboard, its assets, and its publishing workflows are retired. Product-store, affiliate, download-count, pricing, and vendor-hardware promotion are removed or replaced by operator-managed local equivalents. The WiFi dashboard, Observatory, pose-fusion view, `viz.html`, point-cloud viewer, Three.js demos, mobile client, sensing services, training, integrations, utilities, and tests remain available.
+- **Active deployment and device setup no longer assume upstream infrastructure.** Continuous deployment now requires fork-owned `STAGING_URL` / `PRODUCTION_URL` repository variables and no longer checks out submodules it does not use. The Windows ESP32 build helper discovers the operator's ESP-IDF environment, builds from its own directory, never embeds WiFi credentials or target addresses, and flashes only when `-Flash -Port` is explicit. Visible HOMECORE hardware branding is presented as generic sensor gateways while compatibility API and provenance field names remain unchanged.
 - **`@ruvnet/rvagent` startup optimization — stdio time-to-first-response ~242 ms → ~189 ms (−22%; MEASURED, median of repeated `initialize` round-trips against `dist/index.js`, this container, reproduce with a piped-stdin timer).** Two changes: (1) `./http-transport.js` is now imported **lazily** inside the `RVAGENT_HTTP_PORT` branch — it chain-loads the MCP SDK's `streamableHttp` module (~48 ms MEASURED via per-module `import()` timing), which the default stdio path never uses; (2) the advertised JSON Schemas generated from the Zod sources are memoized per tool instead of re-walking the Zod tree on every `tools/list` (matters under the session-per-server HTTP model where each session lists tools). No behavior change: 99/99 jest tests, HTTP session flow re-smoke-tested through the lazy path. The `@ruvnet/ruview` harness CLI was profiled too and left alone — 50 ms vs the ~29 ms bare `node -e ''` floor on the same box (MEASURED), i.e. already near the interpreter floor with zero dependencies.
 
 ### Fixed
@@ -971,8 +976,8 @@ Major release: complete Rust sensing server, full DensePose training pipeline, R
 - Performance benchmarks
 - Contributing guidelines
 
-[Unreleased]: https://github.com/ruvnet/wifi-densepose/compare/v3.0.0...HEAD
-[3.0.0]: https://github.com/ruvnet/wifi-densepose/compare/v2.0.0...v3.0.0
-[2.0.0]: https://github.com/ruvnet/wifi-densepose/compare/v1.1.0...v2.0.0
-[1.1.0]: https://github.com/ruvnet/wifi-densepose/compare/v1.0.0...v1.1.0
-[1.0.0]: https://github.com/ruvnet/wifi-densepose/releases/tag/v1.0.0
+[Unreleased]: https://github.com/Gestusition/KdView/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/Gestusition/KdView/compare/v2.0.0...v3.0.0
+[2.0.0]: https://github.com/Gestusition/KdView/compare/v1.1.0...v2.0.0
+[1.1.0]: https://github.com/Gestusition/KdView/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/Gestusition/KdView/releases/tag/v1.0.0

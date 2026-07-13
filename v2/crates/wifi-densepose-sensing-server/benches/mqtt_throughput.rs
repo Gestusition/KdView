@@ -41,7 +41,7 @@ fn builder() -> DiscoveryBuilder<'static> {
         node_friendly_name: Some("Bedroom"),
         sw_version: "v0.7.0",
         model: "ESP32-S3 CSI node",
-        via_device: Some("cognitum_seed_1"),
+        via_device: Some("edge_gateway_1"),
     }
 }
 

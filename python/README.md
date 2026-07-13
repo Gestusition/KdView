@@ -9,7 +9,7 @@ estimate skeletal pose — using only the WiFi signal already in your home.**
 
 No cameras. No wearables. Works through walls and in the dark.
 
-`wifi-densepose` is the Python binding for the [RuView](https://github.com/ruvnet/RuView)
+`wifi-densepose` is the Python binding for the [KdView](https://github.com/Gestusition/KdView)
 sensing stack: a Rust core that turns the Channel State Information (CSI)
 emitted by ordinary WiFi chips into ambient-intelligence signals. The wheel
 ships compiled DSP for fast offline analysis, plus an opt-in Python client
@@ -119,7 +119,7 @@ print(frame.n_subcarriers, frame.mean_amplitude)
 
 Works with any WiFi chip that exposes CSI. Reference setups (ESP-IDF firmware,
 build scripts, witness-verified test bundles) are in the
-[RuView repo](https://github.com/ruvnet/RuView):
+[KdView repo](https://github.com/Gestusition/KdView):
 
 | Device | Cost | Role |
 |---|---|---|
@@ -133,10 +133,10 @@ to v2 with a migration URL.
 
 ## Links
 
-- **Repository** — https://github.com/ruvnet/RuView
-- **Modernization plan** — [ADR-117](https://github.com/ruvnet/RuView/blob/main/docs/adr/ADR-117-pip-wifi-densepose-modernization.md)
-- **Home Assistant integration** — [ADR-115](https://github.com/ruvnet/RuView/blob/main/docs/adr/ADR-115-home-assistant-integration.md)
-- **Issues** — https://github.com/ruvnet/RuView/issues
+- **Repository** — https://github.com/Gestusition/KdView
+- **Modernization plan** — [ADR-117](https://github.com/Gestusition/KdView/blob/main/docs/adr/ADR-117-pip-wifi-densepose-modernization.md)
+- **Home Assistant integration** — [ADR-115](https://github.com/Gestusition/KdView/blob/main/docs/adr/ADR-115-home-assistant-integration.md)
+- **Issues** — https://github.com/Gestusition/KdView/issues
 
 ## License
 

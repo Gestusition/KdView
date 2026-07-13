@@ -2,27 +2,27 @@
 /**
  * WiFi-DensePose Camera-Free Training Pipeline
  *
- * Extends train-ruvllm.js with multi-modal supervision from Cognitum Seed sensors.
+ * Extends train-ruvllm.js with multi-modal supervision from operator-managed sensors.
  * Trains a full pose estimation model using 10 sensor signals — NO camera required.
  *
  * Supervision signals:
- *   1. PIR sensor (Seed GPIO 6) — binary presence ground truth
- *   2. BME280 temperature (Seed I2C 0x76) — occupancy proxy
- *   3. BME280 humidity (Seed I2C 0x76) — breathing confirmation
+ *   1. PIR sensor (gateway GPIO 6) — binary presence ground truth
+ *   2. BME280 temperature (gateway I2C 0x76) — occupancy proxy
+ *   3. BME280 humidity (gateway I2C 0x76) — breathing confirmation
  *   4. Cross-node RSSI differential — rough XY position
  *   5. Vitals stability — HR/BR variance → activity level
  *   6. Temporal CSI patterns — periodic=walking, stable=sitting, flat=empty
  *   7. kNN cluster labels — natural groupings in vector store
  *   8. Boundary fragility — Stoer-Wagner min-cut detects regime changes
- *   9. Reed switch (Seed GPIO 5) — door open/close events
- *  10. Vibration sensor (Seed GPIO 13) — footstep detection
+ *   9. Reed switch (gateway GPIO 5) — door open/close events
+ *  10. Vibration sensor (gateway GPIO 13) — footstep detection
  *
  * Usage:
  *   node scripts/train-camera-free.js --data data/recordings/pretrain-*.csi.jsonl
- *   node scripts/train-camera-free.js --data data/recordings/*.csi.jsonl --seed-url https://169.254.42.1:8443
+ *   node scripts/train-camera-free.js --data data/recordings/*.csi.jsonl --gateway-url http://127.0.0.1:8080
  *   node scripts/train-camera-free.js --data data/recordings/*.csi.jsonl --output models/csi-camerafree-v1 --benchmark
  *
- * Falls back to CSI-only training (train-ruvllm.js pipeline) if Seed is unavailable.
+ * Falls back to CSI-only training when the optional gateway is unavailable.
  *
  * ADR: docs/adr/ADR-071-ruvllm-training-pipeline.md (Camera-Free Supervision section)
  */
@@ -31,8 +31,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
 const { parseArgs } = require('util');
+const { selectGatewayHttpClient } = require('./gateway-http-client');
 
 // ---------------------------------------------------------------------------
 // Resolve ruvllm from vendor tree
@@ -80,10 +80,15 @@ const { values: args } = parseArgs({
     'batch-size':     { type: 'string',  default: '32' },
     'lora-rank':      { type: 'string',  default: '4' },
     'quantize-bits':  { type: 'string',  default: '4' },
-    'seed-url':       { type: 'string',  default: 'https://169.254.42.1:8443' },
+    'gateway-url':    { type: 'string',  default: '' },
+    'gateway-token':  { type: 'string',  default: '' },
+    'gateway-collect-sec': { type: 'string', default: '120' },
+    // Compatibility aliases for existing automation.
+    'seed-url':       { type: 'string',  default: '' },
     'seed-token':     { type: 'string',  default: '' },
-    'seed-collect-sec': { type: 'string', default: '120' },
+    'seed-collect-sec': { type: 'string' },
     'self-refine':    { type: 'string',  default: '3' },
+    'no-gateway':     { type: 'boolean', default: false },
     'no-seed':        { type: 'boolean', default: false },
     verbose:          { type: 'boolean', short: 'v', default: false },
   },
@@ -91,7 +96,7 @@ const { values: args } = parseArgs({
 });
 
 if (!args.data) {
-  console.error('Usage: node scripts/train-camera-free.js --data <path-to-csi-jsonl> [--seed-url URL] [--output dir]');
+  console.error('Usage: node scripts/train-camera-free.js --data <path-to-csi-jsonl> [--gateway-url URL] [--output dir]');
   process.exit(1);
 }
 
@@ -105,11 +110,13 @@ const CONFIG = {
   quantizeBits: parseInt(args['quantize-bits'], 10),
   verbose: args.verbose,
 
-  // Seed connection
-  seedUrl: args['seed-url'],
-  seedToken: args['seed-token'] || process.env.SEED_TOKEN || '',
-  seedCollectSec: parseInt(args['seed-collect-sec'], 10),
-  noSeed: args['no-seed'],
+  // Optional sensor/vector gateway connection. Legacy values are accepted but
+  // never selected as defaults.
+  gatewayUrl: args['gateway-url'] || args['seed-url'],
+  gatewayToken: args['gateway-token'] || args['seed-token'] ||
+    process.env.RUVIEW_GATEWAY_TOKEN || process.env.SEED_TOKEN || '',
+  gatewayCollectSec: parseInt(args['seed-collect-sec'] || args['gateway-collect-sec'], 10),
+  noGateway: args['no-gateway'] || args['no-seed'],
 
   // Self-refinement rounds
   selfRefineRounds: parseInt(args['self-refine'], 10),
@@ -133,7 +140,7 @@ const CONFIG = {
   embeddingDim: 128,
 
   // Multi-modal dimensions
-  seedEmbeddingDim: 45,
+  gatewayEmbeddingDim: 45,
   multiModalInputDim: 8 + 8 + 4 + 4 + 45 + 6 + 2,  // 77-dim combined
   poseKeypoints5: 5,     // head, L_hand, R_hand, L_foot, R_foot
   poseKeypoints17: 17,   // COCO 17-keypoint format
@@ -152,10 +159,10 @@ const CONFIG = {
 };
 
 // ---------------------------------------------------------------------------
-// Seed API client (HTTPS with self-signed cert support)
+// Compatible gateway API client (HTTP or HTTPS with self-signed certificate support)
 // ---------------------------------------------------------------------------
 
-class SeedClient {
+class GatewayClient {
   constructor(baseUrl, token) {
     this.baseUrl = baseUrl;
     this.token = token;
@@ -163,17 +170,17 @@ class SeedClient {
   }
 
   /**
-   * Make an HTTPS GET request to the Seed API.
+   * Make an HTTP(S) GET request to the configured gateway API.
    * Returns parsed JSON or null on failure.
    */
   _get(endpoint) {
     return new Promise((resolve) => {
-      const url = `${this.baseUrl}${endpoint}`;
+      const { url, client: gatewayHttp } = selectGatewayHttpClient(`${this.baseUrl}${endpoint}`);
       const headers = {};
       if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
 
-      const req = https.get(url, {
-        rejectUnauthorized: false,  // self-signed cert on Seed
+      const req = gatewayHttp.get(url, {
+        rejectUnauthorized: false,  // operator-managed gateways may use a local self-signed cert
         headers,
         timeout: 5000,
       }, (res) => {
@@ -190,11 +197,11 @@ class SeedClient {
   }
 
   /**
-   * Make an HTTPS POST request.
+   * Make an HTTP(S) POST request.
    */
   _post(endpoint, body) {
     return new Promise((resolve) => {
-      const url = new URL(`${this.baseUrl}${endpoint}`);
+      const { url, client: gatewayHttp } = selectGatewayHttpClient(`${this.baseUrl}${endpoint}`);
       const bodyStr = body ? JSON.stringify(body) : '';
       const headers = { 'Content-Type': 'application/json' };
       if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
@@ -209,7 +216,7 @@ class SeedClient {
         timeout: 10000,
       };
 
-      const req = https.request(opts, (res) => {
+      const req = gatewayHttp.request(opts, (res) => {
         let data = '';
         res.on('data', (chunk) => { data += chunk; });
         res.on('end', () => {
@@ -224,7 +231,7 @@ class SeedClient {
     });
   }
 
-  /** Check if the Seed API is reachable. */
+  /** Check if the gateway API is reachable. */
   async probe() {
     const result = await this._get('/api/v1/sensor/list');
     this.available = result !== null;
@@ -278,11 +285,13 @@ class SeedClient {
   streamSensors(durationMs) {
     return new Promise((resolve) => {
       const events = [];
-      const url = `${this.baseUrl}/api/v1/sensor/stream`;
+      const { url, client: gatewayHttp } = selectGatewayHttpClient(
+        `${this.baseUrl}/api/v1/sensor/stream`
+      );
       const headers = {};
       if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
 
-      const req = https.get(url, {
+      const req = gatewayHttp.get(url, {
         rejectUnauthorized: false,
         headers,
         timeout: durationMs + 5000,
@@ -773,23 +782,22 @@ class PoseDecoder5 {
 // ---------------------------------------------------------------------------
 
 /**
- * Collect multi-modal data: CSI frames from UDP + Seed sensor data via HTTPS.
+ * Collect multi-modal data: CSI frames from UDP + gateway sensor data via HTTPS.
  * Builds synchronized MultiModalFrame timeline.
  */
-async function collectMultiModalData(seedClient, durationSec, existingFeatures, existingVitals) {
+async function collectMultiModalData(gatewayClient, durationSec, existingFeatures, existingVitals) {
   const timeline = [];
 
-  // If Seed is not available, build timeline from CSI-only data
-  if (!seedClient.available) {
-    console.log('  Seed unavailable — building CSI-only timeline.');
+  // If the gateway is not available, build a CSI-only timeline.
+  if (!gatewayClient.available) {
+    console.log('  Gateway unavailable — building CSI-only timeline.');
     return buildCsiOnlyTimeline(existingFeatures, existingVitals);
   }
 
-  console.log(`  Collecting Seed sensor data for ${durationSec}s...`);
+  console.log(`  Collecting gateway sensor data for ${durationSec}s...`);
 
-  // Collect sensor stream from Seed
-  const sensorEvents = await seedClient.streamSensors(durationSec * 1000);
-  console.log(`  Received ${sensorEvents.length} Seed sensor events.`);
+  const sensorEvents = await gatewayClient.streamSensors(durationSec * 1000);
+  console.log(`  Received ${sensorEvents.length} gateway sensor events.`);
 
   // Collect periodic boundary/coherence snapshots
   const boundarySnapshots = [];
@@ -799,8 +807,8 @@ async function collectMultiModalData(seedClient, durationSec, existingFeatures, 
 
   for (let i = 0; i < numSnapshots; i++) {
     const [boundary, coherence] = await Promise.all([
-      seedClient.getBoundary(),
-      seedClient.getCoherence(),
+      gatewayClient.getBoundary(),
+      gatewayClient.getCoherence(),
     ]);
     if (boundary) boundarySnapshots.push({ timestamp: Date.now() / 1000, ...boundary });
     if (coherence) coherenceSnapshots.push({ timestamp: Date.now() / 1000, ...coherence });
@@ -809,15 +817,15 @@ async function collectMultiModalData(seedClient, durationSec, existingFeatures, 
     }
   }
 
-  // Build synchronized timeline: for each CSI feature frame, find nearest Seed data
+  // Build synchronized timeline: for each CSI feature frame, find nearest gateway data.
   for (const feat of existingFeatures) {
     const frame = {
       timestamp: feat.timestamp,
       csi_features: feat.features,
       nodeId: feat.nodeId,
       rssi: feat.rssi,
-      seed_embedding: null,
-      seed_sensors: null,
+      gateway_embedding: null,
+      gateway_sensors: null,
       boundary_fragility: null,
       coherence_phase: null,
     };
@@ -830,7 +838,7 @@ async function collectMultiModalData(seedClient, durationSec, existingFeatures, 
       if (dist < bestDist) { bestDist = dist; bestSensor = evt; }
     }
     if (bestSensor && bestDist < 2.0) {
-      frame.seed_sensors = {
+      frame.gateway_sensors = {
         temp: bestSensor.temperature || bestSensor.temp || null,
         humidity: bestSensor.humidity || null,
         pressure: bestSensor.pressure || null,
@@ -838,7 +846,7 @@ async function collectMultiModalData(seedClient, durationSec, existingFeatures, 
         reed: bestSensor.reed != null ? bestSensor.reed : null,
         vibration: bestSensor.vibration != null ? bestSensor.vibration : null,
       };
-      frame.seed_embedding = bestSensor.embedding || null;
+      frame.gateway_embedding = bestSensor.embedding || null;
     }
 
     // Find nearest boundary snapshot
@@ -867,14 +875,14 @@ async function collectMultiModalData(seedClient, durationSec, existingFeatures, 
   }
 
   console.log(`  Built ${timeline.length} multi-modal frames.`);
-  const seedFrames = timeline.filter(f => f.seed_sensors !== null).length;
-  console.log(`  Frames with Seed data: ${seedFrames} (${(seedFrames / timeline.length * 100).toFixed(1)}%)`);
+  const gatewayFrames = timeline.filter(f => f.gateway_sensors !== null).length;
+  console.log(`  Frames with gateway data: ${gatewayFrames} (${(gatewayFrames / timeline.length * 100).toFixed(1)}%)`);
 
   return timeline;
 }
 
 /**
- * Build a CSI-only timeline when Seed is unavailable.
+ * Build a CSI-only timeline when the optional gateway is unavailable.
  */
 function buildCsiOnlyTimeline(features, vitals) {
   const timeline = [];
@@ -894,8 +902,8 @@ function buildCsiOnlyTimeline(features, vitals) {
       nodeId: feat.nodeId,
       rssi: feat.rssi,
       vitals: nearVitals && bestDist < 2.0 ? nearVitals : null,
-      seed_embedding: null,
-      seed_sensors: null,
+      gateway_embedding: null,
+      gateway_sensors: null,
       boundary_fragility: null,
       coherence_phase: null,
     });
@@ -916,7 +924,7 @@ function generateWeakLabels(frame, allFrames, vitals, nodeIds) {
   const labels = {};
 
   // -- 1. Presence label: PIR || CSI presence > 0.3 || temp rising > 0.1C/min --
-  const pirPresent = frame.seed_sensors?.pir === 1;
+  const pirPresent = frame.gateway_sensors?.pir === 1;
 
   // Get CSI presence from nearest vitals
   let csiPresence = 0;
@@ -936,15 +944,15 @@ function generateWeakLabels(frame, allFrames, vitals, nodeIds) {
 
   // Temperature rising: check if temp increased > 0.1C over last 60s
   let tempRising = false;
-  if (frame.seed_sensors?.temp != null) {
+  if (frame.gateway_sensors?.temp != null) {
     const past = allFrames.filter(f =>
-      f.seed_sensors?.temp != null &&
+      f.gateway_sensors?.temp != null &&
       f.timestamp >= frame.timestamp - 60 &&
       f.timestamp < frame.timestamp - 10
     );
     if (past.length > 0) {
-      const pastAvgTemp = past.reduce((s, f) => s + f.seed_sensors.temp, 0) / past.length;
-      tempRising = (frame.seed_sensors.temp - pastAvgTemp) > 0.1;
+      const pastAvgTemp = past.reduce((s, f) => s + f.gateway_sensors.temp, 0) / past.length;
+      tempRising = (frame.gateway_sensors.temp - pastAvgTemp) > 0.1;
     }
   }
 
@@ -1055,14 +1063,14 @@ function generateWeakLabels(frame, allFrames, vitals, nodeIds) {
 
   // -- 6. Entry/exit events: reed switch + PIR change + boundary fragility spike --
   labels.entryExit = 'none';
-  if (frame.seed_sensors?.reed === 1) {
+  if (frame.gateway_sensors?.reed === 1) {
     // Door is open — check PIR transition
     const prevFrames = allFrames.filter(f =>
       f.timestamp >= frame.timestamp - 5 &&
       f.timestamp < frame.timestamp &&
-      f.seed_sensors?.pir != null
+      f.gateway_sensors?.pir != null
     );
-    const prevPir = prevFrames.length > 0 ? prevFrames[prevFrames.length - 1].seed_sensors.pir : 0;
+    const prevPir = prevFrames.length > 0 ? prevFrames[prevFrames.length - 1].gateway_sensors.pir : 0;
     if (prevPir === 0 && pirPresent) labels.entryExit = 'entry';
     else if (prevPir === 1 && !pirPresent) labels.entryExit = 'exit';
   }
@@ -1072,15 +1080,15 @@ function generateWeakLabels(frame, allFrames, vitals, nodeIds) {
 
   // -- 7. Breathing zone: humidity change rate --
   labels.breathingZone = null;
-  if (frame.seed_sensors?.humidity != null) {
+  if (frame.gateway_sensors?.humidity != null) {
     const pastHumidity = allFrames.filter(f =>
-      f.seed_sensors?.humidity != null &&
+      f.gateway_sensors?.humidity != null &&
       f.timestamp >= frame.timestamp - 30 &&
       f.timestamp < frame.timestamp - 5
     );
     if (pastHumidity.length > 0) {
-      const pastAvg = pastHumidity.reduce((s, f) => s + f.seed_sensors.humidity, 0) / pastHumidity.length;
-      const humidityDelta = frame.seed_sensors.humidity - pastAvg;
+      const pastAvg = pastHumidity.reduce((s, f) => s + f.gateway_sensors.humidity, 0) / pastHumidity.length;
+      const humidityDelta = frame.gateway_sensors.humidity - pastAvg;
       // Positive delta near person location suggests breathing
       if (humidityDelta > 0.05) {
         labels.breathingZone = labels.position;
@@ -1109,7 +1117,7 @@ function generateWeakLabels(frame, allFrames, vitals, nodeIds) {
 
     // Feet: vibration sensor + RSSI ground reflection
     let footSpread = 0.05;
-    if (frame.seed_sensors?.vibration === 1) {
+    if (frame.gateway_sensors?.vibration === 1) {
       footSpread = 0.1; // wider stance when stepping
     }
 
@@ -1132,15 +1140,15 @@ function generateWeakLabels(frame, allFrames, vitals, nodeIds) {
 
   // -- Confidence score: how many sensor signals agree --
   let signalsActive = 0;
-  if (frame.seed_sensors?.pir != null) signalsActive++;
-  if (frame.seed_sensors?.temp != null) signalsActive++;
-  if (frame.seed_sensors?.humidity != null) signalsActive++;
-  if (frame.seed_sensors?.reed != null) signalsActive++;
-  if (frame.seed_sensors?.vibration != null) signalsActive++;
+  if (frame.gateway_sensors?.pir != null) signalsActive++;
+  if (frame.gateway_sensors?.temp != null) signalsActive++;
+  if (frame.gateway_sensors?.humidity != null) signalsActive++;
+  if (frame.gateway_sensors?.reed != null) signalsActive++;
+  if (frame.gateway_sensors?.vibration != null) signalsActive++;
   if (otherNodeFrame) signalsActive++; // RSSI differential
   if (csiPresence > 0) signalsActive++; // CSI presence
   if (frame.boundary_fragility != null) signalsActive++;
-  if (frame.seed_embedding != null) signalsActive++;
+  if (frame.gateway_embedding != null) signalsActive++;
   labels.confidence = signalsActive / 10; // 10 possible signals
 
   return labels;
@@ -1278,17 +1286,17 @@ function generateTriplets(features, vitals, config) {
 
 /**
  * Generate additional contrastive triplets from multi-modal data.
- * - Multi-modal positive: CSI + Seed at same time agree
+ * - Multi-modal positive: CSI + gateway sensors at the same time agree
  * - Sensor-verified negative: PIR=0 vs PIR=1
  * - Activity boundary: before/after fragility spike
- * - Cross-modal: CSI embedding close to Seed embedding for same state
+ * - Cross-modal: CSI embedding close to the gateway embedding for the same state
  */
 function generateMultiModalTriplets(timeline, encoder) {
   const triplets = [];
 
   // Sensor-verified negative: PIR=0 vs PIR=1
-  const pirOff = timeline.filter(f => f.seed_sensors?.pir === 0);
-  const pirOn = timeline.filter(f => f.seed_sensors?.pir === 1);
+  const pirOff = timeline.filter(f => f.gateway_sensors?.pir === 0);
+  const pirOn = timeline.filter(f => f.gateway_sensors?.pir === 1);
 
   if (pirOff.length >= 2 && pirOn.length >= 1) {
     const nPairs = Math.min(100, pirOff.length, pirOn.length);
@@ -1330,25 +1338,24 @@ function generateMultiModalTriplets(timeline, encoder) {
     }
   }
 
-  // Cross-modal: CSI embedding close to Seed embedding for same state
-  // Use CSI features as anchor, Seed embedding as projection target
-  const seedFrames = timeline.filter(f => f.seed_embedding != null && f.seed_embedding.length > 0);
-  if (seedFrames.length >= 3) {
-    for (let i = 0; i < Math.min(100, seedFrames.length); i++) {
-      const anchor = seedFrames[i];
+  // Cross-modal: CSI embedding close to the gateway embedding for the same state.
+  const gatewayFrames = timeline.filter(f => f.gateway_embedding != null && f.gateway_embedding.length > 0);
+  if (gatewayFrames.length >= 3) {
+    for (let i = 0; i < Math.min(100, gatewayFrames.length); i++) {
+      const anchor = gatewayFrames[i];
       // Positive: temporally adjacent frame (same state)
-      const posIdx = (i + 1) % seedFrames.length;
-      const positive = seedFrames[posIdx];
+      const posIdx = (i + 1) % gatewayFrames.length;
+      const positive = gatewayFrames[posIdx];
       // Negative: temporally distant frame
-      const negIdx = (i + Math.floor(seedFrames.length / 2)) % seedFrames.length;
-      const negative = seedFrames[negIdx];
+      const negIdx = (i + Math.floor(gatewayFrames.length / 2)) % gatewayFrames.length;
+      const negative = gatewayFrames[negIdx];
 
       if (Math.abs(anchor.timestamp - positive.timestamp) < 2.0 &&
           Math.abs(anchor.timestamp - negative.timestamp) > 5.0) {
         triplets.push({
           anchor: anchor.csi_features, positive: positive.csi_features,
           negative: negative.csi_features, isHard: false, type: 'cross-modal',
-          anchorLabel: `seed-csi-${i}`, posLabel: `seed-csi-${posIdx}`, negLabel: `seed-csi-${negIdx}`,
+          anchorLabel: `gateway-csi-${i}`, posLabel: `gateway-csi-${posIdx}`, negLabel: `gateway-csi-${negIdx}`,
         });
       }
     }
@@ -1704,7 +1711,7 @@ async function main() {
   const startTime = Date.now();
   console.log('=== WiFi-DensePose Camera-Free Training Pipeline ===');
   console.log(`Config: epochs=${CONFIG.epochs} batch=${CONFIG.batchSize} lora_rank=${CONFIG.loraRank} quant=${CONFIG.quantizeBits}bit`);
-  console.log(`Seed URL: ${CONFIG.seedUrl} (${CONFIG.noSeed ? 'disabled' : 'enabled'})`);
+  console.log(`Gateway URL: ${CONFIG.gatewayUrl || '(not configured)'} (${CONFIG.noGateway ? 'disabled' : 'enabled'})`);
   console.log('');
 
   // =========================================================================
@@ -1757,28 +1764,28 @@ async function main() {
   console.log(`\n[1c/12] Augmentation: ${originalCount} -> ${allFeatures.length} features (${CONFIG.augmentMultiplier}x)`);
 
   // =========================================================================
-  // Step 2: Probe Seed and collect multi-modal data (Phase 0)
+  // Step 2: Probe the optional gateway and collect multi-modal data (Phase 0)
   // =========================================================================
   console.log('\n[2/12] Phase 0: Multi-modal data collection...');
-  const seedClient = new SeedClient(CONFIG.seedUrl, CONFIG.seedToken);
-  let seedAvailable = false;
+  const gatewayClient = new GatewayClient(CONFIG.gatewayUrl, CONFIG.gatewayToken);
+  let gatewayAvailable = false;
 
-  if (!CONFIG.noSeed) {
+  if (!CONFIG.noGateway && CONFIG.gatewayUrl) {
     try {
-      seedAvailable = await seedClient.probe();
-      if (seedAvailable) {
-        console.log('  Cognitum Seed connected. Collecting multi-modal data...');
+      gatewayAvailable = await gatewayClient.probe();
+      if (gatewayAvailable) {
+        console.log('  Sensor gateway connected. Collecting multi-modal data...');
       } else {
-        console.log('  Cognitum Seed not reachable. Falling back to CSI-only pipeline.');
+        console.log('  Sensor gateway not reachable. Falling back to CSI-only pipeline.');
       }
     } catch (e) {
-      console.log(`  Seed probe failed: ${e.message}. Falling back to CSI-only pipeline.`);
+      console.log(`  Gateway probe failed: ${e.message}. Falling back to CSI-only pipeline.`);
     }
   } else {
-    console.log('  --no-seed flag set. Running CSI-only pipeline.');
+    console.log('  Gateway disabled or not configured. Running CSI-only pipeline.');
   }
 
-  const timeline = await collectMultiModalData(seedClient, CONFIG.seedCollectSec, allFeatures, allVitals);
+  const timeline = await collectMultiModalData(gatewayClient, CONFIG.gatewayCollectSec, allFeatures, allVitals);
   console.log(`  Timeline: ${timeline.length} frames`);
 
   // =========================================================================
@@ -1815,9 +1822,9 @@ async function main() {
   // Build the encoder first so we can generate multi-modal triplets
   const encoder = new CsiEncoder(CONFIG.inputDim, CONFIG.hiddenDim, CONFIG.embeddingDim);
 
-  // Multi-modal triplets (if Seed available)
+  // Multi-modal triplets (if the gateway is available)
   let multiModalTriplets = [];
-  if (seedAvailable) {
+  if (gatewayAvailable) {
     multiModalTriplets = generateMultiModalTriplets(timeline, encoder);
     console.log(`  Multi-modal triplets: ${multiModalTriplets.length}`);
   }
@@ -2220,8 +2227,8 @@ async function main() {
       version: '1.0.0',
       architecture: 'csi-encoder-8-64-128-pose17',
       pipelineType: 'camera-free',
-      seedAvailable: seedAvailable,
-      supervisionSignals: seedAvailable ? 10 : 3,
+      gatewayAvailable,
+      supervisionSignals: gatewayAvailable ? 10 : 3,
       training: {
         steps: contrastiveResult.history.length * contrastiveTrainer.getTripletCount(),
         loss: contrastiveResult.finalLoss,
@@ -2320,8 +2327,8 @@ async function main() {
     JSON.stringify({ type: 'lora', config: taskAdapter.getConfig(), parameters: taskAdapter.numParameters() }),
     JSON.stringify({ type: 'ewc', stats: ewcStats }),
     JSON.stringify({ type: 'quantization', default_bits: CONFIG.quantizeBits, variants: [2, 4, 8] }),
-    JSON.stringify({ type: 'camera_free_supervision', signals: seedAvailable ? 10 : 3,
-      sources: seedAvailable
+    JSON.stringify({ type: 'camera_free_supervision', signals: gatewayAvailable ? 10 : 3,
+      sources: gatewayAvailable
         ? ['PIR', 'BME280_temp', 'BME280_humidity', 'RSSI_diff', 'vitals_stability',
            'temporal_CSI', 'kNN_clusters', 'boundary_fragility', 'reed_switch', 'vibration']
         : ['RSSI_diff', 'vitals_stability', 'temporal_CSI'] }),
@@ -2335,8 +2342,8 @@ async function main() {
     timestamp: new Date().toISOString(),
     pipelineType: 'camera-free',
     totalDurationMs: Date.now() - startTime,
-    seedAvailable,
-    supervisionSignals: seedAvailable ? 10 : 3,
+    gatewayAvailable,
+    supervisionSignals: gatewayAvailable ? 10 : 3,
     data: {
       files: files.map(f => path.basename(f)),
       totalFeatures: allFeatures.length,
@@ -2344,7 +2351,7 @@ async function main() {
       totalRawCsi: allRawCsi.length,
       nodes: nodeIds,
       multiModalFrames: timeline.length,
-      seedFrames: timeline.filter(f => f.seed_sensors !== null).length,
+      gatewayFrames: timeline.filter(f => f.gateway_sensors !== null).length,
     },
     weakLabels: {
       totalLabeled: labeledTimeline.length,
@@ -2385,7 +2392,7 @@ async function main() {
   // =========================================================================
   const totalDuration = Date.now() - startTime;
   console.log('\n=== Training Complete ===');
-  console.log(`  Pipeline: Camera-Free (${seedAvailable ? '10 signals' : 'CSI-only fallback, 3 signals'})`);
+  console.log(`  Pipeline: Camera-Free (${gatewayAvailable ? '10 signals' : 'CSI-only fallback, 3 signals'})`);
   console.log(`  Duration: ${(totalDuration / 1000).toFixed(1)}s`);
   console.log(`  Output: ${path.resolve(CONFIG.outputDir)}`);
   console.log(`  Model (fp32): ${(safetensorsBuffer.length / 1024).toFixed(1)} KB`);

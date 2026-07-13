@@ -26,6 +26,10 @@ EXPOSE 8080
 
 ENV PYTHONUNBUFFERED=1
 
+# Native execution stays loopback-only; containers must listen on their
+# network interface so Docker's published WebSocket port is reachable.
+ENV WIFI_DENSEPOSE_WS_HOST=0.0.0.0
+
 #Prevent Python from writing .pyc files and __pycache__ folders to disk
 #Make the runtime faster
 

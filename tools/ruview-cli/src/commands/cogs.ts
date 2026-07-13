@@ -1,5 +1,5 @@
 /**
- * ruview cogs — Cognitum edge module registry commands.
+ * ruview cogs — local edge-module registry commands.
  *
  * cogs list  — list cogs from the registry (via sensing-server ADR-102 proxy).
  */

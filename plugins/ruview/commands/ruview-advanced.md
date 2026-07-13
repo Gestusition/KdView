@@ -12,7 +12,7 @@ Drive RuView's research-grade / multi-node features.
    - **multistatic** (ADR-029) — `wifi-densepose-signal/src/ruvsense/multistatic.rs`, `phase_align.rs`, `coherence_gate.rs`; neighbours' APs as illuminators.
    - **cross-viewpoint** (ADR-016 viewpoint) — `wifi-densepose-ruvector/src/viewpoint/`; needs 2+ nodes; `node scripts/mesh-graph-transformer.js`.
    - **tomography** — `ruvsense/tomography.rs` (ISTA L1 voxel solver) + cross-viewpoint geometry; through-wall volumetric.
-   - **field-model** (ADR-030) — `ruvsense/field_model.rs`, SVD room eigenstructure persisted to RVF (Cognitum Seed); residual = perturbation.
+   - **field-model** (ADR-030) — `ruvsense/field_model.rs`, SVD room eigenstructure persisted to a local RVF store or an operator-managed gateway; residual = perturbation.
    - **intention** — `ruvsense/intention.rs`, 200–500 ms pre-movement lead signals.
    - **adversarial** — `ruvsense/adversarial.rs`, physically-impossible-signal + multi-link consistency checks.
    - **security** (ADR-032) — mesh hardening: adversarial gate + coherence quarantine + Ed25519 witness chain; run a security review (`docs/security-audit-wasm-edge-vendor.md`), see `/ruview-verify`.

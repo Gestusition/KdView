@@ -1,6 +1,6 @@
 # Happiness Vector — WiFi CSI Guest Sentiment Sensing
 
-Contactless hotel guest happiness scoring using WiFi Channel State Information (CSI) from ESP32-S3 nodes, coordinated by a Cognitum Seed edge intelligence appliance.
+Contactless hotel guest happiness scoring using WiFi Channel State Information (CSI) from ESP32-S3 nodes. It runs locally and can optionally send vectors to any compatible operator-managed gateway.
 
 No cameras. No microphones. No PII. Just radio waves.
 
@@ -26,7 +26,7 @@ Guest walks through lobby
   [happiness, gait, stride, fluidity, calm, posture, dwell, social]
         |
         v
-  Cognitum Seed (Pi Zero 2 W)
+  Optional local vector gateway (operator hardware)
   - kNN similarity search
   - Concept drift detection (13 detectors)
   - Ed25519 witness chain (tamper-proof audit)
@@ -53,10 +53,10 @@ Weights: gait 25%, fluidity 20%, calm 20%, stride 15%, posture 10%, dwell 10%.
 | Component | Model | Role | Cost |
 |-----------|-------|------|------|
 | ESP32-S3 | QFN56 (4MB flash, 2MB PSRAM) | CSI sensing node | ~$4 |
-| Cognitum Seed | Pi Zero 2 W | Swarm coordinator | ~$20 |
+| Optional gateway | Any local computer that implements the documented API | Persistence, search, cross-node fusion | operator choice |
 | WiFi Router | Any 2.4 GHz | CSI signal source | existing |
 
-One Seed manages up to 20 ESP32 nodes. Each node covers ~10m radius through walls.
+The gateway is optional; when used, its capacity depends on the operator's implementation. Each ESP32 node covers roughly a 10 m radius through walls.
 
 ## Quick Start
 
@@ -70,23 +70,24 @@ idf.py build
 # Flash to device
 idf.py -p COM5 flash
 
-# Provision with WiFi + Seed credentials
+# Provision with WiFi plus optional gateway credentials
 python provision.py \
   --port COM5 \
   --ssid "YourWiFi" \
   --password "yourpassword" \
   --node-id 1 \
-  --seed-url "http://10.1.10.236" \
-  --seed-token "YOUR_SEED_TOKEN" \
+  --gateway-url "http://127.0.0.1:8080" \
+  --gateway-token "YOUR_GATEWAY_TOKEN" \
   --zone "lobby"
 ```
 
-### 2. Pair the Seed (first time only)
+### 2. Pair a compatible gateway (optional)
 
 ```bash
-# Via USB (link-local, no token needed)
-curl -X POST http://169.254.42.1/api/v1/pair/window
-curl -X POST http://169.254.42.1/api/v1/pair -H "Content-Type: application/json" \
+# The exact pairing policy belongs to your gateway. For an implementation
+# compatible with the historical API, the flow is:
+curl -X POST http://127.0.0.1:8080/api/v1/pair/window
+curl -X POST http://127.0.0.1:8080/api/v1/pair -H "Content-Type: application/json" \
   -d '{"name":"esp32-swarm"}'
 # Save the token from the response
 ```
@@ -94,42 +95,42 @@ curl -X POST http://169.254.42.1/api/v1/pair -H "Content-Type: application/json"
 ### 3. Run the Dashboard
 
 ```bash
-# Happiness mode with Seed bridge
+# Happiness mode with an optional local gateway
 python examples/ruview_live.py \
   --mode happiness \
   --csi COM5 \
-  --seed http://10.1.10.236 \
+  --gateway http://127.0.0.1:8080 \
   --duration 300
 
 # Output:
-#    s             Happy   Gait   Calm  Social  Pres   RSSI    Seed   CSI#
+#    s             Happy   Gait   Calm  Social  Pres   RSSI Gateway   CSI#
 #   2s  [====------] 0.43   0.00   0.64    0.00    no    -59      OK   1800
 #  10s  [=======---] 0.72   0.65   0.80    0.45   YES    -55      OK   4200
 ```
 
-### 4. Query the Seed
+### 4. Query the gateway
 
 ```bash
 # Status
 python examples/happiness-vector/seed_query.py \
-  --seed http://10.1.10.236 --token YOUR_TOKEN status
+  --gateway http://127.0.0.1:8080 --token YOUR_TOKEN status
 
 # Live monitor vectors flowing in
 python examples/happiness-vector/seed_query.py \
-  --seed http://10.1.10.236 --token YOUR_TOKEN monitor
+  --gateway http://127.0.0.1:8080 --token YOUR_TOKEN monitor
 
 # Happiness report
 python examples/happiness-vector/seed_query.py \
-  --seed http://10.1.10.236 --token YOUR_TOKEN report
+  --gateway http://127.0.0.1:8080 --token YOUR_TOKEN report
 
 # Witness chain audit
 python examples/happiness-vector/seed_query.py \
-  --seed http://10.1.10.236 --token YOUR_TOKEN witness
+  --gateway http://127.0.0.1:8080 --token YOUR_TOKEN witness
 ```
 
 ## Multi-Node Swarm
 
-Deploy multiple ESP32 nodes across zones. The Seed aggregates all vectors and detects cross-zone patterns.
+Deploy multiple ESP32 nodes across zones. An optional compatible gateway can aggregate vectors and detect cross-zone patterns.
 
 ```bash
 # Provision all nodes at once
@@ -144,10 +145,10 @@ python provision.py --port COM8  --node-id 3 --zone restaurant ...
 Each node independently:
 - Collects CSI at ~100 fps
 - Runs Tier 2 DSP on Core 1 (presence, vitals, fall detection)
-- Pushes happiness vectors to Seed every 5 seconds (when presence detected)
+- Pushes happiness vectors to the configured gateway every 5 seconds (when present)
 - Sends heartbeats every 30 seconds
 
-The Seed provides:
+With a compatible gateway, the protocol supports:
 - **kNN search** across all zones ("which room is happiest right now?")
 - **Drift detection** (13 detectors monitoring mood trends over time)
 - **Witness chain** (Ed25519-signed, tamper-proof audit trail)
@@ -192,7 +193,7 @@ This system is designed to be privacy-preserving by construction:
 
 | File | Description |
 |------|-------------|
-| `seed_query.py` | CLI tool: status, search, witness, monitor, report |
+| `seed_query.py` | Compatibility-named CLI tool for any gateway: status, search, witness, monitor, report |
 | `provision_swarm.sh` | Batch provisioning for multi-node deployment |
 | `happiness_vector_schema.json` | JSON Schema for the 8-dim vector format |
 | `README.md` | This file |

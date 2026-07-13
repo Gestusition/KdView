@@ -36,7 +36,7 @@
 //! EMA-smoothed for temporal stability.
 //!
 //! An 8-dimensional "happiness vector" is also produced for ingestion into a
-//! Cognitum Seed vector store (dim=8).
+//! any compatible local vector store (dim=8).
 //!
 //! # Events (690-694: Exotic / Research)
 //!
@@ -138,7 +138,7 @@ pub const EVENT_AFFECT_VALENCE: i32 = 692;
 pub const EVENT_SOCIAL_ENERGY: i32 = 693;
 pub const EVENT_TRANSIT_DIRECTION: i32 = 694;
 
-/// Dimension of the happiness vector for Cognitum Seed ingestion.
+/// Dimension of the happiness vector for local/gateway ingestion.
 pub const HAPPINESS_VECTOR_DIM: usize = 8;
 
 // ── Happiness Score Detector ─────────────────────────────────────────────────
@@ -146,7 +146,7 @@ pub const HAPPINESS_VECTOR_DIM: usize = 8;
 /// Computes a composite happiness score from WiFi CSI physiological proxies.
 ///
 /// Outputs a scalar happiness score [0, 1] and an 8-dim happiness vector
-/// suitable for ingestion into a Cognitum Seed vector store.
+/// suitable for ingestion into any compatible vector store.
 pub struct HappinessScoreDetector {
     /// Phase rate-of-change history (gait speed proxy).
     phase_roc: CircularBuffer<PHASE_ROC_LEN>,
@@ -180,7 +180,7 @@ pub struct HappinessScoreDetector {
     /// Current happiness score [0, 1].
     happiness: f32,
 
-    /// 8-dim happiness vector for Cognitum Seed ingestion.
+    /// 8-dim happiness vector for local/gateway ingestion.
     ///
     /// Layout:
     ///   [0] = happiness_score

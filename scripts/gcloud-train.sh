@@ -22,7 +22,7 @@
 #
 # Prerequisites:
 #   - gcloud CLI authenticated: gcloud auth login
-#   - Project set: gcloud config set project cognitum-20260110
+#   - GCP_PROJECT set, or a project selected with `gcloud config set project`
 #   - Quota for GPUs in the selected zone
 #
 # Cost estimates:
@@ -35,7 +35,7 @@ set -euo pipefail
 
 # ── Defaults ──────────────────────────────────────────────────────────────────
 
-PROJECT="cognitum-20260110"
+PROJECT="${GCP_PROJECT:-$(gcloud config get-value project 2>/dev/null || true)}"
 GPU_TYPE="l4"
 ZONE="us-central1-a"
 MAX_HOURS=2
@@ -45,7 +45,7 @@ DRY_RUN=false
 SWEEP=false
 KEEP_VM=false
 INSTANCE_NAME=""
-REPO_URL="https://github.com/ruvnet/wifi-densepose.git"
+REPO_URL="${KDVIEW_REPOSITORY_URL:-https://github.com/Gestusition/KdView.git}"
 BRANCH="main"
 
 # ── Parse arguments ───────────────────────────────────────────────────────────
@@ -72,6 +72,8 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+: "${PROJECT:?Set GCP_PROJECT or configure a default gcloud project}"
 
 # ── GPU configuration map ────────────────────────────────────────────────────
 

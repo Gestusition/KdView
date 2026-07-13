@@ -1,5 +1,7 @@
 # Per-Room Calibration — Integration Overview (for `cognitum-one/v0-appliance`)
 
+> **Historical integration profile:** This document records the upstream Cognitum appliance integration that originally exercised the calibration stack. KdView does not require that product architecture. The data formats, Rust APIs, and calibration CLI described here remain valid for operator-managed local gateways; appliance names and service labels below are retained as reproducibility and compatibility identifiers.
+
 **Audience:** integrators wiring the RuView per-room calibration system (ADR-151) into the
 Cognitum V0 appliance (`cognitum-v0`, Pi 5 + Hailo). This document is the contract +
 deployment spec: data formats, API surface, crate API, and the appliance integration plan.

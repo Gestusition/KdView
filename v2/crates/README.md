@@ -2,13 +2,13 @@
 
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE)
 [![Rust 1.85+](https://img.shields.io/badge/rust-1.85%2B-orange.svg)](https://www.rust-lang.org/)
-[![Workspace](https://img.shields.io/badge/workspace-14%20crates-green.svg)](https://github.com/ruvnet/wifi-densepose)
+[![Workspace](https://img.shields.io/badge/workspace-Rust%20crates-green.svg)](https://github.com/Gestusition/KdView/tree/main/v2/crates)
 [![RuVector v2.0.4](https://img.shields.io/badge/ruvector-v2.0.4-purple.svg)](https://crates.io/crates/ruvector-mincut)
 [![Tests](https://img.shields.io/badge/tests-542%2B-brightgreen.svg)](#testing)
 
 **See through walls with WiFi. No cameras. No wearables. Just radio waves.**
 
-A modular Rust workspace for WiFi-based human pose estimation, vital sign monitoring, and disaster response using Channel State Information (CSI). Built on [RuVector](https://crates.io/crates/ruvector-mincut) graph algorithms and the [WiFi-DensePose](https://github.com/ruvnet/wifi-densepose) research platform by [rUv](https://github.com/ruvnet).
+A modular Rust workspace for WiFi-based human pose estimation, vital sign monitoring, and disaster response using Channel State Information (CSI). KdView carries the WiFi-DensePose work forward independently while retaining upstream copyright and source attribution.
 
 ---
 
@@ -212,8 +212,8 @@ cargo run -p wifi-densepose-train --features tch-backend --bin verify-training
 
 ```bash
 # Clone the repository
-git clone https://github.com/ruvnet/wifi-densepose.git
-cd wifi-densepose/v2
+git clone https://github.com/Gestusition/KdView.git
+cd KdView/v2
 
 # Check workspace (no GPU dependencies)
 cargo check --workspace --no-default-features
@@ -272,21 +272,22 @@ cargo bench -p wifi-densepose-mat
 
 ## Architecture Decision Records
 
-Key design decisions documented in [`docs/adr/`](https://github.com/ruvnet/wifi-densepose/tree/main/docs/adr):
+Key design decisions are documented in [`docs/adr/`](https://github.com/Gestusition/KdView/tree/main/docs/adr):
 
 | ADR | Title | Status |
 |-----|-------|--------|
-| [ADR-014](https://github.com/ruvnet/wifi-densepose/blob/main/docs/adr/ADR-014-sota-signal-processing.md) | SOTA Signal Processing | Accepted |
-| [ADR-015](https://github.com/ruvnet/wifi-densepose/blob/main/docs/adr/ADR-015-public-dataset-training-strategy.md) | MM-Fi + Wi-Pose Training Datasets | Accepted |
-| [ADR-016](https://github.com/ruvnet/wifi-densepose/blob/main/docs/adr/ADR-016-ruvector-integration.md) | RuVector Training Pipeline | Accepted (Complete) |
-| [ADR-017](https://github.com/ruvnet/wifi-densepose/blob/main/docs/adr/ADR-017-ruvector-signal-mat-integration.md) | RuVector Signal + MAT Integration | Accepted |
-| [ADR-021](https://github.com/ruvnet/wifi-densepose/blob/main/docs/adr/ADR-021-vital-sign-detection.md) | Vital Sign Detection Pipeline | Accepted |
-| [ADR-022](https://github.com/ruvnet/wifi-densepose/blob/main/docs/adr/ADR-022-windows-wifi-enhanced.md) | Windows WiFi Enhanced Sensing | Accepted |
-| [ADR-024](https://github.com/ruvnet/wifi-densepose/blob/main/docs/adr/ADR-024-contrastive-csi-embedding.md) | Contrastive CSI Embedding Model | Accepted |
+| [ADR-014](https://github.com/Gestusition/KdView/blob/main/docs/adr/ADR-014-sota-signal-processing.md) | SOTA Signal Processing | Accepted |
+| [ADR-015](https://github.com/Gestusition/KdView/blob/main/docs/adr/ADR-015-public-dataset-training-strategy.md) | MM-Fi + Wi-Pose Training Datasets | Accepted |
+| [ADR-016](https://github.com/Gestusition/KdView/blob/main/docs/adr/ADR-016-ruvector-integration.md) | RuVector Training Pipeline | Accepted (Complete) |
+| [ADR-017](https://github.com/Gestusition/KdView/blob/main/docs/adr/ADR-017-ruvector-signal-mat-integration.md) | RuVector Signal + MAT Integration | Accepted |
+| [ADR-021](https://github.com/Gestusition/KdView/blob/main/docs/adr/ADR-021-vital-sign-detection.md) | Vital Sign Detection Pipeline | Accepted |
+| [ADR-022](https://github.com/Gestusition/KdView/blob/main/docs/adr/ADR-022-windows-wifi-enhanced.md) | Windows WiFi Enhanced Sensing | Accepted |
+| [ADR-024](https://github.com/Gestusition/KdView/blob/main/docs/adr/ADR-024-contrastive-csi-embedding.md) | Contrastive CSI Embedding Model | Accepted |
 
 ## Related Projects
 
-- **[WiFi-DensePose](https://github.com/ruvnet/wifi-densepose)** -- Main repository (Python v1 + Rust v2)
+- **[KdView](https://github.com/Gestusition/KdView)** -- independent repository (Python archive + Rust workspace)
+- **[WiFi-DensePose upstream](https://github.com/ruvnet/wifi-densepose)** -- historical source provenance
 - **[RuVector](https://github.com/ruvnet/ruvector)** -- Graph algorithms for neural networks (5 crates, v2.0.4)
 - **[rUv](https://github.com/ruvnet)** -- Creator and maintainer
 

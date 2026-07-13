@@ -1,5 +1,5 @@
 /**
- * `<hc-state-card>` — renders one HOMECORE entity state in the cognitum-v0 card style.
+ * `<hc-state-card>` — renders one HOMECORE entity state in the local card style.
  * Uses Lit 3 (LitElement + html/css template tags).
  */
 

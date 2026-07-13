@@ -7,7 +7,7 @@ blueprint:
     investigating. Pairs with the longer-term ADR-079 P9 personalisation
     flow once available. Part of the ADR-115 §3.12 starter blueprint set.
   domain: automation
-  source_url: https://github.com/ruvnet/RuView/blob/main/examples/ha-blueprints/07-fall-risk-escalation.yaml
+  source_url: https://github.com/Gestusition/KdView/blob/main/examples/ha-blueprints/07-fall-risk-escalation.yaml
   input:
     fall_risk_entity:
       name: Fall risk elevated sensor (0-100 score)

@@ -35,15 +35,24 @@ describe("cogBinaryCandidates()", () => {
 
   it("keeps the /usr/local/bin and bare-name PATH fallbacks last", () => {
     const c = cogBinaryCandidates("cog-person-count", "arm64");
-    // The two arch builds come first; the /usr/local/bin fallback follows them.
+    // Current + legacy roots are probed before the /usr/local/bin fallback.
     expect(c[c.length - 1]).toBe("/usr/local/bin/cog-person-count");
-    expect(c).toHaveLength(3);
+    expect(c).toHaveLength(5);
   });
 
   it("derives the id by stripping the cog- prefix once", () => {
     const c = cogBinaryCandidates("cog-person-count", "x64");
     expect(c[0]).toBe(
+      "/var/lib/ruview/apps/person-count/cog-person-count-x86_64"
+    );
+  });
+
+  it("keeps the historical install root as a final migration fallback", () => {
+    const c = cogBinaryCandidates("cog-person-count", "x64");
+    expect(c).toContain(
       "/var/lib/cognitum/apps/person-count/cog-person-count-x86_64"
     );
+    expect(c.indexOf("/var/lib/ruview/apps/person-count/cog-person-count-x86_64"))
+      .toBeLessThan(c.indexOf("/var/lib/cognitum/apps/person-count/cog-person-count-x86_64"));
   });
 });

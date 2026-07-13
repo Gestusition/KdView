@@ -5,7 +5,7 @@ edition = "2021"
 authors = ["ruvector contributors"]
 description = "CRV (Coordinate Remote Viewing) protocol integration for ruvector - maps 6-stage signal line methodology to vector database subsystems"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/ruvnet/ruvector"
+repository = "https://github.com/Gestusition/KdView"
 
 [lib]
 name = "ruvector_crv"

@@ -19,7 +19,7 @@ RuView publishes its full WiFi-sensing capability set to **Home Assistant** via 
 ```bash
 # Docker (recommended for non-developers):
 docker run --rm --net=host \
-    ruvnet/wifi-densepose:0.7.0 \
+    ghcr.io/gestusition/kdview:0.7.0 \
     --source esp32 \
     --mqtt --mqtt-host 192.168.1.10 \
     --mqtt-username homeassistant --mqtt-password-env MQTT_PASSWORD

@@ -1,7 +1,6 @@
 ---
 name: ruview-advanced-sensing
-description: Advanced RuView capabilities — RuvSense multistatic sensing (attention-weighted fusion, geometric diversity, persistent field model), cross-viewpoint fusion across multiple nodes, RF tomography (ISTA L1 solver, voxel grids), longitudinal biomechanics drift, pre-movement intention signals, adversarial signal detection, and multistatic mesh security hardening. Use for research-grade or multi-node deployments.
-allowed-tools: Bash Read Write Edit Glob Grep
+description: Use KdView's advanced RuView capabilities for RuvSense multistatic sensing, cross-viewpoint fusion, persistent field models, RF tomography, biomechanics drift, intention signals, adversarial detection, and mesh security. Use for research-grade or multi-node deployments.
 ---
 
 # RuView Advanced Sensing
@@ -42,7 +41,7 @@ Host-side helpers to explore the geometry before deploying: `node scripts/mesh-g
 
 ## Persistent field model (ADR-030)
 
-`field_model.rs` builds an SVD eigenstructure of the room and stores it (RVF, ideally on a Cognitum Seed). New CSI frames are projected against it; the residual *is* the perturbation. Lets you ask "what's different from the empty-room baseline?" and survive restarts.
+`field_model.rs` builds an SVD eigenstructure of the room and stores it in RVF on an operator-managed local gateway. New CSI frames are projected against it; the residual *is* the perturbation. This supports empty-room comparisons across restarts.
 
 ## RF tomography
 

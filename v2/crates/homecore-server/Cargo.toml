@@ -13,7 +13,7 @@ edition = "2021"
 license = "MIT"
 authors = ["rUv <ruv@ruv.net>", "HOMECORE Contributors"]
 description = "HOMECORE integration server — wires HomeCore + API + Recorder + Plugins + Automation + Assist + HAP into one process"
-repository = "https://github.com/ruvnet/RuView"
+repository = "https://github.com/Gestusition/KdView"
 
 [[bin]]
 name = "homecore-server"

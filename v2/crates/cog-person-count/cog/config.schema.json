@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://cognitum.one/schemas/cog-person-count-config-v1.json",
+  "$id": "https://raw.githubusercontent.com/Gestusition/KdView/main/v2/crates/cog-person-count/cog/config.schema.json",
   "title": "Person Count Cog Runtime Config",
   "type": "object",
   "additionalProperties": false,
@@ -12,7 +12,7 @@
     },
     "model_path": {
       "type": "string",
-      "description": "Filesystem path to count_v1.safetensors. Resolved relative to /var/lib/cognitum/apps/person-count/ when not absolute."
+      "description": "Filesystem path to count_v1.safetensors. Resolved relative to /var/lib/ruview/apps/person-count/ when not absolute."
     },
     "poll_ms": {
       "type": "integer",

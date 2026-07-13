@@ -17,11 +17,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ruview"
 version = "2.0.0a1"
-description = "RuView — ambient intelligence from WiFi CSI. Meta-package; installs `wifi-densepose` and re-exports it under the `ruview` namespace. See https://github.com/ruvnet/RuView."
+description = "KdView ambient intelligence from WiFi CSI. Compatibility meta-package that installs `wifi-densepose` and re-exports it under the `ruview` namespace. See https://github.com/Gestusition/KdView."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-authors = [{ name = "rUv", email = "ruv@ruv.net" }]
+authors = [{ name = "KdView Contributors" }]
 keywords = [
     "wifi", "csi", "pose-estimation", "vital-signs",
     "biometric", "ambient-intelligence", "home-assistant", "matter",
@@ -52,10 +52,10 @@ dependencies = [
 client = ["wifi-densepose[client]==2.0.0a1"]
 
 [project.urls]
-Homepage = "https://github.com/ruvnet/RuView"
-Repository = "https://github.com/ruvnet/RuView"
-Issues = "https://github.com/ruvnet/RuView/issues"
-Documentation = "https://github.com/ruvnet/RuView/tree/main/docs"
+Homepage = "https://github.com/Gestusition/KdView"
+Repository = "https://github.com/Gestusition/KdView"
+Issues = "https://github.com/Gestusition/KdView/issues"
+Documentation = "https://github.com/Gestusition/KdView/tree/main/docs"
 
 [tool.setuptools]
 packages = ["ruview"]

@@ -8,7 +8,7 @@ export default {
   meta: { title: 'System Dashboard' },
   async render(root, ctx) {
     const { api } = ctx;
-    root.appendChild(sectionHeader('System Dashboard', 'Cognitum v0 Appliance — the machine you are looking at'));
+    root.appendChild(sectionHeader('System Dashboard', 'Local RuView appliance — the machine you are looking at'));
     if (api.anyDemo()) root.appendChild(h('.banner.amber', 'DEMO mode (?demo=1) — panels show contract-conformant fixture data, not live (ADR-131 §2.2).'));
 
     // Each section loads independently so one offline upstream can't blank
@@ -29,13 +29,13 @@ export default {
     });
 
     // ── SEED fleet overview + ESP32 summary ────────────────────────
-    await section(root, 'SEED Fleet', async () => {
+    await section(root, 'Sensor Fleet', async () => {
       const wrap = h('div');
       const seeds = await api.seeds();
       const warnings = await api.esp32Warnings().catch(() => []);
       const grid = h('.grid.cols-3');
       seeds.forEach((s) => grid.appendChild(seedCard(s, ctx)));
-      wrap.appendChild(h('h2', 'SEED Fleet'));
+      wrap.appendChild(h('h2', 'Sensor Fleet'));
       wrap.appendChild(grid);
       wrap.appendChild(esp32Summary(seeds, warnings));
       return wrap;

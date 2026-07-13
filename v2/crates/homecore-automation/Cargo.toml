@@ -11,7 +11,7 @@ edition = "2021"
 license = "MIT"
 authors = ["rUv <ruv@ruv.net>", "HOMECORE Contributors"]
 description = "Automation engine, trigger evaluator, and MiniJinja template evaluator for HOMECORE (ADR-129)"
-repository = "https://github.com/ruvnet/RuView"
+repository = "https://github.com/Gestusition/KdView"
 
 [lib]
 name = "homecore_automation"

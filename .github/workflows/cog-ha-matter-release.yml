@@ -1,30 +1,54 @@
 name: Cog HA-Matter Release
 
-# ADR-116 P8 — Build + sign + bundle the cog-ha-matter cog on a
-# version tag. Upload to gs://cognitum-apps/ runs only when the
-# GCP_CREDENTIALS + COGNITUM_OWNER_SIGNING_KEY secrets are set, so
-# this workflow is safe to merge before the production credentials
-# land — it'll bundle release artifacts to the workflow run page
-# either way.
+# Validate and cross-build the Home Assistant + Matter integration on version
+# tags. Manual runs retain downloadable workflow artifacts; tag runs also
+# publish the same checksummed assets to a standard GitHub Release.
 
 on:
   push:
     tags:
       - 'cog-ha-matter-v*'
   workflow_dispatch:
-    inputs:
-      dry_run:
-        description: 'Build + sign + bundle but skip GCS upload'
-        required: false
-        default: 'true'
+
+permissions:
+  contents: read
 
 env:
   CARGO_TERM_COLOR: always
   CRATE: cog-ha-matter
 
 jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            v2/target
+          key: cog-ha-matter-validate-${{ hashFiles('v2/Cargo.lock') }}
+
+      - name: Run library tests
+        working-directory: v2
+        run: cargo test -p cog-ha-matter --no-default-features --lib
+
+      - name: Check release package
+        working-directory: v2
+        run: cargo check -p cog-ha-matter --no-default-features
+
   build-x86_64:
     name: Build x86_64
+    needs: validate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -49,21 +73,11 @@ jobs:
         working-directory: v2/crates/cog-ha-matter/cog
         run: make build-x86_64
 
-      - name: Compute SHA-256
+      - name: Compute checksum and optional signature
+        env:
+          RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
         working-directory: v2/crates/cog-ha-matter/cog
         run: make sign-x86_64
-
-      - name: Sign with Ed25519 (gated)
-        if: ${{ env.SIGNING_KEY != '' }}
-        env:
-          SIGNING_KEY: ${{ secrets.COGNITUM_OWNER_SIGNING_KEY }}
-        working-directory: v2/crates/cog-ha-matter/cog
-        run: |
-          printf '%s' "$SIGNING_KEY" \
-            | openssl pkeyutl -sign -inkey /dev/stdin -rawin \
-                -in dist/cog-ha-matter-x86_64.sha256 \
-            | base64 -w0 > dist/cog-ha-matter-x86_64.sig
-          echo "Signed cog-ha-matter-x86_64 ($(wc -c < dist/cog-ha-matter-x86_64.sig) bytes)"
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
@@ -74,9 +88,11 @@ jobs:
             v2/crates/cog-ha-matter/cog/dist/cog-ha-matter-x86_64.sha256
             v2/crates/cog-ha-matter/cog/dist/cog-ha-matter-x86_64.sig
           if-no-files-found: warn
+          retention-days: 14
 
   build-arm:
     name: Build aarch64 (arm)
+    needs: validate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -111,23 +127,12 @@ jobs:
           mkdir -p crates/cog-ha-matter/cog/dist
           cp target/aarch64-unknown-linux-gnu/release/cog-ha-matter \
              crates/cog-ha-matter/cog/dist/cog-ha-matter-arm
-          # ^ matches Makefile's `dist/$(CRATE)-arm` so `make sign-arm` finds it
 
-      - name: Compute SHA-256
+      - name: Compute checksum and optional signature
+        env:
+          RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
         working-directory: v2/crates/cog-ha-matter/cog
         run: make sign-arm
-
-      - name: Sign with Ed25519 (gated)
-        if: ${{ env.SIGNING_KEY != '' }}
-        env:
-          SIGNING_KEY: ${{ secrets.COGNITUM_OWNER_SIGNING_KEY }}
-        working-directory: v2/crates/cog-ha-matter/cog
-        run: |
-          printf '%s' "$SIGNING_KEY" \
-            | openssl pkeyutl -sign -inkey /dev/stdin -rawin \
-                -in dist/cog-ha-matter-arm.sha256 \
-            | base64 -w0 > dist/cog-ha-matter-arm.sig
-          echo "Signed cog-ha-matter-arm ($(wc -c < dist/cog-ha-matter-arm.sig) bytes)"
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
@@ -138,69 +143,44 @@ jobs:
             v2/crates/cog-ha-matter/cog/dist/cog-ha-matter-arm.sha256
             v2/crates/cog-ha-matter/cog/dist/cog-ha-matter-arm.sig
           if-no-files-found: warn
+          retention-days: 14
 
-  publish-gcs:
-    name: Upload to GCS (gated)
+  publish-github-release:
+    name: Publish GitHub Release
     needs: [build-x86_64, build-arm]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/cog-ha-matter-v')
     runs-on: ubuntu-latest
-    # Skip on dry-run dispatch; skip on tags when GCP_CREDENTIALS unset.
-    if: >
-      github.event_name == 'push' &&
-      vars.HAS_GCP_CREDENTIALS == 'true'
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Download x86_64 artifact
+      - name: Download release artifacts
         uses: actions/download-artifact@v4
         with:
-          name: cog-ha-matter-x86_64
-          path: dist/
+          path: release-assets
+          merge-multiple: true
 
-      - name: Download arm artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: cog-ha-matter-arm
-          path: dist/
-
-      - name: Auth to GCP
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-
-      - name: Set up gcloud
-        uses: google-github-actions/setup-gcloud@v2
-
-      - name: Upload binaries + sidecars
+      - name: Verify release checksums
         run: |
-          gsutil cp dist/cog-ha-matter-x86_64       gs://cognitum-apps/cogs/x86_64/cog-ha-matter-x86_64
-          gsutil cp dist/cog-ha-matter-x86_64.sha256 gs://cognitum-apps/cogs/x86_64/cog-ha-matter-x86_64.sha256
-          gsutil cp dist/cog-ha-matter-arm           gs://cognitum-apps/cogs/arm/cog-ha-matter-arm
-          gsutil cp dist/cog-ha-matter-arm.sha256    gs://cognitum-apps/cogs/arm/cog-ha-matter-arm.sha256
-          if [ -f dist/cog-ha-matter-x86_64.sig ]; then
-            gsutil cp dist/cog-ha-matter-x86_64.sig gs://cognitum-apps/cogs/x86_64/cog-ha-matter-x86_64.sig
-          fi
-          if [ -f dist/cog-ha-matter-arm.sig ]; then
-            gsutil cp dist/cog-ha-matter-arm.sig    gs://cognitum-apps/cogs/arm/cog-ha-matter-arm.sig
-          fi
-
-      - name: Print app-registry.json snippet for the cognitum-one PR
-        run: |
-          for arch in arm x86_64; do
-            sha=$(cat dist/cog-cog-ha-matter-$arch.sha256)
-            sig=$([ -f dist/cog-cog-ha-matter-$arch.sig ] && cat dist/cog-cog-ha-matter-$arch.sig || echo "")
-            cat <<EOF
-          --- $arch ---
-          {
-            "id": "ha-matter",
-            "version": "${GITHUB_REF_NAME#cog-ha-matter-v}",
-            "binary_url": "https://storage.googleapis.com/cognitum-apps/cogs/$arch/cog-cog-ha-matter-$arch",
-            "binary_sha256": "$sha",
-            "binary_signature": "$sig",
-            "description": "Home Assistant + Matter Cognitum Seed cog (mDNS + witness chain)",
-            "min_seed_version": "0.6.0",
-            "installable_on": ["$arch"]
-          }
-          EOF
+          set -euo pipefail
+          cd release-assets
+          for checksum in *.sha256; do
+            binary="${checksum%.sha256}"
+            printf '%s  %s\n' "$(cat "$checksum")" "$binary" | sha256sum --check -
           done
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          tag="$GITHUB_REF_NAME"
+          title="cog-ha-matter ${tag#cog-ha-matter-v}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" release-assets/* --clobber
+          else
+            gh release create "$tag" release-assets/* \
+              --verify-tag \
+              --title "$title" \
+              --generate-notes
+          fi

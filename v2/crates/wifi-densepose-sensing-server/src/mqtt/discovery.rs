@@ -514,7 +514,7 @@ mod tests {
             node_friendly_name: Some("Bedroom"),
             sw_version: "v0.7.0",
             model: "ESP32-S3 CSI node",
-            via_device: Some("cognitum_seed_1"),
+            via_device: Some("edge_gateway_1"),
         }
     }
 
@@ -535,7 +535,7 @@ mod tests {
         );
         assert_eq!(j["device"]["identifiers"][0], "wifi_densepose_aabbccddeeff");
         assert_eq!(j["device"]["name"], "Bedroom");
-        assert_eq!(j["device"]["via_device"], "cognitum_seed_1");
+        assert_eq!(j["device"]["via_device"], "edge_gateway_1");
         assert_eq!(j["origin"]["name"], "wifi-densepose-sensing-server");
     }
 

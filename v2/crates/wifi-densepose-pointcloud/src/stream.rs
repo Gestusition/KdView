@@ -16,6 +16,41 @@ use axum::{
 use std::sync::{Arc, Mutex};
 use tower_http::cors::{AllowOrigin, CorsLayer};
 
+const KDVIEW_PAGES_ORIGIN: &str = "https://gestusition.github.io";
+
+fn configured_cors_origins() -> Vec<String> {
+    std::env::var("KDVIEW_CORS_ORIGINS")
+        .or_else(|_| std::env::var("RUVIEW_CORS_ORIGINS"))
+        .unwrap_or_default()
+        .split(',')
+        .map(str::trim)
+        .filter(|origin| !origin.is_empty())
+        .map(str::to_owned)
+        .collect()
+}
+
+fn is_loopback_origin(origin: &str) -> bool {
+    origin == "http://localhost"
+        || origin
+            .strip_prefix("http://localhost:")
+            .is_some_and(|port| !port.is_empty() && port.chars().all(|ch| ch.is_ascii_digit()))
+        || origin == "http://127.0.0.1"
+        || origin
+            .strip_prefix("http://127.0.0.1:")
+            .is_some_and(|port| !port.is_empty() && port.chars().all(|ch| ch.is_ascii_digit()))
+        || origin == "http://[::1]"
+        || origin
+            .strip_prefix("http://[::1]:")
+            .is_some_and(|port| !port.is_empty() && port.chars().all(|ch| ch.is_ascii_digit()))
+}
+
+fn is_cors_origin_allowed(origin: &str, configured: &[String]) -> bool {
+    origin == KDVIEW_PAGES_ORIGIN
+        || is_loopback_origin(origin)
+        || origin == "null"
+        || configured.iter().any(|allowed| allowed == origin)
+}
+
 struct AppState {
     latest_cloud: Mutex<pointcloud::PointCloud>,
     latest_splats: Mutex<Vec<pointcloud::GaussianSplat>>,
@@ -119,20 +154,20 @@ pub async fn serve(bind: &str, _brain: Option<&str>) -> anyhow::Result<()> {
     // 127.0.0.1/localhost as a "potentially trustworthy" origin so the HTTPS
     // page can reach a plain-HTTP loopback backend without mixed-content
     // blocking. Origins permitted:
-    //   - https://ruvnet.github.io (the published RuView Pages demo)
+    //   - https://gestusition.github.io (the published KdView Pages demo)
     //   - http://localhost:* / http://127.0.0.1:* (developer running the
     //     viewer.html bundled with this binary)
+    //   - exact origins listed in KDVIEW_CORS_ORIGINS (comma-separated), with
+    //     RUVIEW_CORS_ORIGINS retained as a compatibility alias
     // Anything else is denied, so this is not a "wildcard" CORS.
+    let configured_origins = configured_cors_origins();
     let cors = CorsLayer::new()
-        .allow_origin(AllowOrigin::predicate(|origin: &HeaderValue, _req| {
+        .allow_origin(AllowOrigin::predicate(move |origin: &HeaderValue, _req| {
             let s = match origin.to_str() {
                 Ok(v) => v,
                 Err(_) => return false,
             };
-            s == "https://ruvnet.github.io"
-                || s.starts_with("http://localhost")
-                || s.starts_with("http://127.0.0.1")
-                || s == "null" // file:// origins
+            is_cors_origin_allowed(s, &configured_origins)
         }))
         .allow_methods([Method::GET, Method::OPTIONS])
         .allow_headers([axum::http::header::CONTENT_TYPE]);
@@ -160,6 +195,50 @@ pub async fn serve(bind: &str, _brain: Option<&str>) -> anyhow::Result<()> {
     let listener = tokio::net::TcpListener::bind(bind).await?;
     axum::serve(listener, app).await?;
     Ok(())
+}
+
+#[cfg(test)]
+mod cors_tests {
+    use super::is_cors_origin_allowed;
+
+    #[test]
+    fn allows_fork_pages_and_loopback_development_origins() {
+        let configured = Vec::new();
+        assert!(is_cors_origin_allowed(
+            "https://gestusition.github.io",
+            &configured
+        ));
+        assert!(is_cors_origin_allowed("http://localhost:5173", &configured));
+        assert!(is_cors_origin_allowed("http://127.0.0.1:9880", &configured));
+        assert!(is_cors_origin_allowed("http://[::1]:9880", &configured));
+        assert!(is_cors_origin_allowed("null", &configured));
+    }
+
+    #[test]
+    fn allows_only_exact_configured_origins() {
+        let configured = vec!["https://viewer.example".to_owned()];
+        assert!(is_cors_origin_allowed(
+            "https://viewer.example",
+            &configured
+        ));
+        assert!(!is_cors_origin_allowed(
+            "https://viewer.example.evil",
+            &configured
+        ));
+    }
+
+    #[test]
+    fn rejects_prefix_spoofing_and_retired_vendor_origin_by_default() {
+        let configured = Vec::new();
+        assert!(!is_cors_origin_allowed(
+            "http://localhost.evil:5173",
+            &configured
+        ));
+        assert!(!is_cors_origin_allowed(
+            "https://ruvnet.github.io",
+            &configured
+        ));
+    }
 }
 
 fn capture_camera_cloud() -> pointcloud::PointCloud {

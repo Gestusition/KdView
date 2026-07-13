@@ -19,7 +19,7 @@ Discovery payload (presence/heart_rate/fall) generation completed earlier in the
 
 ## What this means
 
-At a full **1 Hz publish rate per node**, the entire ADR-115 hot path — rate-limit decisions, privacy filter, semantic inference across all 10 primitives, plus serialised state encoding — costs roughly **1 µs per node per tick** on commodity hardware. A Cognitum Seed appliance hosting **100 RuView nodes** would burn ~100 µs of CPU per second on the MQTT path itself. That's a 0.01% load floor.
+At a full **1 Hz publish rate per node**, the entire ADR-115 hot path — rate-limit decisions, privacy filter, semantic inference across all 10 primitives, plus serialised state encoding — costs roughly **1 µs per node per tick** on commodity hardware. A local gateway hosting **100 RuView nodes** would spend about 100 µs of CPU per second on the MQTT path itself. That's a 0.01% load floor.
 
 Memory: every primitive's FSM is a few dozen bytes of state. 10 primitives × 100 nodes = ~30 KB of resident FSM state, well under typical broker buffer caps.
 
@@ -37,4 +37,4 @@ Output lands under `dist/witness-bundle-ADR115-<sha>-<ts>/bench-results/` as bot
 
 ## Cross-platform note
 
-These measurements are from a single laptop. Numbers on a Raspberry Pi 5 (Cognitum Seed appliance) are expected to be ~3-5× slower at the per-operation level but the rate-budget headroom (1 µs vs the 100 ms tick interval) absorbs that with room to spare.
+These measurements are from a single laptop. Numbers on a Raspberry Pi 5 gateway are expected to be ~3-5× slower at the per-operation level, but the rate-budget headroom (1 µs vs the 100 ms tick interval) absorbs that with room to spare.

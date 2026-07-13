@@ -5,7 +5,7 @@ Apple Home HomeKit Accessory Protocol bridge for HOMECORE with HAP-1.1 trait sur
 [![Crates.io](https://img.shields.io/crates/v/homecore-hap.svg)](https://crates.io/crates/homecore-hap)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![MSRV: 1.89+](https://img.shields.io/badge/MSRV-1.89%2B-purple.svg)
-[![Tests](https://img.shields.io/badge/tests-17%20passing-brightgreen.svg)](https://github.com/ruvnet/RuView)
+[![Tests](https://img.shields.io/badge/tests-17%20passing-brightgreen.svg)](https://github.com/Gestusition/KdView)
 [![ADR-125](https://img.shields.io/badge/ADR-125-orange.svg)](../../docs/adr/ADR-125-homecore-apple-home-homekit-bridge.md)
 
 **P1 scaffold**: trait surface for HAP accessories + characteristics, entity→HAP mapping rules, and bridge ownership. The actual HAP-1.1 TLS server and real mDNS integration are gated behind `--features hap-server` (P2).

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Happiness Vector",
-  "description": "8-dimensional happiness feature vector for Cognitum Seed ingestion (ADR-065). Each dimension is normalized to [0, 1] where higher values indicate more positive affect.",
+  "description": "8-dimensional happiness feature vector for compatible local gateway ingestion (ADR-065). Each dimension is normalized to [0, 1] where higher values indicate more positive affect.",
   "type": "object",
   "properties": {
     "vectors": {
@@ -87,7 +87,7 @@
     },
     "seed_id_scheme": {
       "type": "object",
-      "description": "Vector ID encoding for Cognitum Seed",
+      "description": "Vector ID encoding for a compatible local gateway",
       "properties": {
         "format": "node_id * 1000000 + type_offset + timestamp_component",
         "registration": "offset 0 (e.g. node 1 = 1000000)",

@@ -1,7 +1,7 @@
 # RuView — Multi-node grid Lovelace dashboard
 #
 # For deployments with multiple RuView nodes (typical: one per room,
-# all behind a Cognitum Seed bridge). Shows a top-level grid of every
+# optionally connected through an operator-managed local gateway). Shows a top-level grid of every
 # room's presence + person count + activity, with drill-in links.
 #
 # Replace `_bedroom`, `_living`, `_kitchen`, `_office`, `_bathroom`

@@ -62,7 +62,7 @@ export default {
     let filter = '';
     const search = h('input.search', {
       type: 'text',
-      placeholder: 'Filter by entity domain · event type · source (e.g. "sensor", "ConfigReloaded", "seed-")',
+      placeholder: 'Filter by entity domain · event type · source (e.g. "sensor", "ConfigReloaded", "gateway")',
     });
     search.addEventListener('input', () => { filter = search.value.trim().toLowerCase(); applyFilter(); });
 
@@ -164,7 +164,7 @@ function causalityBreadcrumb(c) {
 // ── automation builder (trigger → condition → action) ─────────────────
 const TRIGGERS = [
   { id: 'state_changed', label: 'state_changed on RoomState entity' },
-  { id: 'seed_reflex', label: 'SEED reflex rule fired' },
+  { id: 'seed_reflex', label: 'Gateway reflex rule fired' },
   { id: 'custom_event', label: 'custom domain_event topic' },
 ];
 const REFLEX_RULES = ['fragility_alarm', 'hd_anomaly_indicator'];

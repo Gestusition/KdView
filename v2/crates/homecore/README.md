@@ -5,7 +5,7 @@ Rust port of Home Assistant's core state machine, event bus, service registry, a
 [![Crates.io](https://img.shields.io/crates/v/homecore.svg)](https://crates.io/crates/homecore)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![MSRV: 1.89+](https://img.shields.io/badge/MSRV-1.89%2B-purple.svg)
-[![Tests](https://img.shields.io/badge/tests-20%20passing-brightgreen.svg)](https://github.com/ruvnet/RuView)
+[![Tests](https://img.shields.io/badge/tests-20%20passing-brightgreen.svg)](https://github.com/Gestusition/KdView)
 [![ADR-127](https://img.shields.io/badge/ADR-127-orange.svg)](../../docs/adr/ADR-127-homecore-state-machine-rust.md)
 
 **P1 scaffold**: foundational types, DashMap-backed state machine, and Tokio broadcast event bus. Persistence and full Home Assistant schema compatibility land in P2.

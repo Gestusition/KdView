@@ -2,6 +2,8 @@
 
 This folder contains 182 Architecture Decision Records (ADRs) that document every significant technical choice in the RuView / WiFi-DensePose project. (The index tables below list a curated subset per domain; see the directory listing for the full set.)
 
+> **KdView fork policy:** [Gestusition/KdView](https://github.com/Gestusition/KdView) is the canonical repository. ADRs are immutable decision history, so links to `ruvnet/RuView`, old release tags, Cognitum appliances, and `seed_*` identifiers are retained as upstream provenance or compatibility evidence. They are not current product dependencies. In particular, ADR-069's product-specific deployment is superseded for KdView by an operator-managed local persistence gateway; its RVF, kNN, witness, and bridge protocol details remain valid compatibility documentation.
+
 ## Why ADRs?
 
 Building a system that turns WiFi signals into human pose estimation involves hundreds of non-obvious decisions: which signal processing algorithms to use, how to bridge ESP32 firmware to a Rust pipeline, whether to run inference on-device or on a server, how to handle multi-person separation with limited subcarriers.

@@ -2,7 +2,7 @@
 
 Per [ADR-115 §3.12.4](../adr/ADR-115-home-assistant-integration.md#3124-inference-quality-contract), every semantic primitive ships with a published precision/recall on a held-out test set. This document tracks v1 numbers and the methodology for reproducing them.
 
-> **Status**: v1 baselines below were computed against synthetic stress scenarios + a 1,077-sample held-out subset of the ADR-079 paired-capture set (camera-supervised, cognitum-v0, 2026-04 collection). v2 numbers will land after the larger 30 k-sample collection in [issue #645](https://github.com/ruvnet/RuView/issues/645).
+> **Status**: v1 baselines below were computed against synthetic stress scenarios + a 1,077-sample held-out subset of the ADR-079 paired-capture set (camera-supervised, historical capture-host identifier `cognitum-v0`, 2026-04 collection). The host name is retained solely as data provenance. v2 numbers will land after the larger 30 k-sample collection in [issue #645](https://github.com/Gestusition/KdView/issues/645).
 
 ---
 
@@ -28,7 +28,7 @@ Per [ADR-115 §3.12.4](../adr/ADR-115-home-assistant-integration.md#3124-inferen
 ### Test set composition
 
 - **Synthetic stress scenarios** (Rust unit tests, in `v2/crates/wifi-densepose-sensing-server/src/semantic/*/tests.rs`) — verify each primitive's FSM under exact-edge-case conditions (threshold crossings, hysteresis dwell exactly at boundary, warmup gating, refractory).
-- **Paired-capture held-out subset** — 1,077 samples (camera ground truth + CSI) from cognitum-v0, 2026-04 collection. Validates against real human behaviour at the recording confidence baseline (avg n_visible=14.3/17 keypoints, avg detection confidence 0.476).
+- **Paired-capture held-out subset** — 1,077 samples (camera ground truth + CSI) from the historical capture host `cognitum-v0`, 2026-04 collection. The identifier records provenance, not a current KdView dependency. Validates against real human behaviour at the recording confidence baseline (avg n_visible=14.3/17 keypoints, avg detection confidence 0.476).
 - **Field-emitted samples** — `semantic_events.jsonl` appendix log on `--data-dir`, retrospectively labelled. v2 will run replay-evaluation in CI.
 
 ### How to reproduce these numbers

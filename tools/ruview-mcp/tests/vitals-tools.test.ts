@@ -28,7 +28,7 @@ const testConfig: RuviewConfig = {
 
 /** Fixture that mirrors a realistic EdgeVitalsMessage from a live node. */
 const FIXTURE: EdgeVitalsMessage = {
-  node_id: "cognitum-seed-1",
+  node_id: "local-gateway-1",
   timestamp_ms: 1_716_500_000_000,
   presence: true,
   n_persons: 2,
@@ -81,7 +81,7 @@ describe("ruview.presence.now handler", () => {
     expect(out.present).toBe(true);
     expect(out.n_persons).toBe(2);
     expect(out.confidence).toBe(0.87);
-    expect(out.node_id).toBe("cognitum-seed-1");
+    expect(out.node_id).toBe("local-gateway-1");
   });
 });
 
@@ -159,7 +159,7 @@ describe("ruview.vitals.get_all handler", () => {
 
   it("spreads all fixture fields (no raw field present)", () => {
     const out = { ok: true, ...FIXTURE };
-    expect(out.node_id).toBe("cognitum-seed-1");
+    expect(out.node_id).toBe("local-gateway-1");
     expect(out.presence).toBe(true);
     expect(out.breathing_rate_bpm).toBe(14.5);
     expect(out.heartrate_bpm).toBe(72.0);
@@ -171,7 +171,7 @@ describe("ruview.vitals.get_all handler", () => {
 
 describe("vitalsGetAllSchema", () => {
   it("accepts node_id", () => {
-    const r = vitalsGetAllSchema.parse({ node_id: "seed-1" });
-    expect(r.node_id).toBe("seed-1");
+    const r = vitalsGetAllSchema.parse({ node_id: "node-1" });
+    expect(r.node_id).toBe("node-1");
   });
 });

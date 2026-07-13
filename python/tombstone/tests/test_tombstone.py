@@ -37,6 +37,8 @@ def test_tombstone_contains_migration_url() -> None:
     assert "docs/pip-migration.md" in src, (
         "tombstone must point users at the migration guide"
     )
+    assert "github.com/Gestusition/KdView" in src
+    assert "github.com/ruvnet" not in src
 
 
 def test_tombstone_is_minimal() -> None:

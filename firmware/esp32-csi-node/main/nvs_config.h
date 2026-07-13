@@ -57,8 +57,8 @@ typedef struct {
     uint8_t  filter_mac_set;                 /**< 1 if filter_mac was loaded from NVS. */
 
     /* ADR-066: Swarm bridge configuration */
-    char     seed_url[64];                /**< Cognitum Seed base URL (empty = disabled). */
-    char     seed_token[64];             /**< Seed Bearer token (from pairing). */
+    char     gateway_url[64];             /**< Operator-managed gateway URL (empty = disabled). */
+    char     gateway_token[64];           /**< Optional gateway Bearer token. */
     char     zone_name[16];              /**< Zone name for this node (e.g. "lobby"). */
     uint16_t swarm_heartbeat_sec;        /**< Heartbeat interval (seconds, default 30). */
     uint16_t swarm_ingest_sec;           /**< Vector ingest interval (seconds, default 5). */

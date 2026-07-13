@@ -1,6 +1,6 @@
 // HOMECORE-UI bootstrap + shell + router — ADR-131 §5.
 //
-// Builds the Cognitum-shell top nav (Framework | Guide | Cog Store |
+// Builds the HOMECORE top nav (Framework | Guide | Edge Modules |
 // HOMECORE | Status) with HOMECORE active, a left sub-nav for the nine
 // HOMECORE sections, and a hash router. One shared WebSocket feeds a bus
 // that every panel subscribes to (no per-panel sockets, no polling).
@@ -23,7 +23,7 @@ import settings from './panels/settings.js';
 // Section registry. order drives the left sub-nav (§5).
 const SECTIONS = [
   { id: 'dashboard', label: 'Dashboard', icon: '◳', mod: dashboard },
-  { id: 'fleet', label: 'SEED Fleet', icon: '⬡', mod: fleet },
+  { id: 'fleet', label: 'Sensor Fleet', icon: '⬡', mod: fleet },
   { id: 'entities', label: 'Entities', icon: '◈', mod: entities },
   { id: 'rooms', label: 'Rooms', icon: '⌂', mod: rooms },
   { id: 'cogs', label: 'COGs', icon: '⚙', mod: cogs },
@@ -63,7 +63,7 @@ function buildShell() {
   const topnav = h('.topnav',
     h('.brand',
       h('span.logo', 'C'),
-      h('span.brand-name', 'Cognitum'),
+      h('span.brand-name', 'HOMECORE'),
       h('span.brand-sep', '/'),
       h('span.brand-tag', 'HOMECORE')),
     h('span.nav-spacer'),

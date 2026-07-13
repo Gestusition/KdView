@@ -25,6 +25,7 @@ fi
 INSTANCE_IP="$1"
 SNAPSHOT_DIR="$2"
 GCP_USER="${GCP_USER:-$(gcloud config get-value account 2>/dev/null | cut -d@ -f1)}"
+GCP_PROJECT="${GCP_PROJECT:-$(gcloud config get-value project 2>/dev/null || true)}"
 REMOTE="${GCP_USER}@${INSTANCE_IP}"
 LOCAL_SCRIPTS_DIR="$(cd "$(dirname "$0")/../.." && pwd)/scripts"
 OUTPUT_DIR="./out/gcp-checkpoints"
@@ -65,7 +66,7 @@ SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=15 -o BatchMode=yes"
 if ! ssh $SSH_OPTS "$REMOTE" "echo ok" &>/dev/null; then
   echo "ERROR: Cannot SSH to $REMOTE" >&2
   echo "       Ensure the instance is running and your SSH key is authorized." >&2
-  echo "       Try: gcloud compute ssh <INSTANCE_NAME> --project=cognitum-20260110" >&2
+  echo "       Try: gcloud compute ssh <INSTANCE_NAME> --project=${GCP_PROJECT:-<configured-project>}" >&2
   exit 1
 fi
 log "SSH connection OK"

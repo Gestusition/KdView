@@ -16,7 +16,7 @@ export default {
   async render(root, ctx) {
     const { api } = ctx;
 
-    root.appendChild(sectionHeader('Witness / Audit Log', 'Two-tier provenance — SEED SHA-256 store chain + homecore Ed25519 state chain'));
+    root.appendChild(sectionHeader('Witness / Audit Log', 'Two-tier provenance — gateway SHA-256 store chain + homecore Ed25519 state chain'));
     if (api.isDemo('audit')) root.appendChild(banner('DEMO — contract-conformant witness data until the live audit endpoint lands (ADR-131 §7.1).', 'amber'));
 
     // Async data accessors now return Promises (api.js). Wrap the initial
@@ -78,8 +78,8 @@ function privacyCard(modes, rerender) {
   const anyAudit = modes.some((m) => m.mode === 'audit-only');
 
   const top = allPublish
-    ? banner('Full-publish mode — SEED state changes are published over MQTT.', 'green')
-    : banner('Audit-only mode (SHA-256 digests on-SEED only, no MQTT state messages).', 'amber');
+    ? banner('Full-publish mode — gateway state changes are published over MQTT.', 'green')
+    : banner('Audit-only mode (SHA-256 digests stay on the gateway; no MQTT state messages).', 'amber');
 
   const list = h('div');
   modes.forEach((m, i) => list.appendChild(privacyRow(m, modes, rerender, i)));
@@ -88,7 +88,7 @@ function privacyCard(modes, rerender) {
     title: 'Privacy mode',
     children: [
       top,
-      h('.t2.mt', 'Per-SEED configuration — each SEED chooses independently what leaves the device.'),
+      h('.t2.mt', 'Per-gateway configuration — each gateway chooses independently what leaves the device.'),
       list,
     ],
   });
@@ -120,7 +120,7 @@ function privacyRow(m, modes, rerender, idx) {
 function confirmStep(m, modes, rerender, confirmHost) {
   const target = m.mode === 'full-publish' ? 'audit-only' : 'full-publish';
   const summary = target === 'audit-only'
-    ? `${m.seed} will STOP publishing state changes over MQTT — only on-SEED SHA-256 digests remain.`
+    ? `${m.seed} will STOP publishing state changes over MQTT — only local gateway SHA-256 digests remain.`
     : `${m.seed} will START publishing state changes over MQTT (full state values leave the device).`;
 
   const confirmBtn = button('Confirm', {
@@ -150,7 +150,7 @@ function timelineCard(res, onPrev, onNext) {
   const isLast = page >= lastPage;
 
   const head = h('.row',
-    h('span.k', 'entity · old → new · when · tier · source SEED · key'),
+    h('span.k', 'entity · old → new · when · tier · source gateway · key'),
     h('span.t2', `merged chronological — both chains`));
 
   const body = h('div');
@@ -203,13 +203,13 @@ function exportCard() {
     onClick: () => {
       clear(status);
       status.appendChild(h('span.green',
-        'Bundle prepared — SEED SHA-256 store chain + homecore Ed25519 state chain packaged for compliance handoff.'));
+        'Bundle prepared — gateway SHA-256 store chain + homecore Ed25519 state chain packaged for compliance handoff.'));
     },
   });
   return card({
     title: 'Attestation bundle',
     children: [
-      h('.t2', 'Packages both witness chains (SEED SHA-256 + homecore Ed25519) for regulated-deployment compliance handoff.'),
+      h('.t2', 'Packages both witness chains (gateway SHA-256 + homecore Ed25519) for regulated-deployment compliance handoff.'),
       h('.mt', btn),
       status,
     ],

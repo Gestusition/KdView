@@ -5,7 +5,7 @@ WASM integration plugin runtime for HOMECORE with native Rust runtime (P1) and W
 [![Crates.io](https://img.shields.io/crates/v/homecore-plugins.svg)](https://crates.io/crates/homecore-plugins)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![MSRV: 1.89+](https://img.shields.io/badge/MSRV-1.89%2B-purple.svg)
-[![Tests](https://img.shields.io/badge/tests-10%20passing-brightgreen.svg)](https://github.com/ruvnet/RuView)
+[![Tests](https://img.shields.io/badge/tests-10%20passing-brightgreen.svg)](https://github.com/Gestusition/KdView)
 [![ADR-128](https://img.shields.io/badge/ADR-128-orange.svg)](../../docs/adr/ADR-128-homecore-integration-plugin-system.md)
 
 **P1 scaffold**: manifest parsing, plugin traits, and in-memory native Rust plugin registry. Wasmtime sandbox (P2) and hot-reload (P3) are deferred.

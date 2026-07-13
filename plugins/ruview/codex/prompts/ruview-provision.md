@@ -10,7 +10,7 @@ python firmware/esp32-csi-node/provision.py --port COM8 \
   [--channel <N>] [--filter-mac <AA:BB:CC:DD:EE:FF>] [--hop-channels 1,6,11 --hop-dwell 200] \
   [--tdm-slot <i> --tdm-total <n>] [--edge-tier 0|1|2] [--pres-thresh 50] [--fall-thresh 15000] \
   [--vital-win 300] [--vital-int 1000] [--subk-count 32] \
-  [--seed-url http://10.1.10.236 --seed-token <bearer> --zone lobby] [--swarm-hb 30] [--swarm-ingest 5] [--dry-run]
+  [--gateway-url http://127.0.0.1:8080 --gateway-token <bearer> --zone lobby] [--swarm-hb 30] [--swarm-ingest 5] [--dry-run]
 ```
 
 Trade-offs:

@@ -6,7 +6,7 @@ blueprint:
     home alarm. Time-window-gated so a midnight bathroom trip doesn't
     trigger it. Part of the ADR-115 §3.12 starter blueprint set.
   domain: automation
-  source_url: https://github.com/ruvnet/RuView/blob/main/examples/ha-blueprints/03-wake-routine-on-bed-exit.yaml
+  source_url: https://github.com/Gestusition/KdView/blob/main/examples/ha-blueprints/03-wake-routine-on-bed-exit.yaml
   input:
     bed_exit_event:
       name: Bed exit event entity

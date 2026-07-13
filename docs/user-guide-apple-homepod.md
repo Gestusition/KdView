@@ -468,7 +468,7 @@ These items are intentionally deferred or beyond the current release:
 - [ADR-125 — RuView ↔ Apple Home native HAP bridge](docs/adr/ADR-125-ruview-apple-home-native-hap-bridge.md) — Design spec, privacy rationale, sequencing
 - [ADR-118 — Beamforming Feedback Layer for Detection](docs/adr/ADR-118-bfld-beamforming-feedback-layer-for-detection.md) — BFLD privacy gate and identity-risk semantics
 - [ADR-124 — rvagent MCP / RuVector npm integration](docs/adr/ADR-124-rvagent-mcp-ruvector-npm-integration.md) — MCP tool specification
-- [Issue #796](https://github.com/ruvnet/RuView/issues/796) — Tier 1+2 sprint tracking (close-out comments have per-iter empirical data)
+- [Issue #796](https://github.com/Gestusition/KdView/issues/796) — Tier 1+2 sprint tracking (close-out comments have per-iter empirical data)
 - [scripts/macos-shortcuts/README.md](scripts/macos-shortcuts/README.md) — Shortcuts-as-glue setup and troubleshooting
 - [HomeKit Accessory Protocol (Non-Commercial Version)](https://developer.apple.com/apple-home/) — HAP-1.1 spec
 - [HAP-python on GitHub](https://github.com/ikalchev/HAP-python) — Implementation library

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://cognitum.one/schemas/cog-pose-estimation-config-v1.json",
+  "$id": "https://raw.githubusercontent.com/Gestusition/KdView/main/v2/crates/cog-pose-estimation/cog/config.schema.json",
   "title": "Pose Estimation Cog Runtime Config",
   "type": "object",
   "additionalProperties": false,
@@ -13,7 +13,7 @@
     },
     "model_path": {
       "type": "string",
-      "description": "Filesystem path to the model weights (safetensors or Hailo HEF). Resolved relative to /var/lib/cognitum/apps/pose-estimation/ when not absolute."
+      "description": "Filesystem path to the model weights (safetensors or Hailo HEF). Resolved relative to /var/lib/ruview/apps/pose-estimation/ when not absolute."
     },
     "poll_ms": {
       "type": "integer",

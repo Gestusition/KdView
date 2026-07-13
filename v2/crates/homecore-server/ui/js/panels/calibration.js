@@ -52,7 +52,7 @@ export default {
       let seedList = [];
       (async () => {
         try { seedList = (await api.seeds()).filter((s) => s.online); }
-        catch (e) { warn.appendChild(banner('SEED fleet unavailable — ' + (e.message || e), 'red')); }
+        catch (e) { warn.appendChild(banner('Sensor fleet unavailable — ' + (e.message || e), 'red')); }
         seedList.forEach((s) => seedSel.appendChild(h('option', { value: s.device_id }, `${s.device_id} (${s.zone})`)));
       })();
       const validate = () => {
@@ -66,9 +66,9 @@ export default {
       roomInput.addEventListener('input', validate);
       seedSel.addEventListener('change', validate);
       return card({
-        title: 'Step 1 — Select room and SEED', children: [
+        title: 'Step 1 — Select room and gateway', children: [
           h('h3', 'room_id'), roomInput,
-          h('h3.mt', 'Serving SEED'), seedSel, warn,
+          h('h3.mt', 'Serving gateway'), seedSel, warn,
           h('.mt', button('Next', { variant: 'primary', onClick: () => { if (validate()) { state.room_id = roomInput.value; state.seed = seedSel.value; go(2); } } })),
         ],
       });

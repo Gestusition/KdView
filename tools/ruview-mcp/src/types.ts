@@ -77,7 +77,7 @@ export interface CountInferResult {
 
 // ── Registry ──────────────────────────────────────────────────────────────
 
-/** A single cog entry from the Cognitum app-registry.json. */
+/** A single module entry from the local edge registry. */
 export interface CogEntry {
   id: string;
   name: string;

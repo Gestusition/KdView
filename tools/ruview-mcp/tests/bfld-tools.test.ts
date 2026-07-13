@@ -82,10 +82,10 @@ describe("ruview.bfld.last_scan schema (BfldLastScanInputSchema)", () => {
 
   it("accepts node_id + sensing_server_url", () => {
     const r = BfldLastScanInputSchema.parse({
-      node_id: "cognitum-seed-1",
+      node_id: "local-gateway-1",
       sensing_server_url: "http://localhost:3000",
     });
-    expect(r.node_id).toBe("cognitum-seed-1");
+    expect(r.node_id).toBe("local-gateway-1");
   });
 });
 
@@ -122,8 +122,8 @@ describe("ruview.bfld.subscribe handler", () => {
   });
 
   it("10. topic matches ruview/<node_id>/bfld/* pattern", async () => {
-    const r = await bfldSubscribe({ node_id: "seed-1", duration_s: 10 }, testConfig) as Record<string, unknown>;
-    expect(r["topic"]).toBe("ruview/seed-1/bfld/*");
+    const r = await bfldSubscribe({ node_id: "node-1", duration_s: 10 }, testConfig) as Record<string, unknown>;
+    expect(r["topic"]).toBe("ruview/node-1/bfld/*");
   });
 });
 

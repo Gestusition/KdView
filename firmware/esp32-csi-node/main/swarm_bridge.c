@@ -1,9 +1,9 @@
 /**
  * @file swarm_bridge.c
- * @brief ADR-066: ESP32 Swarm Bridge — Cognitum Seed coordinator client.
+ * @brief ADR-066: ESP32 client for an operator-managed swarm gateway.
  *
  * Runs a FreeRTOS task on Core 0 that periodically POSTs registration,
- * heartbeat, and happiness vectors to a Cognitum Seed ingest endpoint.
+ * heartbeat, and happiness vectors to a compatible ingest endpoint.
  */
 
 #include "swarm_bridge.h"
@@ -24,7 +24,7 @@ static const char *TAG = "swarm";
 
 /* ---- Task parameters ---- */
 /* Issue #949: 3 KB was sized for plain HTTP (~2.5 KB). The bug reporter
- * configured `--seed-url https://…` which exercises TLS — mbedTLS handshake
+ * configured `--gateway-url https://…` which exercises TLS — mbedTLS handshake
  * alone needs 4-6 KB on the stack (cipher suite + cert chain + ECDH), and on
  * top of that esp_http_client adds another 1.5-2 KB. The task panicked with
  * `0xa5a5a5a5` (FreeRTOS stack-fill sentinel) immediately after "bridge init
@@ -35,12 +35,12 @@ static const char *TAG = "swarm";
 #define SWARM_TASK_STACK   8192   /**< 8 KB stack — fits mbedTLS handshake. */
 #define SWARM_TASK_PRIO    3
 #define SWARM_TASK_CORE    0
-#define SWARM_HTTP_TIMEOUT 3000  /**< HTTP timeout in ms (Seed responds <100ms on LAN). */
+#define SWARM_HTTP_TIMEOUT 3000  /**< HTTP timeout in ms for a LAN gateway. */
 
 /* ---- Ingest endpoint path ---- */
 #define SWARM_INGEST_PATH  "/api/v1/store/ingest"
 
-/* ---- JSON buffer size (Seed tuple format: max ~120 bytes per vector) ---- */
+/* ---- JSON buffer size (gateway tuple format: max ~120 bytes per vector) ---- */
 #define SWARM_JSON_BUF     256
 
 /* ---- Module state ---- */
@@ -70,8 +70,8 @@ static void swarm_get_ip_str(char *buf, size_t buf_len);
 
 esp_err_t swarm_bridge_init(const swarm_config_t *cfg, uint8_t node_id)
 {
-    if (cfg == NULL || cfg->seed_url[0] == '\0') {
-        ESP_LOGW(TAG, "seed_url is empty — swarm bridge disabled");
+    if (cfg == NULL || cfg->gateway_url[0] == '\0') {
+        ESP_LOGW(TAG, "gateway_url is empty — swarm bridge disabled");
         return ESP_ERR_INVALID_ARG;
     }
 
@@ -110,8 +110,8 @@ esp_err_t swarm_bridge_init(const swarm_config_t *cfg, uint8_t node_id)
         return ESP_FAIL;
     }
 
-    ESP_LOGI(TAG, "bridge init OK — seed=%s zone=%s hb=%us ingest=%us",
-             s_cfg.seed_url, s_cfg.zone_name,
+    ESP_LOGI(TAG, "bridge init OK — gateway=%s zone=%s hb=%us ingest=%us",
+             s_cfg.gateway_url, s_cfg.zone_name,
              s_cfg.heartbeat_sec, s_cfg.ingest_sec);
     return ESP_OK;
 }
@@ -161,7 +161,7 @@ static esp_err_t swarm_post_json(esp_http_client_handle_t client,
 
     esp_err_t err = esp_http_client_perform(client);
     if (err != ESP_OK) {
-        /* Connection may have been closed by Seed between requests.
+        /* Connection may have been closed by the gateway between requests.
          * Close our end and let the next perform() reconnect. */
         esp_http_client_close(client);
         /* Retry once. */
@@ -214,7 +214,7 @@ static void swarm_task(void *arg)
 
     /* Build the full ingest URL once. */
     char url[128];
-    snprintf(url, sizeof(url), "%s%s", s_cfg.seed_url, SWARM_INGEST_PATH);
+    snprintf(url, sizeof(url), "%s%s", s_cfg.gateway_url, SWARM_INGEST_PATH);
 
     /* Create a reusable HTTP client. */
     esp_http_client_config_t http_cfg = {
@@ -231,16 +231,16 @@ static void swarm_task(void *arg)
 
     esp_http_client_set_header(client, "Content-Type", "application/json");
 
-    /* ADR-066: Set Bearer token for Seed WiFi auth (from pairing). */
-    if (s_cfg.seed_token[0] != '\0') {
+    /* ADR-066: Set optional Bearer token for gateway authentication. */
+    if (s_cfg.gateway_token[0] != '\0') {
         char auth_hdr[80];
-        snprintf(auth_hdr, sizeof(auth_hdr), "Bearer %s", s_cfg.seed_token);
+        snprintf(auth_hdr, sizeof(auth_hdr), "Bearer %s", s_cfg.gateway_token);
         esp_http_client_set_header(client, "Authorization", auth_hdr);
-        ESP_LOGI(TAG, "Bearer token configured for Seed auth");
+        ESP_LOGI(TAG, "Bearer token configured for gateway auth");
     }
 
     /* Firmware version + IP captured locally so logs name the build; both
-     * intentionally unused in the JSON payloads — the seed extracts them
+     * intentionally unused in the JSON payloads — the gateway extracts them
      * from the register/heartbeat IDs. Keep as side-effect probes. */
     const esp_app_desc_t *app = esp_app_get_description();
     if (app) {
@@ -252,7 +252,7 @@ static void swarm_task(void *arg)
     swarm_get_ip_str(ip_str, sizeof(ip_str));
 
     /* ---- Registration POST ---- */
-    /* Seed ingest format: {"vectors":[[u64_id, [f32; dim]]]} */
+    /* Compatible ingest format: {"vectors":[[u64_id, [f32; dim]]]} */
     {
         /* ID scheme: node_id * 1000000 + type_code (0=reg, 1=hb, 2=happiness) */
         uint32_t reg_id = (uint32_t)s_node_id * 1000000U;
@@ -263,7 +263,7 @@ static void swarm_task(void *arg)
 
         if (swarm_post_json(client, json, len) == ESP_OK) {
             s_cnt_regs++;
-            ESP_LOGI(TAG, "registered node %u with seed (id=%lu)", s_node_id, (unsigned long)reg_id);
+            ESP_LOGI(TAG, "registered node %u with gateway (id=%lu)", s_node_id, (unsigned long)reg_id);
         } else {
             ESP_LOGW(TAG, "registration failed — will retry on next heartbeat");
         }

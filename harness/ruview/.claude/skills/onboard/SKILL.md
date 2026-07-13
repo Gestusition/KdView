@@ -16,7 +16,7 @@ camera-grade.
 Run `ruview_onboard {path}` or decide from:
 
 1. **docker-demo** — fastest, no hardware. Replays sample CSI into the dashboard.
-   `docker run -p 8000:8000 ruvnet/wifi-densepose` → open `http://localhost:8000`.
+   `docker run -p 8000:8000 ghcr.io/gestusition/kdview:latest` → open `http://localhost:8000`.
    Use to see what it looks like.
 2. **repo-build** — for developers. `cd v2 && cargo test --workspace --no-default-features`
    (1,031+ tests pass), then `cargo run -p wifi-densepose-cli -- --help`.

@@ -74,8 +74,8 @@ CONFIG_VALUE_CHECKS = [
     ("channel", lambda value: value is not None),
     ("filter_mac", lambda value: value is not None),
     ("hop_channels", lambda value: value is not None),
-    ("seed_url", lambda value: value is not None),
-    ("seed_token", lambda value: value is not None),
+    ("gateway_url", lambda value: value is not None),
+    ("gateway_token", lambda value: value is not None),
     ("zone", lambda value: value is not None),
     ("swarm_hb", lambda value: value is not None),
     ("swarm_ingest", lambda value: value is not None),
@@ -107,7 +107,7 @@ MERGEABLE_ATTRS = [
     "vital_win", "vital_int", "subk_count",
     "channel", "filter_mac",
     "hop_channels", "hop_dwell",
-    "seed_url", "seed_token", "zone", "swarm_hb", "swarm_ingest",
+    "gateway_url", "gateway_token", "zone", "swarm_hb", "swarm_ingest",
 ]
 
 
@@ -165,6 +165,16 @@ def merge_state_into_args(args, prior: dict) -> dict:
     in place so downstream `build_nvs_csv` sees the merged values.
     """
     merged = dict(prior)
+    # One-way migration for state created by pre-decoupling releases. The old
+    # names remain accepted at the CLI and in firmware NVS, but new state is
+    # always stored under the implementation-neutral gateway names.
+    for legacy_name, neutral_name in (
+        ("seed_url", "gateway_url"),
+        ("seed_token", "gateway_token"),
+    ):
+        if neutral_name not in merged and legacy_name in merged:
+            merged[neutral_name] = merged[legacy_name]
+        merged.pop(legacy_name, None)
     for name in MERGEABLE_ATTRS:
         cli_val = getattr(args, name, None)
         if cli_val is not None:
@@ -223,11 +233,11 @@ def build_nvs_csv(args):
         chan_bytes = bytes(channels)
         writer.writerow(["chan_list", "data", "hex2bin", chan_bytes.hex()])
         writer.writerow(["dwell_ms", "data", "u32", str(args.hop_dwell)])
-    # ADR-066: Swarm bridge configuration
-    if args.seed_url is not None:
-        writer.writerow(["seed_url", "data", "string", args.seed_url])
-    if args.seed_token is not None:
-        writer.writerow(["seed_token", "data", "string", args.seed_token])
+    # ADR-066: Operator-managed swarm gateway configuration.
+    if args.gateway_url is not None:
+        writer.writerow(["gateway_url", "data", "string", args.gateway_url])
+    if args.gateway_token is not None:
+        writer.writerow(["gateway_token", "data", "string", args.gateway_token])
     if args.zone is not None:
         writer.writerow(["zone_name", "data", "string", args.zone])
     if args.swarm_hb is not None:
@@ -346,9 +356,13 @@ def main():
     # ADR-073: Multi-frequency channel hopping
     parser.add_argument("--hop-channels", type=str, help="Comma-separated channel list for hopping (e.g. '1,6,11')")
     parser.add_argument("--hop-dwell", type=int, default=200, help="Dwell time per channel in ms (default: 200)")
-    # ADR-066: Swarm bridge
-    parser.add_argument("--seed-url", type=str, help="Cognitum Seed base URL (e.g. http://10.1.10.236)")
-    parser.add_argument("--seed-token", type=str, help="Seed Bearer token (from pairing)")
+    # ADR-066: Swarm gateway. Legacy --seed-* spellings remain aliases so
+    # existing fleet automation keeps working while new provisioning output is
+    # vendor-neutral.
+    parser.add_argument("--gateway-url", "--seed-url", dest="gateway_url", type=str,
+                        help="Operator-managed swarm gateway base URL")
+    parser.add_argument("--gateway-token", "--seed-token", dest="gateway_token", type=str,
+                        help="Gateway Bearer token (never stored in the repository)")
     parser.add_argument("--zone", type=str, help="Zone name for this node (e.g. lobby, hallway)")
     parser.add_argument("--swarm-hb", type=int, help="Swarm heartbeat interval in seconds (default 30)")
     parser.add_argument("--swarm-ingest", type=int, help="Swarm vector ingest interval in seconds (default 5)")
@@ -468,8 +482,8 @@ def main():
         print(f"  CSI Channel:   {args.channel}")
     if args.filter_mac is not None:
         print(f"  Filter MAC:    {args.filter_mac}")
-    if args.seed_url is not None:
-        print(f"  Seed URL:      {args.seed_url}")
+    if args.gateway_url is not None:
+        print(f"  Gateway URL:   {args.gateway_url}")
     if args.zone is not None:
         print(f"  Zone:          {args.zone}")
     if args.swarm_hb is not None:

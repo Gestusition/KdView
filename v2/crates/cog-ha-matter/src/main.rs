@@ -1,8 +1,8 @@
-//! `cog-ha-matter` — Home Assistant + Matter Cognitum Seed cog (ADR-116).
+//! `cog-ha-matter` — RuView Home Assistant + Matter integration (ADR-116).
 //!
 //! Binary entrypoint. The actual wiring lives in [`cog_ha_matter`] —
 //! this main.rs is intentionally tiny so the cog runtime can call
-//! into the library from tests and from the Seed's control plane
+//! into the library from tests and from an edge supervisor's
 //! integration tests without re-launching the binary.
 
 use std::process::ExitCode;
@@ -17,9 +17,9 @@ use wifi_densepose_sensing_server::mqtt::state::VitalsSnapshot;
 #[command(
     name = "cog-ha-matter",
     version,
-    about = "Home Assistant + Matter Cognitum Seed cog",
-    long_about = "Wraps the ADR-115 HA-DISCO + HA-MIND publisher as a \
-                  Seed-installable artifact with mDNS, embedded broker, \
+    about = "RuView Home Assistant + Matter integration service",
+    long_about = "Wraps the ADR-115 HA-DISCO + HA-MIND publisher as an \
+                  edge-deployable service with mDNS, embedded broker, \
                   RuVector-backed thresholds, and Ed25519 witness. See \
                   docs/adr/ADR-116-cog-ha-matter-seed.md for the design."
 )]
@@ -44,12 +44,12 @@ struct Args {
     #[arg(long)]
     privacy_mode: bool,
 
-    /// Print the manifest the cog would self-report to the Seed's
-    /// control plane and exit. Useful for the build-time signer.
+    /// Print the manifest the service would self-report at runtime
+    /// and exit. Useful for the build-time signer.
     #[arg(long)]
     print_manifest: bool,
 
-    /// mDNS hostname for the Seed advertisement. Must end with
+    /// mDNS hostname for the local advertisement. Must end with
     /// `.local.` per RFC 6762. Default lets HA's discovery find a
     /// dev cog on localhost without LAN config.
     #[arg(long, default_value = "cog-ha-matter.local.")]
@@ -92,9 +92,12 @@ async fn main() -> ExitCode {
         let m = cog_ha_matter::manifest::CogManifest {
             id: cog_ha_matter::COG_ID.into(),
             version: env!("CARGO_PKG_VERSION").into(),
-            binary_url:
-                "https://storage.googleapis.com/cognitum-apps/cogs/{{ARCH}}/cog-ha-matter-{{ARCH}}"
-                    .into(),
+            binary_url: concat!(
+                "https://github.com/Gestusition/KdView/releases/download/cog-ha-matter-v",
+                env!("CARGO_PKG_VERSION"),
+                "/cog-ha-matter-{{ARCH}}"
+            )
+            .into(),
             binary_bytes: 0,
             binary_sha256: String::new(),
             binary_signature: String::new(),
@@ -163,7 +166,7 @@ async fn main() -> ExitCode {
     };
 
     // Wait on Ctrl-C so the cog runs as a long-lived daemon under
-    // the Seed's process supervisor.
+    // the edge process supervisor.
     tokio::select! {
         _ = tokio::signal::ctrl_c() => {
             info!("ctrl-c received — shutting down");

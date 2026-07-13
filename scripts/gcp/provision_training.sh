@@ -3,13 +3,13 @@
 # Usage: bash scripts/gcp/provision_training.sh [--dry-run]
 #
 # Provisions an a2-highgpu-8g (8× A100 40GB) in us-central1-a (fallback us-east1-b).
-# GCP project: cognitum-20260110
-# Auth:        ruv@ruv.net (gcloud must already be authenticated)
+# GCP project: set GCP_PROJECT or configure the active gcloud project
+# Auth:        gcloud must already be authenticated
 
 set -euo pipefail
 
 # ── Constants ──────────────────────────────────────────────────────────────────
-PROJECT="cognitum-20260110"
+PROJECT="${GCP_PROJECT:-$(gcloud config get-value project 2>/dev/null || true)}"
 INSTANCE_NAME="occworld-train-$(date +%Y%m%d)"
 MACHINE_TYPE="a2-highgpu-8g"
 PRIMARY_ZONE="us-central1-a"
@@ -40,6 +40,8 @@ for arg in "$@"; do
       ;;
   esac
 done
+
+: "${PROJECT:?Set GCP_PROJECT or configure a default gcloud project}"
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 run() {

@@ -5,7 +5,7 @@ edition.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Cognitum Cog: WiFi-CSI presence detector + (data-gated) person count (ADR-103). Candle-based head trained on classes 0/1 (presence); the 8-class count head ships but counts above the trained range are flagged low_confidence. Stoer-Wagner multi-node fusion."
+description = "WiFi-CSI presence detector and data-gated person count service (ADR-103). Candle-based head trained on classes 0/1 (presence); counts above the trained range are flagged low_confidence. Stoer-Wagner multi-node fusion."
 
 [[bin]]
 name = "cog-person-count"

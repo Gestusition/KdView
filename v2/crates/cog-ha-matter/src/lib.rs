@@ -1,22 +1,22 @@
-//! ADR-116 — Home Assistant + Matter Cognitum Seed cog.
+//! ADR-116 — RuView Home Assistant + Matter integration service.
 //!
-//! This crate is the Seed-installable wrapper around ADR-115's
+//! This crate is the edge-deployable wrapper around ADR-115's
 //! `wifi-densepose-sensing-server::mqtt` publisher. It adds the
-//! Seed-native surfaces ADR-115's `--mqtt` flag can't easily reach:
+//! integration surfaces ADR-115's `--mqtt` flag can't easily reach:
 //!
 //! 1. **mDNS service advertisement** — `_ruview-ha._tcp` so HA discovers
 //!    the cog automatically (no manual broker host/port config).
-//! 2. **Optional embedded MQTT broker** — for Seeds running without an
+//! 2. **Optional embedded MQTT broker** — for nodes running without an
 //!    external mosquitto. Defaults to off; the cog can either embed
 //!    rumqttd or connect to a user-provided broker.
 //! 3. **RuVector-backed semantic-primitive thresholds** — replaces
 //!    static `semantic-thresholds.yaml` with a SONA-adapted RuVector
-//!    inference. Per-home thresholds learned from the Seed's own
+//!    inference. Per-home thresholds learned from the node's own
 //!    long-term observation stream.
 //! 4. **Ed25519 witness chain** — every state transition signed so
 //!    regulated deployments (healthcare, education, shared housing)
 //!    have a tamper-evident audit log.
-//! 5. **Multi-Seed federation** — peer discovery via mDNS + cross-Seed
+//! 5. **Multi-node federation** — peer discovery via mDNS + cross-node
 //!    event deduplication keyed on ADR-110's ≤100 µs mesh-aligned
 //!    timestamps. One fall in a shared room emits one alert, not N.
 //! 6. **OTA firmware coordination** — the cog manages C6 firmware
@@ -32,7 +32,7 @@ pub mod runtime;
 pub mod witness;
 pub mod witness_signing;
 
-/// Cog identifier used in Seed's app-registry.json + the manifest.
+/// Stable integration identifier used in the manifest.
 pub const COG_ID: &str = "ha-matter";
 
 /// mDNS service type advertised when the cog starts.

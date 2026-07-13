@@ -41,7 +41,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/ruvnet/nvsim-server
+          images: ghcr.io/gestusition/kdview-nvsim-server
           tags: |
             type=ref,event=branch
             type=ref,event=tag
@@ -62,10 +62,13 @@ jobs:
 
       - name: Smoke-test the image
         run: |
-          docker pull ghcr.io/ruvnet/nvsim-server:sha-${GITHUB_SHA::7} || \
-            docker pull ghcr.io/ruvnet/nvsim-server:latest
+          IMAGE="ghcr.io/gestusition/kdview-nvsim-server:sha-${GITHUB_SHA::7}"
+          docker pull "$IMAGE" || {
+            IMAGE="ghcr.io/gestusition/kdview-nvsim-server:latest"
+            docker pull "$IMAGE"
+          }
           docker run --rm -d --name nvsim-test -p 7878:7878 \
-            ghcr.io/ruvnet/nvsim-server:latest
+            "$IMAGE"
           sleep 4
           curl -fsS http://localhost:7878/api/health
           docker stop nvsim-test

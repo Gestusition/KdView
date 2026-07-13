@@ -117,8 +117,8 @@ describe("Schema happy-path acceptance", () => {
   });
 
   it("NodeStatus — accepts node_id string", () => {
-    const r = NodeStatusInputSchema.parse({ node_id: "cognitum-seed-1" });
-    expect(r.node_id).toBe("cognitum-seed-1");
+    const r = NodeStatusInputSchema.parse({ node_id: "local-gateway-1" });
+    expect(r.node_id).toBe("local-gateway-1");
   });
 
   it("VectorSearchPose — applies default k=10", () => {

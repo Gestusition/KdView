@@ -14,5 +14,5 @@ Launch a RuView application.
    - `mat` (Mass Casualty Assessment) → `wifi-densepose-mat` crate, `docs/wifi-mat-user-guide.md`.
    - `pointcloud` → `python scripts/mmwave_fusion_bridge.py` (camera depth + CSI + mmWave).
    - novel RF → `scripts/passive-radar.js`, `material-classifier.js`, `device-fingerprint.js`, `mincut-person-counter.js`.
-3. If no hardware: fall back to `docker run -p 3000:3000 ruvnet/wifi-densepose:latest` or `python examples/ruview_live.py`.
+3. If no hardware: fall back to `docker run -p 3000:3000 ghcr.io/gestusition/kdview:latest` or `python examples/ruview_live.py`.
 4. Help pick the right modality (through-wall → presence/activity; stationary subject → vitals/sleep; need skeletons → pose, train it for accuracy; search & rescue → MAT; best accuracy → 2+ nodes + cross-viewpoint fusion via `/ruview-advanced`).

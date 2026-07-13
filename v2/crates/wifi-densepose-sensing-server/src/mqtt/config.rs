@@ -23,8 +23,7 @@ pub struct MqttConfig {
 ///
 /// `None` means plaintext. `Some(TlsBundle::SystemTrust)` means encrypt
 /// against the system trust store. `Some(TlsBundle::PinnedCa { ... })`
-/// means encrypt against a specific CA (the typical Cognitum Seed mTLS
-/// recipe).
+/// means encrypt against a deployment-specific private CA.
 #[derive(Debug, Clone)]
 pub enum TlsConfig {
     Off,

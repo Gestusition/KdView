@@ -1,11 +1,11 @@
 /**
  * MCP tool: ruview_registry_list
  *
- * List installed/available cogs from the Cognitum edge module registry.
+ * List installed/available modules from the local edge registry.
  *
  * Fetches `/api/v1/edge/registry` from the sensing-server, which proxies the
- * canonical GCS catalog with a 1-hour TTL cache (ADR-102).  The result is the
- * full 105-cog catalog as of the last upstream sync.
+ * included offline catalog with a 1-hour TTL cache (ADR-102). Operators may
+ * configure an additional mirror explicitly.
  *
  * Use the optional `category` filter to narrow results.  Available categories
  * (from the v2.1.0 registry): health, security, building, retail, industrial,
@@ -46,7 +46,7 @@ export const registryListSchema = z.object({
 
 export type RegistryListInput = z.infer<typeof registryListSchema>;
 
-// The upstream registry JSON shape (ADR-102).
+// The registry JSON shape (ADR-102).
 interface UpstreamRegistryPayload {
   registry: {
     cogs?: CogEntry[];

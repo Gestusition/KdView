@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Cognitum Seed — Happiness Vector Query Tool
+KdView — Happiness Vector Gateway Query Tool
 
-Query the Seed's vector store for happiness patterns across ESP32 swarm nodes.
+Query any compatible local vector gateway for happiness patterns across ESP32 nodes.
 Demonstrates kNN search, drift monitoring, and witness chain verification.
 
 Usage:
-    python seed_query.py --seed http://10.1.10.236 --token <bearer_token>
-    python seed_query.py --seed http://169.254.42.1   # USB link-local (no token needed)
+    python seed_query.py --gateway http://127.0.0.1:8080 --token <bearer_token>
+    python seed_query.py --seed http://127.0.0.1:8080  # legacy flag alias
 
 Requirements:
     Python 3.7+ (stdlib only, no dependencies)
@@ -22,7 +22,7 @@ import urllib.error
 
 
 def api(base, path, token=None, method="GET", data=None):
-    """Make an API request to the Seed."""
+    """Make an API request to the configured local gateway."""
     url = f"{base}{path}"
     headers = {"Content-Type": "application/json"}
     if token:
@@ -45,9 +45,9 @@ def print_header(title):
 
 
 def cmd_status(args):
-    """Show Seed and swarm status."""
-    print_header("Seed Status")
-    s = api(args.seed, "/api/v1/status", args.token)
+    """Show gateway and node status."""
+    print_header("Gateway Status")
+    s = api(args.gateway, "/api/v1/status", args.token)
     if "error" in s:
         print(f"  Error: {s['error']}")
         return
@@ -59,7 +59,7 @@ def cmd_status(args):
     print(f"  Witness:    {s['witness_chain_length']} entries")
 
     print_header("Drift Detection")
-    d = api(args.seed, "/api/v1/sensor/drift/status", args.token)
+    d = api(args.gateway, "/api/v1/sensor/drift/status", args.token)
     if "error" not in d:
         print(f"  Drifting:   {d.get('drifting', False)}")
         print(f"  Score:      {d.get('current_drift_score', 0):.4f}")
@@ -84,7 +84,7 @@ def cmd_search(args):
     print(f"  k:          {args.k}")
     print()
 
-    result = api(args.seed, "/api/v1/store/search", args.token,
+    result = api(args.gateway, "/api/v1/store/search", args.token,
                  method="POST", data={"vector": query, "k": args.k})
 
     if "error" in result:
@@ -110,13 +110,13 @@ def cmd_witness(args):
     """Show the witness chain for audit trail."""
     print_header("Witness Chain (Audit Trail)")
 
-    epoch = api(args.seed, "/api/v1/custody/epoch", args.token)
+    epoch = api(args.gateway, "/api/v1/custody/epoch", args.token)
     if "error" not in epoch:
         print(f"  Current epoch:  {epoch.get('epoch', '?')}")
         head = epoch.get("witness_head", "?")
         print(f"  Chain head:     {head[:16]}..." if len(head) > 16 else f"  Chain head:     {head}")
 
-    chain = api(args.seed, "/api/v1/cognitive/status", args.token)
+    chain = api(args.gateway, "/api/v1/cognitive/status", args.token)
     if "error" not in chain:
         cv = chain.get("chain_valid", {})
         print(f"  Chain valid:    {cv.get('valid', '?')}")
@@ -125,7 +125,7 @@ def cmd_witness(args):
 
 
 def cmd_monitor(args):
-    """Live monitor happiness vectors flowing into the Seed."""
+    """Live monitor happiness vectors flowing into the gateway."""
     print_header("Live Happiness Monitor")
     print(f"  Polling every {args.interval}s (Ctrl+C to stop)")
     print()
@@ -135,7 +135,7 @@ def cmd_monitor(args):
 
     try:
         while True:
-            s = api(args.seed, "/api/v1/status", args.token)
+            s = api(args.gateway, "/api/v1/status", args.token)
             if "error" in s:
                 print(f"  [{time.strftime('%H:%M:%S')}] Error: {s['error']}")
                 time.sleep(args.interval)
@@ -146,7 +146,7 @@ def cmd_monitor(args):
             new_v = vectors - prev_vectors if prev_vectors > 0 else 0
             new_e = epoch - prev_epoch if prev_epoch > 0 else 0
 
-            d = api(args.seed, "/api/v1/sensor/drift/status", args.token)
+            d = api(args.gateway, "/api/v1/sensor/drift/status", args.token)
             drift = d.get("current_drift_score", 0) if "error" not in d else 0
             drifting = d.get("drifting", False) if "error" not in d else False
 
@@ -166,7 +166,7 @@ def cmd_happiness_report(args):
     """Generate a happiness report from stored vectors."""
     print_header("Happiness Report")
 
-    s = api(args.seed, "/api/v1/status", args.token)
+    s = api(args.gateway, "/api/v1/status", args.token)
     if "error" in s:
         print(f"  Error: {s['error']}")
         return
@@ -180,7 +180,7 @@ def cmd_happiness_report(args):
     sad_ref = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5]
 
     print("  Happiest moments (closest to ideal happy):")
-    happy = api(args.seed, "/api/v1/store/search", args.token,
+    happy = api(args.gateway, "/api/v1/store/search", args.token,
                 method="POST", data={"vector": happy_ref, "k": 3})
     for n in happy.get("neighbors", happy.get("results", [])):
         dist = n.get("distance", n.get("dist", 0))
@@ -190,7 +190,7 @@ def cmd_happiness_report(args):
 
     print()
     print("  Most stressed moments (closest to stressed reference):")
-    sad = api(args.seed, "/api/v1/store/search", args.token,
+    sad = api(args.gateway, "/api/v1/store/search", args.token,
               method="POST", data={"vector": sad_ref, "k": 3})
     for n in sad.get("neighbors", sad.get("results", [])):
         dist = n.get("distance", n.get("dist", 0))
@@ -200,7 +200,7 @@ def cmd_happiness_report(args):
 
     # Drift status
     print()
-    d = api(args.seed, "/api/v1/sensor/drift/status", args.token)
+    d = api(args.gateway, "/api/v1/sensor/drift/status", args.token)
     if "error" not in d:
         if d.get("drifting"):
             print(f"  WARNING: Mood drift detected (score={d['current_drift_score']:.4f})")
@@ -211,25 +211,26 @@ def cmd_happiness_report(args):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Happiness Vector Query Tool for Cognitum Seed",
+        description="Happiness Vector Query Tool for a compatible local gateway",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  %(prog)s status --seed http://169.254.42.1
-  %(prog)s search --seed http://10.1.10.236 --token TOKEN --mood happy
-  %(prog)s monitor --seed http://10.1.10.236 --token TOKEN
-  %(prog)s report --seed http://10.1.10.236 --token TOKEN
-  %(prog)s witness --seed http://10.1.10.236 --token TOKEN
+  %(prog)s status --gateway http://127.0.0.1:8080
+  %(prog)s search --gateway http://127.0.0.1:8080 --token TOKEN --mood happy
+  %(prog)s monitor --gateway http://127.0.0.1:8080 --token TOKEN
+  %(prog)s report --gateway http://127.0.0.1:8080 --token TOKEN
+  %(prog)s witness --gateway http://127.0.0.1:8080 --token TOKEN
 """
     )
-    parser.add_argument("--seed", default="http://169.254.42.1",
-                        help="Seed base URL (default: USB link-local)")
+    parser.add_argument("--gateway", "--seed", dest="gateway",
+                        default="http://127.0.0.1:8080",
+                        help="Compatible gateway base URL; --seed is a legacy alias")
     parser.add_argument("--token", default=None,
                         help="Bearer token for WiFi access (not needed for USB)")
 
     sub = parser.add_subparsers(dest="command")
 
-    sub.add_parser("status", help="Show Seed and swarm status")
+    sub.add_parser("status", help="Show gateway and node status")
     sub.add_parser("witness", help="Show witness chain audit trail")
 
     p_search = sub.add_parser("search", help="kNN search for mood patterns")

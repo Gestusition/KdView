@@ -1,5 +1,7 @@
 # Witness Verification Log — ADR-028 ESP32 Capability Audit
 
+> **Historical upstream witness:** this log is bound to the recorded upstream commit and repository URL. Use [Gestusition/KdView](https://github.com/Gestusition/KdView) for current source; keep the original clone URL below when reproducing the attested commit.
+
 > **Purpose:** Machine-verifiable attestation of repository capabilities at a specific commit.
 > Third parties can re-run these checks to confirm or refute each claim independently.
 

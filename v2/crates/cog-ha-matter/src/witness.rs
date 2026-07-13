@@ -177,9 +177,9 @@ pub fn hash_event(
     WitnessHash(out)
 }
 
-/// In-memory append-only chain. Persistence (write to the Seed's
-/// `~/cognitum/witness/<cog>/events.jsonl`) is a separate concern
-/// kept out of this module.
+/// In-memory append-only chain. Persistence (for example, writing JSONL under
+/// an operator-configured local data directory) is a separate concern kept out
+/// of this module.
 #[derive(Debug, Default, Clone)]
 pub struct WitnessChain {
     events: Vec<WitnessEvent>,

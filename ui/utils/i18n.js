@@ -45,14 +45,14 @@ const translations = {
     'benefit.privacyDesc': 'No cameras or visual recording - just WiFi signal analysis',
     'benefit.realtime': 'Real-Time',
     'benefit.realtimeDesc': 'Maps 24 body regions in real-time at 100Hz sampling rate',
-    'benefit.lowCost': 'Low Cost',
-    'benefit.lowCostDesc': 'Built using $30 commercial WiFi hardware',
+    'benefit.lowCost': 'Operator-Owned Hardware',
+    'benefit.lowCostDesc': 'Works with supported ESP32-S3 boards that you provision and control',
 
     // Stats
     'stat.bodyRegions': 'Body Regions',
     'stat.samplingRate': 'Sampling Rate',
     'stat.accuracy': 'Accuracy (AP@50)',
-    'stat.hardwareCost': 'Hardware Cost',
+    'stat.hardwareCost': 'Sensor Platform',
 
     // Actions
     'action.startDetection': 'Start Detection',

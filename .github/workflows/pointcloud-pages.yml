@@ -40,7 +40,7 @@ jobs:
           cat > _site/pointcloud/README.md <<'EOF'
           # RuView — Live 3D Point Cloud Viewer
 
-          Hosted at: https://ruvnet.github.io/RuView/pointcloud/
+          Hosted at: https://gestusition.github.io/KdView/pointcloud/
 
           ## Modes
 
@@ -52,7 +52,7 @@ jobs:
             `ruview-pointcloud serve --bind 127.0.0.1:9880` on the same
             machine with your ESP32 streaming CSI to UDP port 3333, then
             visit the URL above. The local server's CorsLayer permits
-            requests from `https://ruvnet.github.io`, and modern browsers
+            requests from `https://gestusition.github.io`, and modern browsers
             permit HTTPS→127.0.0.1 mixed-content as a trustworthy origin.
             The "📡 Connect ESP32" button in the viewer prompts for this
             URL and persists it in localStorage.

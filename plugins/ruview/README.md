@@ -8,7 +8,7 @@ Part of the **`ruview` marketplace** — manifest at the repo root: `.claude-plu
 
 ```bash
 # In Claude Code — add this repo as a plugin marketplace, then install:
-/plugin marketplace add ruvnet/RuView
+/plugin marketplace add Gestusition/KdView
 /plugin install ruview@ruview
 
 # Or try it locally without installing (from a clone of the repo):
@@ -25,7 +25,7 @@ For Codex (OpenAI CLI), see [`codex/`](codex/) — all seven `/ruview-*` command
 |-------|--------------|
 | `ruview-quickstart` | Onboarding & first run — Docker demo, repo build, fastest path to a live dashboard |
 | `ruview-hardware-setup` | ESP32-S3 / C6 firmware build, flash, WiFi provisioning, serial monitoring |
-| `ruview-configure` | sdkconfig variants, NVS provisioning, channel/MAC overrides (ADR-060), edge modules (ADR-041), sensing-server flags, mesh, Cognitum Seed |
+| `ruview-configure` | sdkconfig variants, NVS provisioning, channel/MAC overrides (ADR-060), edge modules (ADR-041), sensing-server flags, mesh, optional operator gateway |
 | `ruview-applications` | Run presence, vitals, pose (WiFlow), sleep, environment mapping, MAT, point-cloud fusion, novel RF apps |
 | `ruview-model-training` | Camera-free pose, camera-supervised pose (92.9% PCK@20, ADR-079), RuVector embeddings (AETHER), domain generalization (MERIDIAN), local SNN, GPU on GCloud, HF publishing |
 | `ruview-advanced-sensing` | RuvSense multistatic, cross-viewpoint fusion, RF tomography, persistent field model, intention signals, adversarial detection, mesh security |
@@ -50,14 +50,14 @@ For Codex (OpenAI CLI), see [`codex/`](codex/) — all seven `/ruview-*` command
 | Agent | Role |
 |-------|------|
 | `ruview-onboarding-guide` | Walks a newcomer from zero to a working setup |
-| `ruview-config-engineer` | Sets up / tunes a deployment (firmware, NVS, edge modules, mesh, Seed) |
+| `ruview-config-engineer` | Sets up / tunes a deployment (firmware, NVS, edge modules, mesh, optional gateway) |
 | `ruview-training-engineer` | Trains, evaluates, and ships models |
 
 ## Compatibility
 
 - **Claude Code** — skills, commands, and agents are auto-discovered; no `claude-flow` MCP server required (skills drive RuView's own tooling: `cargo`, `python`, `idf.py`, `docker`, `node`). Optional: `npx @claude-flow/cli@latest security scan` is referenced for security changes.
 - **Codex (OpenAI CLI)** — workflows mirrored under `codex/prompts/`; drop them in `~/.codex/prompts/` (or point Codex at `codex/`). `codex/AGENTS.md` carries the project rules.
-- **Target repo** — assumes the [`ruvnet/RuView`](https://github.com/ruvnet/RuView) / `wifi-densepose` layout: `v2/crates/`, `firmware/esp32-csi-node/`, `archive/v1/`, `scripts/`, `docs/adr/`. On Windows, ESP-IDF builds go through the Python-subprocess pattern in `CLAUDE.local.md`.
+- **Target repo** — assumes the [`Gestusition/KdView`](https://github.com/Gestusition/KdView) / `wifi-densepose` layout: `v2/crates/`, `firmware/esp32-csi-node/`, `archive/v1/`, `scripts/`, `docs/adr/`. On Windows, ESP-IDF builds go through the Python-subprocess pattern in `CLAUDE.local.md`.
 
 ## Namespace coordination
 

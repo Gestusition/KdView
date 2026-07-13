@@ -8,9 +8,9 @@ version = "2.0.0-alpha.1"
 # inheritance here — every field is local.
 edition = "2021"
 license = "MIT"
-authors = ["rUv <ruv@ruv.net>", "WiFi-DensePose Contributors"]
+authors = ["KdView Contributors", "WiFi-DensePose Contributors"]
 description = "PyO3 bindings for the WiFi-DensePose Rust core — ships as the `wifi-densepose` PyPI wheel (ADR-117)"
-repository = "https://github.com/ruvnet/RuView"
+repository = "https://github.com/Gestusition/KdView"
 
 # ADR-117 §5.2: the Python wheel's compiled module name is
 # `wifi_densepose._native` (the leading underscore marks it as an internal

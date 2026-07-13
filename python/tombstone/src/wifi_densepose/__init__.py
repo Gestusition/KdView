@@ -12,7 +12,7 @@ raise ImportError(
     "\n"
     "  pip install wifi-densepose==2.0.0\n"
     "\n"
-    "Migration guide: https://github.com/ruvnet/RuView/blob/main/docs/pip-migration.md\n"
-    "Modernization rationale: https://github.com/ruvnet/RuView/blob/main/docs/adr/ADR-117-pip-wifi-densepose-modernization.md\n"
-    "Legacy v1 source (archived): https://github.com/ruvnet/RuView/tree/main/archive/v1\n"
+    "Migration guide: https://github.com/Gestusition/KdView/blob/main/docs/pip-migration.md\n"
+    "Modernization rationale: https://github.com/Gestusition/KdView/blob/main/docs/adr/ADR-117-pip-wifi-densepose-modernization.md\n"
+    "Legacy v1 source (archived): https://github.com/Gestusition/KdView/tree/main/archive/v1\n"
 )

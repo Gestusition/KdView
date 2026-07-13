@@ -9,27 +9,27 @@
 import { h, card, pill, statusPill, sectionHeader, relTime, banner } from '../ui.js';
 
 export default {
-  meta: { title: 'SEED Fleet' },
+  meta: { title: 'Sensor Fleet' },
   async render(root, ctx) {
     const { api } = ctx;
 
-    root.appendChild(sectionHeader('SEED Fleet', 'Cross-SEED topology, ESP-NOW mesh & ADR-105 federation'));
+    root.appendChild(sectionHeader('Sensor Fleet', 'Cross-gateway topology, ESP-NOW mesh & optional federation'));
 
     // ── Load seeds + federation independently so one failing upstream
     //    doesn't blank the whole panel (ADR-131 §2.2 / §11.11). ───────
     let seeds = null, fed = null;
     try { seeds = await api.seeds(); } catch (e) {
-      root.appendChild(banner('SEED fleet unavailable — ' + (e.message || e)
+      root.appendChild(banner('Sensor fleet unavailable — ' + (e.message || e)
         + (e.upstreamUnavailable ? ' (upstream not yet wired — ADR-131 §12)' : ''), 'red'));
     }
     try { fed = await api.federation(); } catch (e) {
-      root.appendChild(banner('SEED fleet unavailable — ' + (e.message || e)
+      root.appendChild(banner('Sensor fleet unavailable — ' + (e.message || e)
         + (e.upstreamUnavailable ? ' (upstream not yet wired — ADR-131 §12)' : ''), 'red'));
     }
 
     if (api.isDemo('fleet')) {
       root.appendChild(h('.banner.amber',
-        'DEMO — the SEED HTTPS API and the ADR-105 federation service are not served by this homecore-server binary. '
+        'DEMO — the optional gateway API and federation service are not served by this homecore-server binary. '
         + 'These panels render against their defined contract with contract-conformant mock data (ADR-131 §7.1).'));
     }
 
@@ -49,7 +49,7 @@ export default {
       root.appendChild(card({ title: 'ESP-NOW mesh links', children: [meshLinks(fed.mesh_links)] }));
 
       // ── Cross-SEED event dedup / fusion ─────────────────────────────
-      root.appendChild(card({ title: 'Cross-SEED event dedup', children: [fusionBadges(fed.fused_events)] }));
+      root.appendChild(card({ title: 'Cross-gateway event dedup', children: [fusionBadges(fed.fused_events)] }));
 
       // ── ADR-105 federation config ───────────────────────────────────
       root.appendChild(federationConfig(fed));
@@ -153,13 +153,13 @@ function meshLinks(links) {
 
 // ── Cross-SEED event dedup — fusion badges (kind + n contributing) ──
 function fusionBadges(events) {
-  if (!events || !events.length) return h('.muted-empty', 'no fused cross-SEED events');
+  if (!events || !events.length) return h('.muted-empty', 'no fused cross-gateway events');
   const wrap = h('.flex.wrap.gap-sm');
   events.forEach((e) => {
     const seeds = (e.seeds || []).join(', ');
     wrap.appendChild(h('span.flex.gap-sm', { style: { alignItems: 'center' } },
       pill(e.kind, 'cyan'),
-      pill(e.n + ' SEEDs', 'purple'),
+      pill(e.n + ' gateways', 'purple'),
       h('span.t2.mono', { style: { fontSize: '11px' } }, seeds)));
   });
   return wrap;
@@ -176,7 +176,7 @@ function federationConfig(fed) {
     h('span.mono', fed.invariant)));
 
   body.appendChild(h('.kv.mt',
-    h('span.k', 'Coordinator SEED'), h('span.v.mono', fed.coordinator),
+    h('span.k', 'Coordinator gateway'), h('span.v.mono', fed.coordinator),
     h('span.k', 'Round'), h('span.v.purple', String(fed.round)),
     h('span.k', 'k_healthy'), h('span.v', String(fed.k_healthy)),
     h('span.k', 'Delta status'), statusPill(fed.delta_status === 'exchanging' ? 'updating' : fed.delta_status),

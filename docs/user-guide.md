@@ -2,6 +2,8 @@
 
 WiFi DensePose turns commodity WiFi signals into real-time human pose estimation, vital sign monitoring, and presence detection. This guide walks you through installation, first run, API usage, hardware setup, and model training.
 
+> **Canonical repository:** [Gestusition/KdView](https://github.com/Gestusition/KdView). Commands in this guide use the KdView source tree and `ghcr.io/gestusition/kdview`; `@ruvnet/*`, Hugging Face `ruvnet/*`, RVF, ADR-018, and `seed_*` names are retained only where they are published or protocol compatibility identifiers.
+
 ---
 
 ## Table of Contents
@@ -21,8 +23,8 @@ WiFi DensePose turns commodity WiFi signals into real-time human pose estimation
    - [Windows WiFi (RSSI Only)](#windows-wifi-rssi-only)
    - [ESP32-S3 (Full CSI)](#esp32-s3-full-csi)
    - [ESP32 Multistatic Mesh (Advanced)](#esp32-multistatic-mesh-advanced)
-   - [Connect Mesh Data to the Dashboard and Observatory](#connect-mesh-data-to-the-dashboard-and-observatory)
-   - [Cognitum Seed Integration (ADR-069)](#cognitum-seed-integration-adr-069)
+   - [Connect Mesh Data to the WiFi UIs](#connect-mesh-data-to-the-wifi-uis)
+   - [Optional Local Persistence Gateway (ADR-069)](#optional-local-persistence-gateway-adr-069)
 5. [REST API Reference](#rest-api-reference)
 6. [WebSocket Streaming](#websocket-streaming)
 7. [Web UI](#web-ui)
@@ -71,11 +73,11 @@ WiFi DensePose turns commodity WiFi signals into real-time human pose estimation
 
 **Hardware for live sensing (optional):**
 
-| Option | Cost | Capabilities |
-|--------|------|-------------|
-| ESP32-S3 mesh (3-6 boards) | ~$54 | Full CSI: pose, breathing, heartbeat, presence |
-| Intel 5300 / Atheros AR9580 | $50-100 | Full CSI with 3x3 MIMO (Linux only) |
-| Any WiFi laptop | $0 | RSSI-only: coarse presence and motion detection |
+| Option | Capabilities |
+|--------|-------------|
+| ESP32-S3 mesh (3-6 boards) | Full CSI: pose, breathing, heartbeat, presence |
+| Intel 5300 / Atheros AR9580 | Full CSI with 3x3 MIMO (Linux only) |
+| Any WiFi laptop | RSSI-only: coarse presence and motion detection |
 
 No hardware? The system runs in **simulated mode** with synthetic CSI data.
 
@@ -88,7 +90,7 @@ No hardware? The system runs in **simulated mode** with synthetic CSI data.
 The fastest path. No toolchain installation needed.
 
 ```bash
-docker pull ruvnet/wifi-densepose:latest
+docker pull ghcr.io/gestusition/kdview:latest
 ```
 
 Multi-architecture image (amd64 + arm64). Works on Intel/AMD and Apple Silicon Macs. Contains the Rust sensing server, Three.js UI, and all signal processing.
@@ -102,7 +104,7 @@ Multi-architecture image (amd64 + arm64). Works on Intel/AMD and Apple Silicon M
 | `simulated` | Generate synthetic CSI frames (no hardware required) |
 | `wifi` | Host Wi-Fi RSSI (not available inside containers) |
 
-Example: `docker run -e CSI_SOURCE=esp32 -p 3000:3000 -p 5005:5005/udp ruvnet/wifi-densepose:latest`
+Example: `docker run -e CSI_SOURCE=esp32 -p 3000:3000 -p 5005:5005/udp ghcr.io/gestusition/kdview:latest`
 
 ### From Source (Rust)
 
@@ -121,8 +123,8 @@ sudo apt install -y \
 This prepares the native GTK/WebKit dependencies used by the desktop/Tauri crates in this workspace.
 
 ```bash
-git clone https://github.com/ruvnet/RuView.git
-cd RuView/v2
+git clone https://github.com/Gestusition/KdView.git
+cd KdView/v2
 
 # Build
 cargo build --release
@@ -213,8 +215,8 @@ matrix on each `v*-pip` tag.
 To build the wheel from source (e.g. for a local change):
 
 ```bash
-git clone https://github.com/ruvnet/RuView.git
-cd RuView/python
+git clone https://github.com/Gestusition/KdView.git
+cd KdView/python
 pip install maturin>=1.7
 maturin develop --release
 pytest tests/                              # 183 tests
@@ -230,8 +232,8 @@ Full API + tests breakdown is on the PyPI front page:
 An interactive installer that detects your hardware and recommends a profile:
 
 ```bash
-git clone https://github.com/ruvnet/RuView.git
-cd RuView
+git clone https://github.com/Gestusition/KdView.git
+cd KdView
 ./install.sh
 ```
 
@@ -250,17 +252,14 @@ Non-interactive:
 
 ```bash
 # Pull and run
-docker run -p 3000:3000 -p 3001:3001 ruvnet/wifi-densepose:latest
+docker run -p 3000:3000 -p 3001:3001 ghcr.io/gestusition/kdview:latest
 
-# Open the UI in your browser
-# http://localhost:3000
+# Open the dashboard or Observatory
+# http://localhost:3000/ui/index.html
+# http://localhost:3000/ui/observatory.html
 ```
 
-You will see a Three.js visualization with:
-- 3D body skeleton (17 COCO keypoints)
-- Signal amplitude heatmap
-- Phase plot
-- Vital signs panel (breathing + heartbeat)
+The server ships the dashboard, Observatory, pose-fusion view, and `viz.html`; the repository also preserves the point-cloud/Three.js demos and mobile client. All use the same sensing APIs and streams where applicable.
 
 ### Verify the System Works
 
@@ -298,7 +297,7 @@ Default in Docker. Generates synthetic CSI data exercising the full pipeline.
 
 ```bash
 # Docker
-docker run -p 3000:3000 ruvnet/wifi-densepose:latest
+docker run -p 3000:3000 ghcr.io/gestusition/kdview:latest
 # (--source auto is the default; falls back to simulate when no hardware detected)
 
 # From source
@@ -314,10 +313,10 @@ Uses `netsh wlan` to capture RSSI from nearby access points. No special hardware
 ./target/release/sensing-server --source wifi --http-port 3000 --ws-port 3001 --tick-ms 500
 
 # Docker (requires --network host on Windows)
-docker run --network host ruvnet/wifi-densepose:latest --source wifi --tick-ms 500
+docker run --network host ghcr.io/gestusition/kdview:latest --source wifi --tick-ms 500
 ```
 
-> **Community verified:** Tested on Windows 10 (10.0.26200) with Intel Wi-Fi 6 AX201 160MHz, Python 3.14, StormFiber 5 GHz network. All 7 tutorial steps passed with stable RSSI readings at -48 dBm. See [Tutorial #36](https://github.com/ruvnet/RuView/issues/36) for the full walkthrough and test results.
+> **Community verified:** Tested on Windows 10 (10.0.26200) with Intel Wi-Fi 6 AX201 160MHz, Python 3.14, StormFiber 5 GHz network. All 7 tutorial steps passed with stable RSSI readings at -48 dBm. See [Tutorial #36](https://github.com/Gestusition/KdView/issues/36) for the full walkthrough and test results.
 
 **Vital signs from RSSI:** The sensing server now supports breathing rate estimation from RSSI variance patterns (requires stationary subject near AP) and motion classification with confidence scoring. RSSI-based vital sign detection has lower fidelity than ESP32 CSI — it is best for presence detection and coarse motion classification.
 
@@ -353,7 +352,7 @@ Real Channel State Information at 20 Hz with 56-192 subcarriers. Required for po
 ./target/release/sensing-server --source esp32 --udp-port 5005 --http-port 3000 --ws-port 3001
 
 # Docker (use CSI_SOURCE environment variable)
-docker run -p 3000:3000 -p 3001:3001 -p 5005:5005/udp -e CSI_SOURCE=esp32 ruvnet/wifi-densepose:latest
+docker run -p 3000:3000 -p 3001:3001 -p 5005:5005/udp -e CSI_SOURCE=esp32 ghcr.io/gestusition/kdview:latest
 ```
 
 The ESP32 nodes stream binary CSI frames over UDP to port 5005. See [Hardware Setup](#esp32-s3-mesh) for flashing instructions.
@@ -379,9 +378,9 @@ The mesh uses a **Time-Division Multiplexing (TDM)** protocol so nodes take turn
 
 See [ADR-029](adr/ADR-029-ruvsense-multistatic-sensing-mode.md) and [ADR-032](adr/ADR-032-multistatic-mesh-security-hardening.md) for the full design.
 
-### Connect Mesh Data to the Dashboard and Observatory
+### Connect Mesh Data to the WiFi UIs
 
-If a standalone `aggregator` command prints live packets, the ESP32 fleet is already reaching that host. To visualize the same data, stop the standalone aggregator and run `sensing-server` on that same host and UDP port. The sensing server is the aggregator used by the REST API, WebSocket stream, dashboard, and Observatory.
+If a standalone `aggregator` command prints live packets, the ESP32 fleet is already reaching that host. To visualize the same data, stop the standalone aggregator and run `sensing-server` on that same host and UDP port. The sensing server is the aggregator used by the REST API, WebSocket stream, dashboard, Observatory, pose-fusion view, and `viz.html`.
 
 ```bash
 # From a source build
@@ -391,7 +390,7 @@ cargo run -p wifi-densepose-sensing-server -- \
   --udp-port 5005 \
   --http-port 3000 \
   --ws-port 3001 \
-  --ui-path ../../ui
+  --ui-path ../ui
 
 # Docker
 docker run --rm \
@@ -399,15 +398,17 @@ docker run --rm \
   -p 3000:3000 \
   -p 3001:3001 \
   -p 5005:5005/udp \
-  ruvnet/wifi-densepose:latest
+  ghcr.io/gestusition/kdview:latest
 ```
 
-Open the UI from the sensing server, not from a local file:
+Open the browser views from the sensing server, not from local files:
 
 | View | URL |
 |------|-----|
 | Dashboard | `http://localhost:3000/ui/index.html` |
 | Observatory | `http://localhost:3000/ui/observatory.html` |
+| Pose fusion | `http://localhost:3000/ui/pose-fusion.html` |
+| Visualization | `http://localhost:3000/ui/viz.html` |
 
 Use these checks before debugging the browser:
 
@@ -417,13 +418,13 @@ curl http://localhost:3000/api/v1/nodes
 curl http://localhost:3000/api/v1/sensing/latest
 ```
 
-If the ESP32 nodes are provisioned with `--target-ip <AGGREGATOR_HOST>`, that IP must be the machine running `sensing-server`. Only one process can receive UDP `:5005` at a time, so leave the standalone hardware `aggregator` off while the dashboard or Observatory is live.
+If the ESP32 nodes are provisioned with `--target-ip <AGGREGATOR_HOST>`, that IP must be the machine running `sensing-server`. Only one process can receive UDP `:5005` at a time, so leave the standalone hardware `aggregator` off while any live WiFi UI is connected.
 
-### Cognitum Seed Integration (ADR-069)
+### Optional Local Persistence Gateway (ADR-069)
 
-Connect an ESP32-S3 to a [Cognitum Seed](https://cognitum.one) (Pi Zero 2 W, ~$15) for persistent vector storage, kNN similarity search, cryptographic witness chain, and AI-accessible sensing via MCP proxy.
+Connect an ESP32-S3 to an operator-managed local gateway for persistent vector storage, kNN similarity search, a cryptographic witness chain, and AI-accessible sensing through an MCP proxy.
 
-**What the Seed adds:**
+**What the gateway adds:**
 - **RVF vector store** — Persistent 8-dim feature vectors with content-addressed IDs and kNN search (cosine, L2, dot product)
 - **Witness chain** — SHA-256 tamper-evident audit trail for every ingest operation
 - **Ed25519 custody** — Device-bound keypair for cryptographic attestation of sensing data
@@ -434,11 +435,11 @@ Connect an ESP32-S3 to a [Cognitum Seed](https://cognitum.one) (Pi Zero 2 W, ~$1
 **Setup:**
 
 ```bash
-# 1. Plug in the Cognitum Seed via USB — appears as a network adapter at 169.254.42.1
+# 1. Make the local gateway available on an operator-controlled interface
 
 # 2. Pair your client (opens a 30-second window, USB-only for security)
-curl -sk -X POST https://169.254.42.1:8443/api/v1/pair/window
-curl -sk -X POST https://169.254.42.1:8443/api/v1/pair \
+curl -sk -X POST https://gateway.local:8443/api/v1/pair/window
+curl -sk -X POST https://gateway.local:8443/api/v1/pair \
   -H 'Content-Type: application/json' -d '{"client_name":"my-laptop"}'
 # Save the returned token — it is shown only once
 
@@ -447,17 +448,17 @@ python firmware/esp32-csi-node/provision.py --port COM9 \
   --ssid "YourWiFi" --password "secret" \
   --target-ip 192.168.1.20 --target-port 5006 --node-id 1
 
-# 4. Run the bridge (receives ESP32 UDP, ingests into Seed via HTTPS)
-export SEED_TOKEN="your-pairing-token"
-python scripts/seed_csi_bridge.py \
-  --seed-url https://169.254.42.1:8443 --token "$SEED_TOKEN" \
+# 4. Run the bridge (receives ESP32 UDP, ingests into the gateway via HTTPS)
+export GATEWAY_TOKEN="your-pairing-token"
+python scripts/gateway_csi_bridge.py \
+  --gateway-url https://gateway.local:8443 --token "$GATEWAY_TOKEN" \
   --udp-port 5006 --batch-size 10 --validate
 
-# 5. Check Seed status
-python scripts/seed_csi_bridge.py --token "$SEED_TOKEN" --stats
+# 5. Check gateway status
+python scripts/gateway_csi_bridge.py --token "$GATEWAY_TOKEN" --stats
 
 # 6. Trigger compaction (reclaim disk space from deleted vectors)
-python scripts/seed_csi_bridge.py --token "$SEED_TOKEN" --compact
+python scripts/gateway_csi_bridge.py --token "$GATEWAY_TOKEN" --compact
 ```
 
 **Feature vector dimensions (magic `0xC5110003`, 48 bytes, 1 Hz):**
@@ -476,14 +477,14 @@ python scripts/seed_csi_bridge.py --token "$SEED_TOKEN" --compact
 **Architecture:**
 
 ```
-ESP32-S3 ($9)  ──UDP:5006──>  Host (bridge)  ──HTTPS──>  Cognitum Seed ($15)
-  CSI @ 100 Hz                seed_csi_bridge.py           RVF vector store
+ESP32-S3  ──UDP:5006──>  Host bridge  ──HTTPS──>  Local gateway
+  CSI @ 100 Hz               gateway_csi_bridge.py         RVF vector store
   Features @ 1 Hz            Batches, validates            kNN graph + boundary
   Vitals @ 1 Hz              NaN rejection                 Witness chain
                               Source IP filtering           114-tool MCP proxy
 ```
 
-See [ADR-069](adr/ADR-069-cognitum-seed-csi-pipeline.md) for the complete design, validation results, and security analysis.
+The canonical bridge is `gateway_csi_bridge.py` with `--gateway-url`. The old `seed_csi_bridge.py`, `--seed-url`, and `--seed-token` names remain migration aliases. See [ADR-069](adr/ADR-069-cognitum-seed-csi-pipeline.md) for the historical validation record and security analysis.
 
 ---
 
@@ -769,7 +770,7 @@ Full design + operator guide: [`docs/integrations/home-assistant.md`](integratio
 3. Start the sensing-server with MQTT:
 
    ```bash
-   docker run --rm --net=host ruvnet/wifi-densepose:0.7.0 \
+   docker run --rm --net=host ghcr.io/gestusition/kdview:0.7.0 \
        --source esp32 --mqtt --mqtt-host <ha-host-ip>
    ```
 4. Within ~5 seconds HA auto-creates one **device** per RuView node with 21 entities: 11 raw signals (presence, person count, HR, BR, motion, fall, RSSI, zones, pose, …) plus 10 semantic primitives (someone-sleeping, possible-distress, room-active, elderly-inactivity-anomaly, meeting, bathroom, fall-risk, bed-exit, no-movement, multi-room-transition).
@@ -818,8 +819,8 @@ cargo run -p wifi-densepose-bfld --example bfld_handle
 
 ```rust
 // Bootstrap (once at startup, retain=true messages):
-publish_availability_online(&mut retained_pub, "seed-01")?;
-publish_discovery(&mut retained_pub, "seed-01", PrivacyClass::Anonymous)?;
+publish_availability_online(&mut retained_pub, "node-01")?;
+publish_discovery(&mut retained_pub, "node-01", PrivacyClass::Anonymous)?;
 
 // Per-frame:
 let handle = BfldPipelineHandle::spawn(pipeline, state_pub);
@@ -872,9 +873,10 @@ Detailed surface: [`v2/crates/wifi-densepose-bfld/README.md`](../v2/crates/wifi-
 **Install (Claude Code)**:
 
 ```bash
-claude mcp add rvagent -- npx @ruvnet/rvagent stdio
+cd tools/ruview-mcp && npm ci && npm run build && cd ../..
+claude mcp add rvagent -- node tools/ruview-mcp/dist/index.js
 # With a remote sensing-server:
-RUVIEW_SENSING_SERVER_URL=http://cognitum-v0:3000 claude mcp add rvagent -- npx @ruvnet/rvagent stdio
+RUVIEW_SENSING_SERVER_URL=http://edge-gateway:3000 claude mcp add rvagent -- node tools/ruview-mcp/dist/index.js
 ```
 
 **Available tools (6 of 20 in v0.1.0)**:
@@ -896,33 +898,25 @@ RVAGENT_HTTP_TOKEN=secret npx @ruvnet/rvagent http --port 3001
 # Cross-origin requests are rejected with 403; missing/wrong token → 401.
 ```
 
-Source: [`tools/ruview-mcp/`](../tools/ruview-mcp/README.md). Tracking issue: [#787](https://github.com/ruvnet/RuView/issues/787). Full ADR: [ADR-124](adr/ADR-124-rvagent-mcp-ruvector-npm-integration.md).
+Source: [`tools/ruview-mcp/`](../tools/ruview-mcp/README.md). Tracking issue: [#787](https://github.com/Gestusition/KdView/issues/787). Full ADR: [ADR-124](adr/ADR-124-rvagent-mcp-ruvector-npm-integration.md).
 
 ---
 
 ## Web UI
 
-The built-in Three.js UI is served at `http://localhost:3000/ui/` (Docker) or the configured HTTP port.
+KdView preserves the complete WiFi sensing interface set:
 
-**Two visualization modes:**
+| Surface | Path | Purpose |
+|---------|------|---------|
+| Dashboard | `/ui/index.html` | Tabbed monitoring with body model, signal heatmap, phase plot, and vital signs |
+| Observatory | `/ui/observatory.html` | Immersive Three.js room, signal field, wireframe figures, presence, and vitals |
+| Pose fusion | `/ui/pose-fusion.html` | Dual-modal webcam + WiFi CSI pose-fusion view |
+| Visualization | `/ui/viz.html` | Additional WiFi sensing visualization surface |
+| Point cloud | `v2/crates/wifi-densepose-pointcloud/src/viewer.html` or `http://localhost:9880` from `ruview-pointcloud serve` | Interactive fused camera/WiFi/mmWave Three.js viewer |
+| Three.js gallery | `examples/three.js/` | Five progressively richer WiFi-driven scene demos |
+| Mobile | `ui/mobile/` | Mobile/WebView client for the sensing stream |
 
-| Page | URL | Purpose |
-|------|-----|---------|
-| **Dashboard** | `/ui/index.html` | Tabbed monitoring dashboard with body model, signal heatmap, phase plot, vital signs |
-| **Observatory** | `/ui/observatory.html` | Immersive 3D room visualization with cinematic lighting and wireframe figures |
-
-**Dashboard panels:**
-
-| Panel | Description |
-|-------|-------------|
-| 3D Body View | Rotatable wireframe skeleton with 17 COCO keypoints |
-| Signal Heatmap | 56 subcarriers color-coded by amplitude |
-| Phase Plot | Per-subcarrier phase values over time |
-| Doppler Bars | Motion band power indicators |
-| Vital Signs | Live breathing rate (BPM) and heart rate (BPM) |
-| Dashboard | System stats, throughput, connected WebSocket clients |
-
-Both UIs update in real-time via WebSocket and auto-detect the sensing server on the same origin.
+The sensing-server pages update through the REST/WebSocket surfaces on the same origin. Observatory can fall back to demo mode when no live server is available. The nvsim dashboard is unrelated to WiFi sensing and is not part of this interface set.
 
 ---
 
@@ -1077,7 +1071,7 @@ The Rust sensing server binary accepts the following flags:
 
 ```bash
 # Simulated mode with UI (development)
-./target/release/sensing-server --source simulate --http-port 3000 --ws-port 3001 --ui-path ../../ui
+./target/release/sensing-server --source simulate --http-port 3000 --ws-port 3001 --ui-path ../ui
 
 # ESP32 hardware mode
 ./target/release/sensing-server --source esp32 --udp-port 5005
@@ -1138,7 +1132,7 @@ What it ships (and what it does not):
 
 | Capability | Status |
 |------------|--------|
-| Presence detection (occupied / empty) | ✅ Trained head — v2 encoder reports 82.3% held-out temporal-triplet acc (v1's "100% on validation" was a single-class recording — retracted, [#882](https://github.com/ruvnet/RuView/issues/882)) |
+| Presence detection (occupied / empty) | ✅ Trained head — v2 encoder reports 82.3% held-out temporal-triplet acc (v1's "100% on validation" was a single-class recording — retracted, [#882](https://github.com/Gestusition/KdView/issues/882)) |
 | 128-dim CSI embeddings (re-ID, similarity, downstream training) | ✅ Trained encoder |
 | Single-person breathing / heart-rate | ⚠️ Server still uses heuristic DSP — model does not replace this yet |
 | 17-keypoint full-body pose | 🔬 No keypoint weights shipped yet — pose pipeline runs but without a learned head |
@@ -1377,7 +1371,7 @@ docker run --rm \
   -v $(pwd)/data:/data \
   -v $(pwd)/output:/output \
   --entrypoint /app/sensing-server \
-  ruvnet/wifi-densepose:latest \
+  ghcr.io/gestusition/kdview:latest \
   --train --dataset /data --epochs 100 --save-rvf /output/model.rvf
 ```
 
@@ -1482,34 +1476,34 @@ An RVF file contains: model weights, HNSW vector index, quantization codebooks, 
 | Target | Use case | Source target flag | Notes |
 |---|---|---|---|
 | **ESP32-S3** (default) | Production CSI mesh, 17-keypoint pose | `idf.py set-target esp32s3` | Dual-core 240 MHz, PSRAM, native USB-OTG, DVP camera path |
-| **ESP32-C6** ([ADR-110](adr/ADR-110-esp32-c6-firmware-extension.md)) | Wi-Fi 6 / 802.15.4 research, battery seed nodes | `idf.py set-target esp32c6` | Single-core 160 MHz, no PSRAM, 802.11ax HE PHY, 802.15.4 (Thread/Zigbee), LP-core hibernation ~5 µA |
+| **ESP32-C6** ([ADR-110](adr/ADR-110-esp32-c6-firmware-extension.md)) | Wi-Fi 6 / 802.15.4 research, battery sensing nodes | `idf.py set-target esp32c6` | Single-core 160 MHz, no PSRAM, 802.11ax HE PHY, 802.15.4 (Thread/Zigbee), LP-core hibernation ~5 µA |
 
 The same `firmware/esp32-csi-node` source tree builds for both. ESP-IDF picks up `sdkconfig.defaults.esp32c6` automatically when the target is set to `esp32c6`; otherwise it uses `sdkconfig.defaults` (S3). All C6-only modules are `#ifdef`-gated, so the S3 build is byte-identical to today.
 
 ### ESP32-S3 Mesh
 
-A 3-6 node ESP32-S3 mesh provides full CSI at 20 Hz. Total cost: ~$54 for a 3-node setup.
+A 3-6 node ESP32-S3 mesh provides full CSI at 20 Hz.
 
 **What you need:**
-- 3-6x ESP32-S3 development boards (~$8 each)
+- 3-6x ESP32-S3 development boards
 - A WiFi router (the CSI source)
 - A computer running the sensing server (aggregator)
 
 **Flashing firmware:**
 
-Pre-built binaries are available at [Releases](https://github.com/ruvnet/RuView/releases):
+Pre-built binaries are available at [Releases](https://github.com/Gestusition/KdView/releases):
 
 | Release | What It Includes | Tag |
 |---------|-----------------|-----|
-| [v0.7.0](https://github.com/ruvnet/RuView/releases/tag/v0.7.0-esp32) | **Latest — ADR-110 firmware-side substrate closed.** Adds ESP-NOW mesh substrate with quantified ≤100 µs alignment (104.1 µs smoothed stdev, 3.95× suppression, 99.56 % cross-board match measured live), 32-byte sync-packet UDP emission with operator-tunable cadence, ADR-018 byte 19 bit 4 wire-fix sourced from working ESP-NOW path, Python SyncPacketParser stub for host wiring ([WITNESS-LOG-110 §A0.7-§A0.13](WITNESS-LOG-110.md)) | `v0.7.0-esp32` |
-| [v0.6.9](https://github.com/ruvnet/RuView/releases/tag/v0.6.9-esp32) | Sync-packet UDP emission, `CONFIG_C6_SYNC_EVERY_N_FRAMES` tunable cadence | `v0.6.9-esp32` |
-| [v0.6.8](https://github.com/ruvnet/RuView/releases/tag/v0.6.8-esp32) | ESP-NOW EMA-smoothed cross-board offset (3.95× suppression, 104 µs stdev) | `v0.6.8-esp32` |
-| [v0.6.7](https://github.com/ruvnet/RuView/releases/tag/v0.6.7-esp32) | Real LP-core motion-gate RISC-V program (B4 code path complete) + Wi-Fi 6 soft-AP with TWT Responder for two-board iTWT benches (B1/B2 unblock) | `v0.6.7-esp32` |
-| [v0.5.0](https://github.com/ruvnet/RuView/releases/tag/v0.5.0-esp32) | **Stable (S3 mesh, recommended)** — mmWave sensor fusion (MR60BHA2/LD2410 auto-detect), 48-byte fused vitals, all v0.4.3.1 fixes | `v0.5.0-esp32` |
-| [v0.4.3.1](https://github.com/ruvnet/RuView/releases/tag/v0.4.3.1-esp32) | Fall detection fix ([#263](https://github.com/ruvnet/RuView/issues/263)), 4MB flash ([#265](https://github.com/ruvnet/RuView/issues/265)), watchdog fix ([#266](https://github.com/ruvnet/RuView/issues/266)) | `v0.4.3.1-esp32` |
-| [v0.4.1](https://github.com/ruvnet/RuView/releases/tag/v0.4.1-esp32) | CSI build fix, compile guard, AMOLED display, edge intelligence ([ADR-057](../docs/adr/ADR-057-firmware-csi-build-guard.md)) | `v0.4.1-esp32` |
-| [v0.3.0-alpha](https://github.com/ruvnet/RuView/releases/tag/v0.3.0-alpha-esp32) | Alpha — adds on-device edge intelligence (ADR-039) | `v0.3.0-alpha-esp32` |
-| [v0.2.0](https://github.com/ruvnet/RuView/releases/tag/v0.2.0-esp32) | Raw CSI streaming, TDM, channel hopping, QUIC mesh | `v0.2.0-esp32` |
+| [v0.7.0](https://github.com/Gestusition/KdView/releases/tag/v0.7.0-esp32) | **Latest — ADR-110 firmware-side substrate closed.** Adds ESP-NOW mesh substrate with quantified ≤100 µs alignment (104.1 µs smoothed stdev, 3.95× suppression, 99.56 % cross-board match measured live), 32-byte sync-packet UDP emission with operator-tunable cadence, ADR-018 byte 19 bit 4 wire-fix sourced from working ESP-NOW path, Python SyncPacketParser stub for host wiring ([WITNESS-LOG-110 §A0.7-§A0.13](WITNESS-LOG-110.md)) | `v0.7.0-esp32` |
+| [v0.6.9](https://github.com/Gestusition/KdView/releases/tag/v0.6.9-esp32) | Sync-packet UDP emission, `CONFIG_C6_SYNC_EVERY_N_FRAMES` tunable cadence | `v0.6.9-esp32` |
+| [v0.6.8](https://github.com/Gestusition/KdView/releases/tag/v0.6.8-esp32) | ESP-NOW EMA-smoothed cross-board offset (3.95× suppression, 104 µs stdev) | `v0.6.8-esp32` |
+| [v0.6.7](https://github.com/Gestusition/KdView/releases/tag/v0.6.7-esp32) | Real LP-core motion-gate RISC-V program (B4 code path complete) + Wi-Fi 6 soft-AP with TWT Responder for two-board iTWT benches (B1/B2 unblock) | `v0.6.7-esp32` |
+| [v0.5.0](https://github.com/Gestusition/KdView/releases/tag/v0.5.0-esp32) | **Stable (S3 mesh, recommended)** — mmWave sensor fusion (MR60BHA2/LD2410 auto-detect), 48-byte fused vitals, all v0.4.3.1 fixes | `v0.5.0-esp32` |
+| [v0.4.3.1](https://github.com/Gestusition/KdView/releases/tag/v0.4.3.1-esp32) | Fall detection fix ([#263](https://github.com/Gestusition/KdView/issues/263)), 4MB flash ([#265](https://github.com/Gestusition/KdView/issues/265)), watchdog fix ([#266](https://github.com/Gestusition/KdView/issues/266)) | `v0.4.3.1-esp32` |
+| [v0.4.1](https://github.com/Gestusition/KdView/releases/tag/v0.4.1-esp32) | CSI build fix, compile guard, AMOLED display, edge intelligence ([ADR-057](../docs/adr/ADR-057-firmware-csi-build-guard.md)) | `v0.4.1-esp32` |
+| [v0.3.0-alpha](https://github.com/Gestusition/KdView/releases/tag/v0.3.0-alpha-esp32) | Alpha — adds on-device edge intelligence (ADR-039) | `v0.3.0-alpha-esp32` |
+| [v0.2.0](https://github.com/Gestusition/KdView/releases/tag/v0.2.0-esp32) | Raw CSI streaming, TDM, channel hopping, QUIC mesh | `v0.2.0-esp32` |
 
 > **Important:** Always use **v0.4.3.1 or later**. Earlier versions have false fall detection alerts (v0.4.2 and below) and CSI disabled in the build config (pre-v0.4.1).
 
@@ -1521,7 +1515,7 @@ python -m esptool --chip esp32s3 --port COM7 --baud 460800 \
   0xf000 ota_data_initial.bin 0x20000 esp32-csi-node.bin
 ```
 
-**4MB flash boards** (e.g. ESP32-S3 SuperMini 4MB): download `esp32-csi-node-s3-4mb.bin` + `partition-table-s3-4mb.bin` from the [v0.6.7 release](https://github.com/ruvnet/RuView/releases/tag/v0.6.7-esp32) (882 KB binary, 52 % partition slack) and use `--flash-size 4MB`:
+**4MB flash boards** (e.g. ESP32-S3 SuperMini 4MB): download `esp32-csi-node-s3-4mb.bin` + `partition-table-s3-4mb.bin` from the [v0.6.7 release](https://github.com/Gestusition/KdView/releases/tag/v0.6.7-esp32) (882 KB binary, 52 % partition slack) and use `--flash-size 4MB`:
 
 ```bash
 python -m esptool --chip esp32s3 --port COM7 --baud 460800 \
@@ -1560,7 +1554,7 @@ The C6 build adds four capabilities to the existing csi-node firmware, all opt-i
 | **Wi-Fi 6 HE-LTF tagging** | `CSI_FRAME_HE_TAGGING` (default on) | Each ADR-018 frame's previously-reserved bytes 18-19 now carry PPDU type (HT / HE-SU / HE-MU / HE-TB) + bandwidth flags. Magic stays `0xC5110001` — old aggregators see zeros and ignore. |
 | **802.15.4 mesh time-sync** | `C6_TIMESYNC_ENABLE` (default on, channel 15) | Beacon-based cross-node clock alignment over the 802.15.4 radio. Frees the WiFi channel from coordination traffic — solves the ADR-029/030 multistatic clock-sync problem. |
 | **TWT (Target Wake Time)** | `C6_TWT_ENABLE` (default on, 10 ms wake interval) | After WiFi connect, negotiates an individual TWT agreement with the AP for deterministic CSI cadence. Graceful NACK fallback if the AP doesn't support 11ax TWT. |
-| **LP-core wake-on-motion hibernation** | `C6_LP_CORE_ENABLE` (default off) | Always-on motion gate on the LP RISC-V core; HP core stays in deep sleep until the configured GPIO wakes it. Targets ~5 µA for battery-powered Cognitum Seed nodes. |
+| **LP-core wake-on-motion hibernation** | `C6_LP_CORE_ENABLE` (default off) | Always-on motion gate on the LP RISC-V core; HP core stays in deep sleep until the configured GPIO wakes it. Targets ~5 µA for battery-powered sensing nodes. |
 
 **Build + flash:**
 
@@ -1587,7 +1581,7 @@ The `c6_ts: init done` line confirms the 802.15.4 stack is up; if TWT succeeds y
 
 Flash two or more C6 boards, leave them on the same 802.15.4 channel (default 15). One will elect itself leader (lowest EUI-64) and broadcast `TS_BEACON` frames every 100 ms; the others compute and apply offsets. Each CSI frame from a follower carries a `c6_timesync_get_epoch_us()` wall-clock estimate aligned to within ±100 µs of the leader's monotonic time. Target use case: ADR-029/030 multistatic fusion without burning WiFi airtime on coordination.
 
-**Battery seed-node mode (v0.6.7 — real LP-core program):**
+**Battery sensing-node mode (v0.6.7 — real LP-core program):**
 
 ```bash
 # Enable LP-core hibernation in menuconfig:
@@ -1639,7 +1633,7 @@ fallback that fired against the bench's 11n-only `ruv.net` AP.
 NVS overrides for AP role (namespace `ruview`): `softap_ssid`, `softap_psk`,
 `softap_chan` — provision once and the values survive firmware updates.
 
-**What's NOT on the C6 build** (vs S3 production): no AMOLED display (ADR-045 needs 8 MB + LCD touch driver), no WASM3 (ADR-040 needs PSRAM), no Seeed mmWave fusion (separate board). The C6 is a research/seed target, not a drop-in replacement for the S3 production node.
+**What's NOT on the C6 build** (vs S3 production): no AMOLED display (ADR-045 needs 8 MB + LCD touch driver), no WASM3 (ADR-040 needs PSRAM), no Seeed mmWave fusion (separate board). The C6 is a research and low-power sensing target, not a drop-in replacement for the S3 production node.
 
 **TDM slot assignment:**
 
@@ -1699,10 +1693,10 @@ Binary size: 990 KB (8MB flash, 52% free) or 773 KB (4MB flash). v0.5.0 adds mmW
 ./target/release/sensing-server --source esp32 --udp-port 5005 --http-port 3000 --ws-port 3001
 
 # Docker (use CSI_SOURCE environment variable)
-docker run -p 3000:3000 -p 3001:3001 -p 5005:5005/udp -e CSI_SOURCE=esp32 ruvnet/wifi-densepose:latest
+docker run -p 3000:3000 -p 3001:3001 -p 5005:5005/udp -e CSI_SOURCE=esp32 ghcr.io/gestusition/kdview:latest
 ```
 
-See [ADR-018](../docs/adr/ADR-018-esp32-dev-implementation.md), [ADR-029](../docs/adr/ADR-029-ruvsense-multistatic-sensing-mode.md), and [Tutorial #34](https://github.com/ruvnet/RuView/issues/34).
+See [ADR-018](../docs/adr/ADR-018-esp32-dev-implementation.md), [ADR-029](../docs/adr/ADR-029-ruvsense-multistatic-sensing-mode.md), and [Tutorial #34](https://github.com/Gestusition/KdView/issues/34).
 
 ### Intel 5300 / Atheros NIC
 
@@ -1710,8 +1704,8 @@ These research NICs provide full CSI on Linux with firmware/driver modifications
 
 | NIC | Driver | Platform | Setup |
 |-----|--------|----------|-------|
-| Intel 5300 | `iwl-csi` | Linux | Custom firmware, ~$15 used |
-| Atheros AR9580 | `ath9k` patch | Linux | Kernel patch, ~$20 used |
+| Intel 5300 | `iwl-csi` | Linux | Custom firmware |
+| Atheros AR9580 | `ath9k` patch | Linux | Kernel patch |
 
 These are advanced setups. See the respective driver documentation for installation.
 
@@ -1719,46 +1713,46 @@ These are advanced setups. See the respective driver documentation for installat
 
 ## Camera-Free Pose Training
 
-RuView can train a 17-keypoint COCO pose model **without any camera** by fusing 10 sensor signals from the ESP32 nodes and Cognitum Seed:
+RuView can train a 17-keypoint COCO pose model **without any camera** by fusing 10 signals from ESP32 nodes and sensors attached to a local gateway:
 
 | Signal | Source | What it provides |
 |--------|--------|-----------------|
-| PIR sensor | Seed GPIO 6 | Binary presence ground truth |
-| BME280 temperature | Seed I2C | Occupancy proxy (temp rises with people) |
-| BME280 humidity | Seed I2C | Breathing confirmation |
+| PIR sensor | Gateway GPIO 6 | Binary presence ground truth |
+| BME280 temperature | Gateway I2C | Occupancy proxy (temp rises with people) |
+| BME280 humidity | Gateway I2C | Breathing confirmation |
 | Cross-node RSSI | 2x ESP32 | Rough XY position (triangulation) |
 | Vitals stability | ESP32 DSP | Activity level (stable HR = stationary) |
 | Temporal CSI patterns | ESP32 DSP | Walk (periodic), sit (stable), empty (flat) |
-| kNN clusters | Seed vector store | Natural state groupings |
-| Boundary fragility | Seed graph analysis | Regime changes (enter/exit) |
-| Reed switch | Seed GPIO 5 | Door open/close events |
-| Vibration sensor | Seed GPIO 13 | Footstep detection |
+| kNN clusters | Gateway vector store | Natural state groupings |
+| Boundary fragility | Gateway graph analysis | Regime changes (enter/exit) |
+| Reed switch | Gateway GPIO 5 | Door open/close events |
+| Vibration sensor | Gateway GPIO 13 | Footstep detection |
 
 ### How It Works
 
 The pipeline generates weak labels from sensor fusion, then trains in 5 phases:
 
-1. **Multi-modal collection** — Syncs CSI frames with Seed sensor events
+1. **Multi-modal collection** — Syncs CSI frames with gateway sensor events
 2. **Weak label generation** — RSSI triangulation for head position, subcarrier asymmetry for hands, vibration for feet
 3. **5-keypoint pose proxy** — Trains head/hands/feet positions from fused signals
 4. **17-keypoint interpolation** — Derives full COCO skeleton using bone length constraints
 5. **Self-refinement** — Bootstraps from confident predictions (3 rounds)
 
 ```bash
-# With Cognitum Seed connected (all 10 signals):
+# With a local gateway connected (all 10 signals):
 node scripts/train-camera-free.js \
   --data data/recordings/pretrain-*.csi.jsonl \
-  --seed-url https://169.254.42.1:8443 \
-  --seed-token "$SEED_TOKEN"
+  --gateway-url https://gateway.local:8443 \
+  --gateway-token "$GATEWAY_TOKEN"
 
-# Without Seed (CSI-only, 3 signals — still works):
+# Without a gateway (CSI-only, 3 signals — still works):
 node scripts/train-camera-free.js \
-  --data data/recordings/pretrain-*.csi.jsonl --no-seed
+  --data data/recordings/pretrain-*.csi.jsonl --no-gateway
 ```
 
 **Output:** 82.8 KB model (8 KB at 4-bit) with 17-keypoint predictions, 0 skeleton violations, LoRA per-node adapters, and EWC protection against forgetting.
 
-See [ADR-071](adr/ADR-071-ruvllm-training-pipeline.md) and the [pretraining tutorial](tutorials/cognitum-seed-pretraining.md) for the full walkthrough.
+See [ADR-071](adr/ADR-071-ruvllm-training-pipeline.md) for the architecture and validation record.
 
 ---
 
@@ -1912,7 +1906,7 @@ huggingface-cli download ruvnet/wifi-densepose-pretrained --local-dir models/pre
 
 The pre-trained encoder converts 8-dim CSI feature vectors into 128-dim embeddings. These embeddings power all 17 sensing applications:
 
-- **Presence detection** — v2 encoder: 82.3% held-out temporal-triplet accuracy (v1's "100%" was a single-class recording — retracted, [#882](https://github.com/ruvnet/RuView/issues/882))
+- **Presence detection** — v2 encoder: 82.3% held-out temporal-triplet accuracy (v1's "100%" was a single-class recording — retracted, [#882](https://github.com/Gestusition/KdView/issues/882))
 - **Environment fingerprinting** — kNN search finds "states like this one"
 - **Anomaly detection** — embeddings that don't match known clusters = anomaly
 - **Activity classification** — different activities cluster in embedding space
@@ -1987,7 +1981,7 @@ node scripts/benchmark-ruvllm.js --model models/csi-ruvllm
 | Bits | Size | Compression | Quality Loss | Use Case |
 |------|------|-------------|-------------|----------|
 | fp32 | 48 KB | 1x | 0% | Development |
-| 8-bit | 16 KB | 4x | <0.01% | Cognitum Seed inference |
+| 8-bit | 16 KB | 4x | <0.01% | Local gateway inference |
 | 4-bit | 8 KB | 8x | <0.1% | Recommended for deployment |
 | 2-bit | 4 KB | 16x | <1% | ESP32-S3 SRAM (edge inference) |
 
@@ -2305,13 +2299,13 @@ All of these also run automatically in CI when you push changes to `firmware/`.
 The `latest` tag supports both amd64 and arm64. Pull the latest image:
 
 ```bash
-docker pull ruvnet/wifi-densepose:latest
+docker pull ghcr.io/gestusition/kdview:latest
 ```
 
 If you still see this error, your local Docker may have a stale cached manifest. Try:
 
 ```bash
-docker pull --platform linux/arm64 ruvnet/wifi-densepose:latest
+docker pull --platform linux/arm64 ghcr.io/gestusition/kdview:latest
 ```
 
 ### Docker: "Connection refused" on localhost:3000
@@ -2319,7 +2313,7 @@ docker pull --platform linux/arm64 ruvnet/wifi-densepose:latest
 Make sure you're mapping the ports correctly:
 
 ```bash
-docker run -p 3000:3000 -p 3001:3001 ruvnet/wifi-densepose:latest
+docker run -p 3000:3000 -p 3001:3001 ghcr.io/gestusition/kdview:latest
 ```
 
 The `-p 3000:3000` maps host port 3000 to container port 3000.
@@ -2329,12 +2323,12 @@ The `-p 3000:3000` maps host port 3000 to container port 3000.
 Add the WebSocket port mapping:
 
 ```bash
-docker run -p 3000:3000 -p 3001:3001 ruvnet/wifi-densepose:latest
+docker run -p 3000:3000 -p 3001:3001 ghcr.io/gestusition/kdview:latest
 ```
 
 ### ESP32: "CSI not enabled in menuconfig"
 
-Firmware versions prior to v0.4.1 had `CONFIG_ESP_WIFI_CSI_ENABLED` disabled in the build config. Upgrade to [v0.4.1](https://github.com/ruvnet/RuView/releases/tag/v0.4.1-esp32) or later. If building from source, ensure `sdkconfig.defaults` exists (not just `sdkconfig.defaults.template`). See [ADR-057](../docs/adr/ADR-057-firmware-csi-build-guard.md).
+Firmware versions prior to v0.4.1 had `CONFIG_ESP_WIFI_CSI_ENABLED` disabled in the build config. Upgrade to [v0.4.1](https://github.com/Gestusition/KdView/releases/tag/v0.4.1-esp32) or later. If building from source, ensure `sdkconfig.defaults` exists (not just `sdkconfig.defaults.template`). See [ADR-057](../docs/adr/ADR-057-firmware-csi-build-guard.md).
 
 ### ESP32: No data arriving
 
@@ -2447,10 +2441,10 @@ Install PyYAML: `pip install pyyaml`
 ## FAQ
 
 **Q: Do I need special hardware to try this?**
-No. Run `docker run -p 3000:3000 ruvnet/wifi-densepose:latest` and open `http://localhost:3000`. Simulated mode exercises the full pipeline with synthetic data.
+No. Run `docker run -p 3000:3000 ghcr.io/gestusition/kdview:latest` and open `http://localhost:3000/ui/index.html` or `http://localhost:3000/ui/observatory.html`. Simulated mode exercises the full pipeline with synthetic data, and the other WiFi views remain available at their documented paths.
 
 **Q: Can consumer WiFi laptops do pose estimation?**
-No. Consumer WiFi exposes only RSSI (one number per access point), not CSI (56+ complex subcarrier values per frame). RSSI supports coarse presence and motion detection. Full pose estimation requires CSI-capable hardware like an ESP32-S3 ($8) or a research NIC.
+No. Consumer WiFi exposes only RSSI (one number per access point), not CSI (56+ complex subcarrier values per frame). RSSI supports coarse presence and motion detection. Full pose estimation requires CSI-capable hardware such as an ESP32-S3 or a research NIC.
 
 **Q: How accurate is the pose estimation?**
 Accuracy depends on hardware and environment. With a 3-node ESP32 mesh in a single room, the system tracks 17 COCO keypoints. The core algorithm follows the CMU "DensePose From WiFi" paper ([arXiv:2301.00250](https://arxiv.org/abs/2301.00250)). The MERIDIAN domain generalization system (ADR-027) reduces cross-environment accuracy loss from 40-70% to under 15% via 10-second automatic calibration.
@@ -2468,10 +2462,10 @@ The system uses WiFi radio signals, not cameras. No images or video are captured
 The Rust implementation (v2) is 810x faster than Python (v1) for the full CSI pipeline. The Docker image is 132 MB vs 569 MB. Rust is the primary and recommended runtime. Python v1 remains available for legacy workflows.
 
 **Q: Can I use an ESP8266 instead of ESP32-S3?**
-No. The ESP8266 does not expose WiFi Channel State Information (CSI) through its SDK, has insufficient RAM (~80 KB vs 512 KB), and runs a single-core 80 MHz CPU that cannot handle the signal processing pipeline. The ESP32-S3 is the minimum supported CSI capture device. See [Issue #138](https://github.com/ruvnet/RuView/issues/138) for alternatives including using cheap Android TV boxes as aggregation hubs.
+No. The ESP8266 does not expose WiFi Channel State Information (CSI) through its SDK, has insufficient RAM (~80 KB vs 512 KB), and runs a single-core 80 MHz CPU that cannot handle the signal processing pipeline. The ESP32-S3 is the minimum supported CSI capture device. See [Issue #138](https://github.com/Gestusition/KdView/issues/138) for alternatives including using cheap Android TV boxes as aggregation hubs.
 
 **Q: Does the Windows WiFi tutorial work on Windows 10?**
-Yes. Community-tested on Windows 10 (build 26200) with an Intel Wi-Fi 6 AX201 160MHz adapter on a 5 GHz network. All 7 tutorial steps passed with Python 3.14. See [Issue #36](https://github.com/ruvnet/RuView/issues/36) for full test results.
+Yes. Community-tested on Windows 10 (build 26200) with an Intel Wi-Fi 6 AX201 160MHz adapter on a 5 GHz network. All 7 tutorial steps passed with Python 3.14. See [Issue #36](https://github.com/Gestusition/KdView/issues/36) for full test results.
 
 **Q: Can I run the sensing server on an ARM device (Raspberry Pi, TV box)?**
 ARM64 deployment is planned ([ADR-046](adr/ADR-046-android-tv-box-armbian-deployment.md)) but not yet available as a pre-built binary. You can cross-compile from source using `cross build --release --target aarch64-unknown-linux-gnu -p wifi-densepose-sensing-server` if you have the Rust cross-compilation toolchain set up.

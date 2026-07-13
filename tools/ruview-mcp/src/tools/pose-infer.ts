@@ -97,7 +97,7 @@ export async function poseInfer(
       error: healthResult.error,
       hint:
         "Set RUVIEW_POSE_COG_BINARY to the path of the cog-pose-estimation binary. " +
-        "Install it from gs://cognitum-apps/cogs/<arch>/cog-pose-estimation-<arch>. " +
+        "Download the matching cog-pose-estimation asset from https://github.com/Gestusition/KdView/releases. " +
         "See ADR-101 for installation instructions.",
     };
   }

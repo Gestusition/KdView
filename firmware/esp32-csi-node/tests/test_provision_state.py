@@ -84,8 +84,8 @@ class TestMerge(unittest.TestCase):
 
     def test_partial_invocation_does_not_drop_unrelated_keys(self):
         # The exact #391 scenario: user previously provisioned WiFi, now adds
-        # only --seed-url. Old behaviour wiped SSID. New behaviour keeps it.
-        args = _mk_args(seed_url="http://10.1.10.236")
+        # only --gateway-url. Old behaviour wiped SSID. New behaviour keeps it.
+        args = _mk_args(gateway_url="http://10.1.10.236")
         prior = {
             "ssid": "ruv.net",
             "password": "<secret>",
@@ -95,10 +95,21 @@ class TestMerge(unittest.TestCase):
         self.assertEqual(args.ssid, "ruv.net")
         self.assertEqual(args.password, "<secret>")
         self.assertEqual(args.target_ip, "192.168.1.20")
-        self.assertEqual(args.seed_url, "http://10.1.10.236")
+        self.assertEqual(args.gateway_url, "http://10.1.10.236")
         # And the on-disk merged dict carries all four keys.
         self.assertEqual(set(merged.keys()),
-                         {"ssid", "password", "target_ip", "seed_url"})
+                         {"ssid", "password", "target_ip", "gateway_url"})
+
+    def test_legacy_seed_state_migrates_without_losing_gateway_access(self):
+        args = _mk_args()
+        merged = provision.merge_state_into_args(
+            args,
+            {"seed_url": "http://legacy-gateway", "seed_token": "token-123"},
+        )
+        self.assertEqual(args.gateway_url, "http://legacy-gateway")
+        self.assertEqual(args.gateway_token, "token-123")
+        self.assertNotIn("seed_url", merged)
+        self.assertNotIn("seed_token", merged)
 
     def test_empty_prior_is_noop(self):
         args = _mk_args(ssid="x")

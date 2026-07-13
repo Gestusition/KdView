@@ -91,8 +91,8 @@ sudo apt-get install -y build-essential pkg-config libssl-dev
 
 ```bash
 # Clone the repository
-git clone https://github.com/ruvnet/wifi-densepose.git
-cd wifi-densepose/v2
+git clone https://github.com/Gestusition/KdView.git
+cd KdView/v2
 
 # Build the wifi-mat crate
 cargo build --release --package wifi-densepose-mat
@@ -954,7 +954,7 @@ A **negative result does not guarantee absence of survivors**. Always:
 
 - **Documentation**: [ADR-001](/docs/adr/ADR-001-wifi-mat-disaster-detection.md)
 - **Domain Model**: [DDD Specification](/docs/ddd/wifi-mat-domain-model.md)
-- **Issues**: [GitHub Issues](https://github.com/ruvnet/wifi-densepose/issues)
+- **Issues**: [GitHub Issues](https://github.com/Gestusition/KdView/issues)
 - **API Docs**: Run `cargo doc --package wifi-densepose-mat --open`
 
 ---

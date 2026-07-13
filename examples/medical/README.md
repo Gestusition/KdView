@@ -101,7 +101,7 @@ This tool is intended for:
 
 ### How This Connects to RuView
 
-This example is part of the [RuView](https://github.com/ruvnet/RuView) ambient intelligence platform. When combined with WiFi CSI sensing:
+This example is part of the [KdView](https://github.com/Gestusition/KdView) ambient intelligence platform. When combined with WiFi CSI sensing:
 
 - **WiFi CSI** provides through-wall presence detection and room-scale activity recognition
 - **mmWave radar** provides clinical-grade heart rate, breathing rate, and BP estimation

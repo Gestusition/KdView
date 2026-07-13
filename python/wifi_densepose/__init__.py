@@ -3,7 +3,7 @@
 ADR-117 — v2.0 is a PyO3-bound replacement for the legacy pure-Python
 ``wifi-densepose==1.1.0`` (released 2025-06-07). The compiled core is
 the same Rust workspace published in `v2/crates/` of the
-`ruvnet/RuView <https://github.com/ruvnet/RuView>`_ repository.
+`Gestusition/KdView <https://github.com/Gestusition/KdView>`_ repository.
 
 Quick start::
 
@@ -15,7 +15,7 @@ Quick start::
 P1 (this release): scaffold. Core types land in P2; vital signs +
 signal DSP in P3; WebSocket/MQTT client in P4. See the
 `ADR-117 modernization plan
-<https://github.com/ruvnet/RuView/blob/main/docs/adr/ADR-117-pip-wifi-densepose-modernization.md>`_
+<https://github.com/Gestusition/KdView/blob/main/docs/adr/ADR-117-pip-wifi-densepose-modernization.md>`_
 for the full phase ledger.
 
 Migrating from v1.x: the v1 line was pure-Python and had a different

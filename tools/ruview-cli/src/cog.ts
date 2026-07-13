@@ -1,5 +1,5 @@
 /**
- * Subprocess wrapper for Cognitum Cog binaries (CLI variant).
+ * Subprocess wrapper for portable edge-module binaries (CLI variant).
  * Mirrors tools/ruview-mcp/src/cog.ts.
  */
 

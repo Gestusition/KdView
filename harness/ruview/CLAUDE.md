@@ -24,7 +24,7 @@ accuracy number:
 ## Skills
 
 `onboard` · `provision-node` · `calibrate-room` · `train-pose` · `verify`
-(`npx @ruvnet/ruview skill <name>`).
+(`node harness/ruview/bin/cli.js skill <name>` from the repository root).
 
 ## Don'ts
 

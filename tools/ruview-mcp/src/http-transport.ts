@@ -1,5 +1,5 @@
 /**
- * Streamable HTTP transport for @ruvnet/rvagent (ADR-124 §3, hardened per
+ * Streamable HTTP transport for KdView SENSE-BRIDGE (ADR-124 §3, hardened per
  * ADR-264 F7/O3).
  *
  * Binds to 127.0.0.1 by default and mounts an /mcp endpoint backed by

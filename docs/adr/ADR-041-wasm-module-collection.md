@@ -2517,8 +2517,8 @@ extensions.
 
 ```bash
 # Clone the repo and navigate to the module template
-git clone https://github.com/ruvnet/wifi-densepose.git
-cd wifi-densepose/modules
+git clone https://github.com/Gestusition/KdView.git
+cd KdView/modules
 
 # Copy the template
 cp -r _template/ exotic/my-module/

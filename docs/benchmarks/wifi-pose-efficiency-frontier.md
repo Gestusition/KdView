@@ -1,5 +1,7 @@
 # WiFi-CSI Pose — Efficiency Frontier (beyond SOTA at a fraction of the size)
 
+> Model IDs under `ruvnet/*` are retained as upstream Hugging Face publication identifiers. Canonical source and new benchmark work live at [Gestusition/KdView](https://github.com/Gestusition/KdView).
+
 **Measured:** 2026-05-31 · MM-Fi `random_split` (ratio 0.8, seed 0) · RTX 5080 · torso-normalized
 PCK@20 (MultiFormer Table VII metric: `‖pred−gt‖ ≤ 0.2·‖R-shoulder − L-hip‖`).
 

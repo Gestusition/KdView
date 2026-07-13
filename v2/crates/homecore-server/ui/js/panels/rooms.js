@@ -34,7 +34,7 @@ function roomCard(r, ctx) {
     h('.flex.spread',
       h('strong.mono', r.room_id),
       h('.flex.gap-sm',
-        r.seeds.length > 1 ? pill(r.seeds.length + ' seeds fused', 'purple') : null,
+        r.seeds.length > 1 ? pill(r.seeds.length + ' gateways fused', 'purple') : null,
         r.vetoed ? pill('veto active', 'red') : null,
         r.stale ? pill('stale', 'amber') : null)),
   ];

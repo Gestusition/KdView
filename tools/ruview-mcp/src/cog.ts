@@ -1,5 +1,5 @@
 /**
- * Subprocess wrapper for Cognitum Cog binaries.
+ * Subprocess wrapper for portable edge-module binaries.
  *
  * The cog binaries implement the ADR-100 runtime contract:
  *   cog-<id> version
@@ -47,7 +47,7 @@ export async function runCog(
         err(
           `Failed to launch cog binary "${binary}" (${args.join(" ")}): ${e.message}. ` +
             `Set RUVIEW_POSE_COG_BINARY / RUVIEW_COUNT_COG_BINARY to the installed path, ` +
-            `or install the cog on the Cognitum appliance first.`
+            `or install the module from this fork's GitHub Releases first.`
         )
       );
     });

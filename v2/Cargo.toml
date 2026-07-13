@@ -36,19 +36,16 @@ members = [
     "crates/homecore-automation",         # ADR-129 — HOMECORE automation engine
     "crates/homecore-recorder",        # ADR-132 — HOMECORE state recorder
     "crates/homecore-migrate",         # ADR-134 — HOMECORE migration from Python HA
-    # ADR-100/ADR-101: Cognitum Cog packaging — first Cog from this repo.
-    # Ships the wifi-densepose pose-estimation model as a signed binary +
-    # JSONL manifest installable by the Cognitum V0 appliance (cognitum-v0,
-    # cognitum-cluster-*, ruvultra). The companion appliance-side crate
-    # lives in cognitum-one/v0-appliance as `cognitum-pose-estimation`.
+    # ADR-100/ADR-101: signed pose-estimation service packaging.
+    # Ships the model as a signed binary plus a JSON manifest for compatible
+    # local integration hosts.
     "crates/cog-pose-estimation",
     # ADR-103: Learned multi-person counter (SOTA path) — replaces the
     # PR #491 slot heuristic with a Candle network + Stoer-Wagner fusion.
     # Motivated by #499 ghost-skeleton reports.
     "crates/cog-person-count",
-    # ADR-116: Home Assistant + Matter Cognitum Seed cog. Wraps the
-    # ADR-115 MQTT publisher as a Seed-installable artifact with
-    # mDNS, embedded broker, RuVector thresholds, Ed25519 witness.
+    # ADR-116: Home Assistant + Matter integration service with mDNS, an
+    # embedded broker option, RuVector thresholds, and an Ed25519 witness.
     "crates/cog-ha-matter",
     # ADR-118: BFLD — Beamforming Feedback Layer for Detection. The
     # privacy/safety layer that measures and gates identity leakage from
@@ -93,9 +90,9 @@ exclude = [
 [workspace.package]
 version = "0.3.0"
 edition = "2021"
-authors = ["rUv <ruv@ruv.net>", "WiFi-DensePose Contributors"]
+authors = ["KdView Contributors", "WiFi-DensePose Contributors"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/ruvnet/wifi-densepose"
+repository = "https://github.com/Gestusition/KdView"
 documentation = "https://docs.rs/wifi-densepose"
 keywords = ["wifi", "densepose", "csi", "pose-estimation", "rust"]
 categories = ["science", "computer-vision", "wasm"]

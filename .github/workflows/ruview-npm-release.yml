@@ -1,14 +1,9 @@
-# ADR-265 D2 — publish only from CI, with provenance.
-#
-# Manual `npm publish` from laptops stops: this workflow re-runs the ADR-265 D1
-# gate for the selected package and then publishes with npm provenance
-# attestations (OIDC), tying every published version to a public commit +
-# workflow run — the npm-side analogue of the ADR-028 witness bundle.
-#
-# Requires: NPM_TOKEN repo secret (an npm automation token), or npm Trusted
-# Publishing configured for the package (in which case the token is unused).
+# ADR-265 D2 — package only from CI and publish immutable tarballs to the
+# fork-owned GitHub Releases page. Package names and exports remain unchanged
+# inside each tarball for compatibility; no upstream registry credentials are
+# required.
 
-name: ruview npm release
+name: KdView Node package release
 
 on:
   workflow_dispatch:
@@ -20,19 +15,19 @@ on:
         options:
           - harness/ruview
           - tools/ruview-mcp
-      dist_tag:
-        description: 'npm dist-tag'
-        required: false
-        default: 'latest'
+      release_tag:
+        description: 'Existing Git tag to receive the tarball'
+        required: true
         type: string
 
 permissions:
   contents: read
-  id-token: write # npm --provenance
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: ${{ inputs.package }}
@@ -42,7 +37,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Install
         run: |
@@ -131,7 +125,28 @@ jobs:
             node "$GITHUB_WORKSPACE/harness/ruview/bin/cli.js" claim-check --file README.md
           fi
 
-      - name: Publish (with provenance)
-        run: npm publish --provenance --access public --tag "${{ inputs.dist_tag }}"
+      - name: Pack release tarball
+        id: pack
+        run: |
+          set -euo pipefail
+          tarball="$(npm pack --silent 2>/dev/null | tail -1)"
+          mkdir -p "$GITHUB_WORKSPACE/release-assets"
+          cp "$tarball" "$GITHUB_WORKSPACE/release-assets/$tarball"
+          echo "asset=$GITHUB_WORKSPACE/release-assets/$tarball" >> "$GITHUB_OUTPUT"
+
+      - name: Publish fork-owned GitHub Release asset
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          tag="${{ inputs.release_tag }}"
+          asset="${{ steps.pack.outputs.asset }}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "$asset" --clobber
+          else
+            gh release create "$tag" "$asset" \
+              --verify-tag \
+              --title "$tag" \
+              --generate-notes
+          fi

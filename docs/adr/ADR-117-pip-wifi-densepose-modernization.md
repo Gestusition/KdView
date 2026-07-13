@@ -609,7 +609,7 @@ raise ImportError(
     "wifi-densepose 1.x has been superseded by v2.0.0 which wraps "
     "the Rust-based stack. Run:\n\n"
     "    pip install wifi-densepose==2.0.0\n\n"
-    "Migration guide: https://github.com/ruvnet/RuView/blob/main/docs/pip-migration.md\n"
+    "Migration guide: https://github.com/Gestusition/KdView/blob/main/docs/pip-migration.md\n"
     "Legacy v1 source: archive/v1/ in the repository"
 )
 ```

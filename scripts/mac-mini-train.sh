@@ -6,6 +6,7 @@ echo "Host: $(hostname) | $(sysctl -n hw.ncpu 2>/dev/null || nproc) cores | $(sy
 echo ""
 
 REPO_DIR="${HOME}/Projects/wifi-densepose"
+REPO_URL="${KDVIEW_REPOSITORY_URL:-https://github.com/Gestusition/KdView.git}"
 WINDOWS_HOST="${WINDOWS_HOST:-}"  # Set via env: export WINDOWS_HOST=<tailscale-ip>
 
 # Step 1: Clone or update repo
@@ -13,7 +14,7 @@ echo "[1/7] Setting up repository..."
 if [ -d "$REPO_DIR/.git" ]; then
   cd "$REPO_DIR" && git pull origin main
 else
-  git clone https://github.com/ruvnet/RuView.git "$REPO_DIR"
+  git clone "$REPO_URL" "$REPO_DIR"
   cd "$REPO_DIR"
 fi
 

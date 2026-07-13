@@ -30,7 +30,7 @@ use crate::{DEFAULT_CONFIDENCE_THRESHOLD, MAX_KEYPOINTS};
 ///
 /// Wraps [`num_complex::Complex64`]. The `serde` impl and [`Self::to_le_bytes`]
 /// write `(re, im)` as two little-endian `f64`, matching the ADR-119 endianness
-/// guarantee so x86_64 (ruvultra), aarch64 (cognitum-v0), and Xtensa (ESP32-S3)
+/// guarantee so x86_64, aarch64, and Xtensa (ESP32-S3)
 /// produce bit-identical bytes. Downstream `f32` paths (CIR taps, ADR-134;
 /// NN inference, ADR-146) narrow on demand via [`Self::as_complex32`].
 ///

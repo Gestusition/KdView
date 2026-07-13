@@ -5,7 +5,7 @@ YAML-based automation engine for HOMECORE with trigger evaluation, conditions, a
 [![Crates.io](https://img.shields.io/crates/v/homecore-automation.svg)](https://crates.io/crates/homecore-automation)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![MSRV: 1.89+](https://img.shields.io/badge/MSRV-1.89%2B-purple.svg)
-[![Tests](https://img.shields.io/badge/tests-34%20passing-brightgreen.svg)](https://github.com/ruvnet/RuView)
+[![Tests](https://img.shields.io/badge/tests-34%20passing-brightgreen.svg)](https://github.com/Gestusition/KdView)
 [![ADR-129](https://img.shields.io/badge/ADR-129-orange.svg)](../../docs/adr/ADR-129-homecore-automation-trigger-condition-action.md)
 
 Home Assistant-compatible automation engine for HOMECORE, parsing YAML trigger→condition→action rules and executing them against the HOMECORE event bus.

@@ -6,7 +6,7 @@
 # Run:
 #   docker run --rm -p 7878:7878 nvsim-server:latest
 
-FROM rust:1.81-slim-bookworm AS builder
+FROM rust:1.89-slim-bookworm AS builder
 WORKDIR /build
 RUN apt-get update && apt-get install -y --no-install-recommends \
     pkg-config libssl-dev ca-certificates \
@@ -29,7 +29,7 @@ version = "0.3.0"
 edition = "2021"
 authors = ["rUv <ruv@ruv.net>"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/ruvnet/RuView"
+repository = "https://github.com/Gestusition/KdView"
 
 [workspace.dependencies]
 serde = { version = "1.0", features = ["derive"] }

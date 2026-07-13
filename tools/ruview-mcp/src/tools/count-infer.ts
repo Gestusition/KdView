@@ -99,7 +99,7 @@ export async function countInfer(
       error: healthResult.error,
       hint:
         "Set RUVIEW_COUNT_COG_BINARY to the path of the cog-person-count binary. " +
-        "Install it from gs://cognitum-apps/cogs/<arch>/cog-person-count-<arch>. " +
+        "Download the matching cog-person-count asset from https://github.com/Gestusition/KdView/releases. " +
         "See ADR-103 for installation instructions.",
     };
   }

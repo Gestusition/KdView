@@ -164,7 +164,7 @@ The `ruview/<node_id>/raw/*` namespace is **outside** the `homeassistant/` disco
   "origin": {
     "name": "wifi-densepose-sensing-server",
     "sw_version": "0.7.0",
-    "support_url": "https://github.com/ruvnet/RuView"
+    "support_url": "https://github.com/Gestusition/KdView"
   }
 }
 ```

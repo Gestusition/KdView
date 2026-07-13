@@ -193,8 +193,8 @@ struct LoadedModel {
 
 impl InferenceEngine {
     /// Create an engine. Tries to load weights from `cog/artifacts/pose_v1.safetensors`
-    /// (relative to current dir or the cog install dir under
-    /// `/var/lib/cognitum/apps/pose-estimation/`). Returns a usable
+    /// (relative to current dir or the edge-module install dir under
+    /// `/var/lib/ruview/apps/pose-estimation/`). Returns a usable
     /// engine either way — without weights, `infer` produces the
     /// stub output.
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
@@ -232,7 +232,7 @@ impl InferenceEngine {
                 // SAFETY: `from_mmaped_safetensors` mmaps the file for the
                 // VarBuilder's lifetime. We don't modify the file while the
                 // VarBuilder is alive, and the file is read-only on disk on
-                // appliance installs.
+                // local edge-module installs.
                 let vb = unsafe {
                     VarBuilder::from_mmaped_safetensors(&[p.to_path_buf()], DType::F32, &device)?
                 };
@@ -337,15 +337,22 @@ fn pick_device() -> Device {
 }
 
 fn default_weights_path() -> Option<std::path::PathBuf> {
-    // Search in the order an installed Cog would see it.
-    let candidates = [
-        std::path::PathBuf::from("/var/lib/cognitum/apps/pose-estimation/pose_v1.safetensors"),
+    // Search in the order an installed module would see it. An operator can
+    // relocate the complete module tree with RUVIEW_APPS_DIR. The historical
+    // install path stays last as a read-only migration fallback.
+    let mut candidates = Vec::new();
+    if let Ok(root) = std::env::var("RUVIEW_APPS_DIR") {
+        candidates.push(std::path::PathBuf::from(root).join("pose-estimation/pose_v1.safetensors"));
+    }
+    candidates.extend([
+        std::path::PathBuf::from("/var/lib/ruview/apps/pose-estimation/pose_v1.safetensors"),
         std::path::PathBuf::from("./pose_v1.safetensors"),
         std::path::PathBuf::from("./cog/artifacts/pose_v1.safetensors"),
         // From the repo root.
         std::path::PathBuf::from("v2/crates/cog-pose-estimation/cog/artifacts/pose_v1.safetensors"),
         // From inside v2/.
         std::path::PathBuf::from("crates/cog-pose-estimation/cog/artifacts/pose_v1.safetensors"),
-    ];
+        std::path::PathBuf::from("/var/lib/cognitum/apps/pose-estimation/pose_v1.safetensors"),
+    ]);
     candidates.into_iter().find(|p| p.exists())
 }

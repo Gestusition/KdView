@@ -132,4 +132,4 @@ BASED ON:
 LICENSE:
 --------
 Created with Claude Code
-https://github.com/ruvnet/wifi-densepose
+https://github.com/Gestusition/KdView

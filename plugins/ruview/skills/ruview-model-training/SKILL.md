@@ -1,7 +1,6 @@
 ---
 name: ruview-model-training
-description: Train RuView models — camera-free WiFlow pose (10 sensor signals, no labels), camera-supervised pose (MediaPipe + ESP32 CSI → 92.9% PCK@20, ADR-079), RuVector contrastive embeddings (AETHER, ADR-024), domain generalization (MERIDIAN, ADR-027), local SNN environment adaptation, plus GPU training on GCloud and Hugging Face publishing. Use when building, fine-tuning, evaluating, or shipping a model.
-allowed-tools: Bash Read Write Edit Glob Grep
+description: Train KdView's RuView models for camera-free or camera-supervised pose, RuVector contrastive embeddings, domain generalization, and local SNN adaptation. Use when building, fine-tuning, evaluating, or publishing a model locally or on operator-selected GPU infrastructure.
 ---
 
 # RuView Model Training
@@ -59,27 +58,27 @@ Make a model transfer across environments without retraining. Configured through
 
 ## Track E — Local SNN environment adaptation
 
-Spiking neural network that adapts to a new room in <30 s, on-device or on a Cognitum Seed:
+Run the spiking neural network on-device or on an operator-managed local gateway:
 
 ```bash
 node scripts/snn-csi-processor.js --port 5006
 ```
 
-See `docs/tutorials/cognitum-seed-pretraining.md`, ADR-084/085 (RaBitQ similarity sensor), ADR-086 (edge novelty gate).
+The historical hardware-specific walkthrough remains at `docs/tutorials/cognitum-seed-pretraining.md`; use it only for protocol compatibility. See ADR-084/085 (RaBitQ similarity sensor) and ADR-086 (edge novelty gate).
 
 ## GPU training on GCloud
 
-Project `cognitum-20260110` has L4 / A100 / H100 quota.
+Select an operator-controlled GCloud project with the required accelerator quota.
 
 ```bash
 gcloud auth login
-gcloud config set project cognitum-20260110
+gcloud config set project YOUR_GCP_PROJECT_ID
 
 bash scripts/gcloud-train.sh --dry-run                      # smoke test, synthetic data
 bash scripts/gcloud-train.sh --gpu l4 --hours 2             # prototyping
 bash scripts/gcloud-train.sh --gpu a100 --config scripts/training-config-sweep.json
 bash scripts/gcloud-train.sh --sweep                        # full hyperparameter sweep
-# VM is auto-deleted after training unless --keep-vm. Cost: L4 ~$0.80/hr, A100 40GB ~$3.60/hr.
+# VM is auto-deleted after training unless --keep-vm.
 ```
 
 Local Mac training: `bash scripts/mac-mini-train.sh`. Model benchmark: `python scripts/benchmark-model.py`.

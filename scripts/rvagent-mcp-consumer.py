@@ -2,7 +2,7 @@
 """
 rvagent-mcp-consumer.py — ADR-125 tier1+2 iter 5: end-to-end agentic loop.
 
-Spawns the published `@ruvnet/rvagent` MCP server (ADR-124, npm 0.1.0)
+Spawns the repository-local rvagent MCP package by default
 as a subprocess and exercises it through the standard MCP JSON-RPC 2.0
 stdio protocol. This is the "agentic capabilities" half of the ADR-125
 Tier 1+2 sprint — it proves the full bidirectional chain:
@@ -12,7 +12,7 @@ Tier 1+2 sprint — it proves the full bidirectional chain:
       → c6-presence-watcher.py (BFLD PrivacyGate)
       → /tmp/ruview-last-feature.json
       → ruview-sensing-server.py (sensing-server-equivalent on :3000)
-      → @ruvnet/rvagent (this script spawns it via `npx -y`)
+      → rvagent (this script spawns it via `npx -y`)
       → MCP JSON-RPC tools/call (this script sends them)
       → result returned to any MCP-aware agent
 
@@ -32,9 +32,12 @@ import os
 import sys
 import time
 import subprocess
+from pathlib import Path
 
 NODE_ID = os.environ.get("RVAGENT_TEST_NODE", "12")
 SENSING_URL = os.environ.get("RVAGENT_SENSING_URL", "http://localhost:3000")
+DEFAULT_RVAGENT_PACKAGE = str(Path(__file__).resolve().parent.parent / "tools" / "ruview-mcp")
+RVAGENT_PACKAGE = os.environ.get("RVAGENT_PACKAGE", DEFAULT_RVAGENT_PACKAGE)
 
 
 def _send(proc: subprocess.Popen, msg: dict) -> None:
@@ -78,12 +81,12 @@ def call_tool(proc: subprocess.Popen, tool_name: str,
 
 def main() -> int:
     env = {**os.environ, "RVAGENT_SENSING_URL": SENSING_URL}
-    print(f"[mcp-consumer] spawning npx -y @ruvnet/rvagent")
+    print(f"[mcp-consumer] spawning npx -y {RVAGENT_PACKAGE}")
     print(f"[mcp-consumer] RVAGENT_SENSING_URL={SENSING_URL}")
     print(f"[mcp-consumer] test node_id={NODE_ID}")
 
     proc = subprocess.Popen(
-        ["npx", "-y", "@ruvnet/rvagent"],
+        ["npx", "-y", RVAGENT_PACKAGE],
         stdin=subprocess.PIPE, stdout=subprocess.PIPE,
         stderr=subprocess.PIPE, text=True, env=env, bufsize=1,
     )

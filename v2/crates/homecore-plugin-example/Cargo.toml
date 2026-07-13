@@ -19,7 +19,7 @@ edition = "2021"
 license = "MIT"
 authors = ["rUv <ruv@ruv.net>", "HOMECORE Contributors"]
 description = "Example WASM plugin for HOMECORE — proves the ADR-128 P2 host ABI (guest side)"
-repository = "https://github.com/ruvnet/RuView"
+repository = "https://github.com/Gestusition/KdView"
 
 # Compile as a dynamic library so the WASM host can `Module::new` the bytes.
 [lib]

@@ -3,8 +3,6 @@
    Warm dark background, electric green wireframe, amber data
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
-
 :root {
   --bg-deep:     #080c14;
   --bg-panel:    rgba(8, 16, 28, 0.85);

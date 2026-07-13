@@ -80,13 +80,13 @@ deployment frontier and is treated as the flagship hard benchmark.
 Spec: ADR-149. v0 ranks **pose, presence, edge-latency, determinism**. Tracking &
 vitals activate when their ground truth lands; **privacy-leakage** is gated until the
 membership-inference attacker ships. Source + the open scorer:
-https://github.com/ruvnet/RuView/tree/main/aether-arena
+https://github.com/Gestusition/KdView/tree/main/aether-arena
 """
 
 SUBMIT = """
 ### Submit a model
 
-1. Write a manifest — [`schema/aa-submission.toml`](https://github.com/ruvnet/RuView/blob/main/aether-arena/schema/aa-submission.toml):
+1. Write a manifest — [`schema/aa-submission.toml`](https://github.com/Gestusition/KdView/blob/main/aether-arena/schema/aa-submission.toml):
    declare your model ref, category, the ADR-145 feature set (F0 CSI … F3 BFLD), and the tensor I/O contract.
 2. Provide your model artifact (`.safetensors` / `.rvf` / LoRA adapter).
 3. It moves through `submitted → validated → quarantined → smoke_scored → full_scored → published`,
@@ -102,7 +102,7 @@ VERIFY = """
 The scorer is open and reproducible. Reproduce the determinism proof + repeatability locally:
 
 ```bash
-git clone https://github.com/ruvnet/RuView && cd RuView/v2
+git clone https://github.com/Gestusition/KdView && cd KdView/v2
 # determinism gate (same as CI):
 cargo run -q -p wifi-densepose-train --bin aa_score_runner --no-default-features
 # repeatability — N runs, one identical proof hash:

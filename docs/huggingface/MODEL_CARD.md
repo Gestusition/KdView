@@ -8,7 +8,6 @@ tags:
   - esp32
   - onnx
   - self-supervised
-  - cognitum
   - csi
   - through-wall
   - privacy-preserving
@@ -20,13 +19,15 @@ pipeline_tag: other
 
 # WiFi-DensePose: See Through Walls with WiFi + AI
 
-**Detect people, track movement, and measure breathing -- through walls, without cameras, using a $27 sensor kit.**
+> **Repository provenance:** the canonical source is [Gestusition/KdView](https://github.com/Gestusition/KdView). Existing Hugging Face model IDs under `ruvnet/*` remain upstream publication identifiers and are retained so hashes, cards, and benchmark citations stay reproducible.
+
+**Detect people, track movement, and measure breathing through walls without cameras.**
 
 | | |
 |---|---|
 | **License** | MIT |
 | **Framework** | ONNX Runtime |
-| **Hardware** | ESP32-S3 ($9) + optional Cognitum Seed ($15) |
+| **Hardware** | ESP32-S3 nodes with an optional operator-managed local gateway |
 | **Training** | Self-supervised contrastive learning (no labels needed) |
 | **Privacy** | No cameras, no images, no personally identifiable data |
 
@@ -168,14 +169,14 @@ The training process works like this:
 1. **Collect** raw CSI frames from ESP32-S3 nodes placed in a room
 2. **Extract** 8-dimensional feature vectors from sliding windows of CSI data
 3. **Contrast** -- the model learns that features from nearby time windows should produce similar embeddings, while features from different scenarios should produce different embeddings
-4. **Fine-tune** task heads — *planned:* weak labels from environmental sensors (PIR motion, temperature, pressure) on the Cognitum Seed companion device. **This environmental-sensor ground-truth path is not yet implemented** (no PIR/BME280 ingestion in the training pipeline today); current task-head supervision uses the proxy/camera labels described elsewhere.
+4. **Fine-tune** task heads — *planned:* weak labels from gateway-attached environmental sensors (PIR motion, temperature, pressure). **This environmental-sensor ground-truth path is not yet implemented** (no PIR/BME280 ingestion in the training pipeline today); current task-head supervision uses the proxy/camera labels described elsewhere.
 
 ### Data provenance
 
 - **Source:** Live CSI from 2x ESP32-S3 nodes (802.11n, HT40, 114 subcarriers)
 - **Volume:** ~360,000 CSI frames (~3,600 feature vectors) per collection run
 - **Environment:** Residential room, ~4x5 meters
-- **Ground truth:** *Planned* — environmental sensors on the Cognitum Seed (PIR, BME280, light). Not yet wired into training; treat the PIR/BME280 references in this card as the intended design, not a current capability.
+- **Ground truth:** *Planned* — gateway-attached PIR, BME280, and light sensors. This is not wired into training; treat these references as an intended design, not a current capability.
 - **Attestation:** Every collection run produces a cryptographic witness chain (`collection-witness.json`) that proves data provenance and integrity
 
 ### Witness chain
@@ -195,20 +196,19 @@ The `collection-witness.json` file contains a chain of SHA-256 hashes linking ev
 
 This gets you: presence detection, motion classification, breathing rate.
 
-### Recommended: dual-node sensing ($18)
+### Recommended: dual-node sensing
 
 Add a second ESP32-S3 to enable cross-node signal fusion for better accuracy and person counting.
 
-### Full setup: sensing + ground truth ($27)
+### Full setup: sensing + ground truth
 
-| Component | What it does | Cost |
-|---|---|---|
-| 2x ESP32-S3 (8MB) | WiFi CSI sensing nodes | ~$18 |
-| Cognitum Seed (Pi Zero 2W) | Runs inference + collects ground truth | ~$15 |
-| USB-C cables (x3) | Power + data | ~$9 |
-| **Total** | | **~$27** |
+| Component | What it does |
+|---|---|
+| 2x ESP32-S3 (8MB) | WiFi CSI sensing nodes |
+| Operator-managed local gateway | Runs inference and can collect environmental ground truth |
+| USB-C data cables | Power and data |
 
-The Cognitum Seed runs the ONNX models on-device and orchestrates the ESP32 nodes over USB serial. (Using its onboard PIR/BME280 sensors as training ground truth is planned but not yet implemented — see "Data provenance" above.)
+The optional gateway runs the ONNX models and can orchestrate ESP32 nodes over USB serial. Using attached PIR/BME280 sensors as training ground truth is planned but not implemented; see "Data provenance" above.
 
 ---
 
@@ -232,13 +232,13 @@ The `.rvf` file contains pre-computed embeddings in RuVector format, used by the
 
 ## How to use with RuView
 
-[RuView](https://github.com/ruvnet/RuView) is the open-source application that ties everything together: firmware flashing, real-time sensing, and a browser-based dashboard.
+[KdView](https://github.com/Gestusition/KdView) is the open-source application that ties together firmware flashing, real-time sensing, the WiFi dashboard and Observatory, pose-fusion and visualization pages, point-cloud/Three.js demos, and the mobile client.
 
 ### 1. Flash firmware to ESP32-S3
 
 ```bash
-git clone https://github.com/ruvnet/RuView.git
-cd RuView
+git clone https://github.com/Gestusition/KdView.git
+cd KdView
 
 # Flash firmware (requires ESP-IDF v5.4 or use pre-built binaries from Releases)
 # See the repo README for platform-specific instructions
@@ -257,7 +257,7 @@ huggingface-cli download ruvnet/wifi-densepose-pretrained --local-dir models/
 # Start the CSI bridge (connects ESP32 serial output to the inference pipeline)
 python scripts/seed_csi_bridge.py --port COM7 --model models/pretrained-encoder.onnx
 
-# Or run the full sensing server with web dashboard
+# Or run the full sensing server with the WiFi dashboard and visualization pages
 cargo run -p wifi-densepose-sensing-server
 ```
 
@@ -313,7 +313,7 @@ If you use this model in your research, please cite:
   title   = {WiFi-DensePose: Human Pose Estimation from WiFi Channel State Information},
   author  = {ruvnet},
   year    = {2026},
-  url     = {https://github.com/ruvnet/RuView},
+  url     = {https://github.com/Gestusition/KdView},
   license = {MIT},
   note    = {Self-supervised contrastive learning on ESP32-S3 CSI data}
 }
@@ -323,7 +323,7 @@ If you use this model in your research, please cite:
 
 ## License
 
-MIT License. See [LICENSE](https://github.com/ruvnet/RuView/blob/main/LICENSE) for details.
+MIT License. See [LICENSE](https://github.com/Gestusition/KdView/blob/main/LICENSE) for details.
 
 You are free to use, modify, and distribute this model for any purpose, including commercial applications.
 
@@ -331,6 +331,6 @@ You are free to use, modify, and distribute this model for any purpose, includin
 
 ## Links
 
-- **GitHub:** [github.com/ruvnet/RuView](https://github.com/ruvnet/RuView)
-- **Hardware:** [ESP32-S3 DevKit](https://www.espressif.com/en/products/devkits) | [Cognitum Seed](https://cognitum.one)
+- **GitHub:** [github.com/Gestusition/KdView](https://github.com/Gestusition/KdView)
+- **Hardware:** [ESP32-S3 DevKit](https://www.espressif.com/en/products/devkits)
 - **ONNX Runtime:** [onnxruntime.ai](https://onnxruntime.ai)

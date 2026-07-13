@@ -12,7 +12,7 @@ pub mod publisher;
 pub mod runtime;
 
 /// Cog identifier — matches the on-disk path
-/// `/var/lib/cognitum/apps/pose-estimation/`.
+/// `/var/lib/ruview/apps/pose-estimation/`.
 pub const COG_ID: &str = "pose-estimation";
 
 /// Cog version (sourced from Cargo.toml at build time).

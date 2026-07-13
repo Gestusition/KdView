@@ -42,7 +42,7 @@ python -m esptool --chip esp32s3 --port COM7 --baud 460800 \
 For 4 MB boards use `release_bins/esp32-csi-node-4mb.bin` and `release_bins/partition-table-4mb.bin`
 with `--flash_size 4MB`.
 
-### 1. Build (Docker -- the only reliable method)
+### 1. Build (Docker recommended)
 
 ```bash
 # From the repository root:
@@ -50,6 +50,17 @@ MSYS_NO_PATHCONV=1 docker run --rm \
   -v "$(pwd)/firmware/esp32-csi-node:/project" -w /project \
   espressif/idf:v5.2 bash -c \
   "rm -rf build sdkconfig && idf.py set-target esp32s3 && idf.py build"
+```
+
+On Windows, an installed ESP-IDF environment can build the same source without
+developer-specific paths. Building does not flash unless `-Flash` is explicit:
+
+```powershell
+# Run from the repository root. IDF_PATH may be used instead of -IdfPath.
+.\firmware\esp32-csi-node\build_firmware.ps1 -IdfPath C:\Espressif\frameworks\esp-idf-v5.4
+
+# Flash an operator-selected board only after a successful build.
+.\firmware\esp32-csi-node\build_firmware.ps1 -IdfPath C:\Espressif\frameworks\esp-idf-v5.4 -SkipClean -Flash -Port COM9
 ```
 
 ### 2. Flash

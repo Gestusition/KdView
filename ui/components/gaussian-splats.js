@@ -9,7 +9,7 @@
  *   - Opacity: classification confidence
  */
 
-// Use global THREE from CDN (loaded in SensingTab)
+// Use the checked-in THREE runtime loaded by SensingTab.
 const getThree = () => window.THREE;
 
 // ---- Custom Splat Shaders ------------------------------------------------

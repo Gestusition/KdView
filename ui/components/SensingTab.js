@@ -150,16 +150,9 @@ export class SensingTab {
       return;
     }
 
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-      script.onload = () => {
-        this._threeLoaded = true;
-        resolve();
-      };
-      script.onerror = () => reject(new Error('Failed to load Three.js'));
-      document.head.appendChild(script);
-    });
+    const ThreeNS = await import('../vendor/three/three.module.min.js');
+    window.THREE = { ...ThreeNS };
+    this._threeLoaded = true;
   }
 
   // ---- Splat renderer ----------------------------------------------------

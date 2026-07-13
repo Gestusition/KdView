@@ -276,7 +276,7 @@ void app_main(void)
 #endif
 
     /* ADR-110 P5: Optionally arm LP-core wake-on-motion (C6 only, opt-in).
-     * Default off — only nodes flashed for battery-powered seed duty enable
+     * Default off — only nodes flashed for battery-powered field duty enable
      * this in menuconfig. */
 #if defined(CONFIG_IDF_TARGET_ESP32C6) && defined(CONFIG_C6_LP_CORE_ENABLE)
     if (c6_lp_core_was_motion_wake()) {
@@ -417,24 +417,24 @@ void app_main(void)
         ESP_LOGI(TAG, "No mmWave sensor detected (CSI-only mode)");
     }
 
-    /* ADR-066: Initialize swarm bridge to Cognitum Seed (if configured). */
+    /* ADR-066: Initialize the optional operator-managed swarm gateway. */
     esp_err_t swarm_ret = ESP_ERR_INVALID_ARG;
 #ifndef CONFIG_CSI_MOCK_SKIP_WIFI_CONNECT
-    if (g_nvs_config.seed_url[0] != '\0') {
+    if (g_nvs_config.gateway_url[0] != '\0') {
         swarm_config_t swarm_cfg = {
             .heartbeat_sec = g_nvs_config.swarm_heartbeat_sec,
             .ingest_sec    = g_nvs_config.swarm_ingest_sec,
             .enabled       = 1,
         };
-        strncpy(swarm_cfg.seed_url, g_nvs_config.seed_url, sizeof(swarm_cfg.seed_url) - 1);
-        strncpy(swarm_cfg.seed_token, g_nvs_config.seed_token, sizeof(swarm_cfg.seed_token) - 1);
+        strncpy(swarm_cfg.gateway_url, g_nvs_config.gateway_url, sizeof(swarm_cfg.gateway_url) - 1);
+        strncpy(swarm_cfg.gateway_token, g_nvs_config.gateway_token, sizeof(swarm_cfg.gateway_token) - 1);
         strncpy(swarm_cfg.zone_name, g_nvs_config.zone_name, sizeof(swarm_cfg.zone_name) - 1);
         swarm_ret = swarm_bridge_init(&swarm_cfg, csi_collector_get_node_id());
         if (swarm_ret != ESP_OK) {
             ESP_LOGW(TAG, "Swarm bridge init failed: %s", esp_err_to_name(swarm_ret));
         }
     } else {
-        ESP_LOGI(TAG, "Swarm bridge disabled (no seed_url configured)");
+        ESP_LOGI(TAG, "Swarm bridge disabled (no gateway_url configured)");
     }
 #else
     ESP_LOGI(TAG, "Mock CSI mode: skipping swarm bridge");
@@ -497,7 +497,7 @@ void app_main(void)
              (ota_ret == ESP_OK) ? "ready" : "off",
              (wasm_ret == ESP_OK) ? "ready" : "off",
              (mmwave_ret == ESP_OK) ? "active" : "off",
-             (swarm_ret == ESP_OK) ? g_nvs_config.seed_url : "off",
+             (swarm_ret == ESP_OK) ? g_nvs_config.gateway_url : "off",
              (adapt_ret == ESP_OK) ? "on" : "off");
 
     /* Main loop — keep alive */

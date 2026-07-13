@@ -161,9 +161,9 @@
                         <p>Maps 24 body regions in real-time at 100Hz sampling rate</p>
                     </div>
                     <div class="benefit-card">
-                        <div class="benefit-icon">💰</div>
-                        <h3>Low Cost</h3>
-                        <p>Built using $30 commercial WiFi hardware</p>
+                        <div class="benefit-icon">🔧</div>
+                        <h3>Operator-Owned Hardware</h3>
+                        <p>Works with supported ESP32-S3 boards that you provision and control</p>
                     </div>
                 </div>
 
@@ -181,8 +181,8 @@
                         <span class="stat-label">Accuracy (AP@50)</span>
                     </div>
                     <div class="stat" data-stat="hardware-cost">
-                        <span class="stat-value">$30</span>
-                        <span class="stat-label">Hardware Cost</span>
+                        <span class="stat-value">ESP32-S3</span>
+                        <span class="stat-label">Sensor Platform</span>
                     </div>
                 </div>
             </div>
@@ -324,8 +324,13 @@
             <h2>System Architecture</h2>
             
             <div class="architecture-flow">
-                <img src="https://pplx-res.cloudinary.com/image/upload/v1748813853/gpt4o_images/m7zztcttnue7vaxclvuw.png" 
-                     alt="WiFi DensePose Architecture" class="architecture-image">
+                <div class="architecture-summary" role="img" aria-label="CSI frames flow through signal sanitation, feature extraction, pose inference, and wireframe output">
+                    <span>CSI Frames</span><span class="architecture-arrow" aria-hidden="true">&rarr;</span>
+                    <span>Signal Sanitation</span><span class="architecture-arrow" aria-hidden="true">&rarr;</span>
+                    <span>Feature Extraction</span><span class="architecture-arrow" aria-hidden="true">&rarr;</span>
+                    <span>Pose Inference</span><span class="architecture-arrow" aria-hidden="true">&rarr;</span>
+                    <span>Wireframe Output</span>
+                </div>
                 
                 <div class="flow-steps">
                     <div class="step-card" data-step="1">
@@ -362,8 +367,18 @@
             <h2>Performance Analysis</h2>
             
             <div class="performance-chart">
-                <img src="https://pplx-res.cloudinary.com/image/upload/v1748813924/pplx_code_interpreter/af6ef268_nsauu6.jpg" 
-                     alt="Performance Comparison Chart" class="chart-image">
+                <div class="performance-comparison" role="img" aria-label="AP at 50 comparison: WiFi same-layout 87.2 percent and image reference 94.4 percent">
+                    <div class="comparison-row">
+                        <span>WiFi same-layout AP@50</span>
+                        <span class="comparison-track"><span class="comparison-fill" style="width:87.2%"></span></span>
+                        <span class="comparison-value">87.2%</span>
+                    </div>
+                    <div class="comparison-row">
+                        <span>Image reference AP@50</span>
+                        <span class="comparison-track"><span class="comparison-fill reference" style="width:94.4%"></span></span>
+                        <span class="comparison-value">94.4%</span>
+                    </div>
+                </div>
             </div>
 
             <div class="performance-grid">

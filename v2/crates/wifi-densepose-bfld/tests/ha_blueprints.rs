@@ -86,7 +86,7 @@ fn blueprints_carry_source_url_pointing_at_canonical_path() {
         ("identity-risk-anomaly", IDENTITY_RISK, "identity-risk-anomaly.yaml"),
     ] {
         let needle = format!(
-            "source_url: https://github.com/ruvnet/RuView/blob/main/v2/crates/cog-ha-matter/blueprints/bfld/{fname}"
+            "source_url: https://github.com/Gestusition/KdView/blob/main/v2/crates/cog-ha-matter/blueprints/bfld/{fname}"
         );
         assert!(
             yaml.contains(&needle),

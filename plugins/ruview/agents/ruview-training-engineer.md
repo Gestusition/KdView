@@ -14,11 +14,11 @@ You build and ship RuView models. Know the tracks, the data layout, and the vali
 - **B — camera-supervised pose (ADR-079):** `python scripts/collect-ground-truth.py` (MediaPipe), `python scripts/collect-training-data.py` (CSI), `node scripts/align-ground-truth.js`, train on `data/paired/`, eval `eval-wiflow.js` → reports PCK@20. ~19 min on a laptop; 92.9% PCK@20. Needs `data/pose_landmarker_lite.task`.
 - **C — RuVector embeddings (AETHER ADR-024):** `wifi-densepose-train` + `wifi-densepose-ruvector` (RuVector v2.0.4); `-- --model model.rvf --embed`, `-- --build-index env`. Spectrogram embeddings: ADR-076.
 - **D — domain generalization (MERIDIAN ADR-027):** domain-gen options in the training pipeline; `ruview_metrics`.
-- **E — local SNN adaptation:** `node scripts/snn-csi-processor.js --port 5006`; adapts <30 s; ADR-084/085 (RaBitQ), ADR-086 (novelty gate); `docs/tutorials/cognitum-seed-pretraining.md`.
+- **E — local SNN adaptation:** `node scripts/snn-csi-processor.js --port 5006`; adapts <30 s; ADR-084/085 (RaBitQ), ADR-086 (novelty gate). The original gateway tutorial is retained as historical context in `docs/tutorials/cognitum-seed-pretraining.md`.
 
 ## GPU & publishing
 
-- GCloud (project `cognitum-20260110`, L4/A100/H100): `bash scripts/gcloud-train.sh [--dry-run] [--gpu l4|a100|h100] [--hours N] [--config FILE] [--sweep] [--keep-vm]`. VM auto-deletes. Local Mac: `bash scripts/mac-mini-train.sh`. Bench: `python scripts/benchmark-model.py`.
+- GCloud (your own `GCP_PROJECT`, L4/A100/H100): `bash scripts/gcloud-train.sh [--dry-run] [--gpu l4|a100|h100] [--hours N] [--config FILE] [--sweep] [--keep-vm]`. VM auto-deletes. Local Mac: `bash scripts/mac-mini-train.sh`. Bench: `python scripts/benchmark-model.py`.
 - Publish: `python scripts/publish-huggingface.py` (or the `.sh`); `docs/huggingface/`.
 
 ## Data

@@ -25,13 +25,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "wifi-densepose"
 version = "1.99.0"
-description = "Tombstone release. wifi-densepose v1.x is superseded by v2.0+ (PyO3 bindings to the Rust core). Install wifi-densepose==2.0.0 — see https://github.com/ruvnet/RuView/blob/main/docs/pip-migration.md"
+description = "Tombstone release. wifi-densepose v1.x is superseded by v2.0+ (PyO3 bindings to the Rust core). Install wifi-densepose==2.0.0 — see https://github.com/Gestusition/KdView/blob/main/docs/pip-migration.md"
 readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "MIT" }
-authors = [
-    { name = "rUv", email = "ruv@ruv.net" },
-]
+authors = [{ name = "KdView Contributors" }]
 keywords = ["wifi", "csi", "pose-estimation", "deprecated", "migration"]
 classifiers = [
     "Development Status :: 7 - Inactive",
@@ -44,9 +42,9 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-Homepage = "https://github.com/ruvnet/RuView"
-"Migration guide" = "https://github.com/ruvnet/RuView/blob/main/docs/pip-migration.md"
-"ADR-117 (modernization plan)" = "https://github.com/ruvnet/RuView/blob/main/docs/adr/ADR-117-pip-wifi-densepose-modernization.md"
+Homepage = "https://github.com/Gestusition/KdView"
+"Migration guide" = "https://github.com/Gestusition/KdView/blob/main/docs/pip-migration.md"
+"ADR-117 (modernization plan)" = "https://github.com/Gestusition/KdView/blob/main/docs/adr/ADR-117-pip-wifi-densepose-modernization.md"
 
 [tool.setuptools]
 packages = ["wifi_densepose"]

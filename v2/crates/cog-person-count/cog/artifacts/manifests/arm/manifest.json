@@ -3,7 +3,7 @@
   "binary_bytes": 3807456,
   "binary_sha256": "15c2fbac19741298ad1cbaf119c633a42db0a273099561fd57d8afce27728ea5",
   "binary_signature": "gyV2CDhJo5nqBnREA08KnztGsS7AFOuXCse+2/+wul8DAzerHs9p4L6eUgl8QeiDS9rdQZs33XRxH5WTbkT0Ag==",
-  "binary_url": "https://storage.googleapis.com/cognitum-apps/cogs/arm/cog-person-count-arm",
+  "binary_url": "https://github.com/Gestusition/KdView/releases/download/cog-person-count-v0.0.2/cog-person-count-arm",
   "build_metadata": {
     "candle": "0.9 cpu",
     "cog_person_count_version": "0.3.0",
@@ -17,11 +17,11 @@
   "id": "person-count",
   "installed_at": 0,
   "sig_algo": "Ed25519",
-  "signed_by": "COGNITUM_OWNER_SIGNING_KEY",
+  "signed_by": "RELEASE_SIGNING_KEY",
   "status": "installed",
   "target_triple": "aarch64-unknown-linux-gnu",
   "version": "0.0.2",
   "weights_bytes": 392088,
   "weights_sha256": "32996433516891a37c63c600db8b95e42192a53bd538c088c82cd6a85e55513c",
-  "weights_url": "https://storage.googleapis.com/cognitum-apps/cogs/arm/cog-person-count-count_v1.safetensors"
+  "weights_url": "https://github.com/Gestusition/KdView/releases/download/cog-person-count-v0.0.2/cog-person-count-count_v1.safetensors"
 }

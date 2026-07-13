@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| **Status** | **Implemented (2026-04-27)** — iterations A through N shipped to PR #436. 21 of 21 catalogued gaps closed. P2.7 (`clients.claim()` in SW) and P2.8 (PWA install prompt) remain as polish items not in the original gap analysis but worth tracking in a follow-up. |
+| **Status** | **Superseded in KdView** — the upstream review was completed on 2026-04-27; the nvsim dashboard was later retired from the KdView public browser surface. |
 | **Date** | 2026-04-26 |
 | **Authors** | ruv |
 | **Refines** | ADR-092 (nvsim dashboard implementation) |
@@ -10,6 +10,8 @@
 | **Trigger** | Manual UI walkthrough after the GH-Pages deploy revealed several rail buttons were no-ops, the Ghost Murmur research spec had no dashboard surface, and a handful of mockup features (scene toolbar, frame strip rate badge, scene-toolbar zoom, density toggle, cmd palette items) had not landed. |
 
 ---
+
+> **KdView disposition:** This gap analysis documents an upstream dashboard that is no longer shipped as a KdView public interface. Its component inventory and verification record are retained as historical implementation evidence.
 
 ## 1. Method
 

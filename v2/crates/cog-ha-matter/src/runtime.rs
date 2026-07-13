@@ -3,7 +3,7 @@
 //!
 //! Kept side-effect-free so the tests don't need a tokio runtime, and
 //! so the cog's mDNS responder / control plane (P4) can build the
-//! same inputs from a different source (Seed control config, JSON
+//! same inputs from a different source (edge-host config, JSON
 //! POST) without going through `clap`.
 //!
 //! Per the ADR-115 integration-test post-mortem (iter 45-48 of the
@@ -33,7 +33,7 @@ use wifi_densepose_sensing_server::mqtt::{
 use crate::mdns::MdnsService;
 
 /// Caller-supplied identity for the cog instance. Filled in by the
-/// cog runtime from the mDNS hostname / Seed control plane in
+/// cog runtime from the mDNS hostname / local control plane in
 /// production; threaded as a parameter so tests can build inputs
 /// without touching the environment.
 #[derive(Debug, Clone)]
@@ -49,14 +49,14 @@ pub struct CogIdentity {
 }
 
 impl CogIdentity {
-    /// Default identity used when the cog runs standalone (no Seed
+    /// Default identity used when the cog runs standalone (no external
     /// control plane). Uses the PID for uniqueness so two cog
     /// instances on the same host don't fight over the same MQTT
     /// session — same trick the ADR-115 publisher uses.
     pub fn default_for_build() -> Self {
         Self {
             node_id: format!("cog-ha-matter-{}", std::process::id()),
-            friendly_name: "Cognitum Seed — HA cog".into(),
+            friendly_name: "RuView HA integration".into(),
             sw_version: env!("CARGO_PKG_VERSION").into(),
         }
     }
@@ -109,7 +109,7 @@ pub fn build_publisher_inputs(
 
 /// Default broadcast-channel capacity for the cog's VitalsSnapshot
 /// stream. Matches the sensing-server's own default so the cog
-/// doesn't bottleneck the publisher under bursty loads (multi-Seed
+/// doesn't bottleneck the publisher under bursty loads (multi-node
 /// federation, mesh re-sync events).
 pub const DEFAULT_STATE_CHANNEL_CAPACITY: usize = 256;
 
@@ -198,8 +198,8 @@ mod tests {
 
     fn id() -> CogIdentity {
         CogIdentity {
-            node_id: "seed-7".into(),
-            friendly_name: "test-seed".into(),
+            node_id: "node-7".into(),
+            friendly_name: "test-node".into(),
             sw_version: "0.0.1-test".into(),
         }
     }
@@ -229,9 +229,12 @@ mod tests {
     #[test]
     fn discovery_carries_identity_fields() {
         let out = build_publisher_inputs("h", 1883, false, id());
-        assert_eq!(out.discovery.node_id, "seed-7");
+        assert_eq!(out.discovery.node_id, "node-7");
         assert_eq!(out.discovery.sw_version, "0.0.1-test");
-        assert_eq!(out.discovery.node_friendly_name.as_deref(), Some("test-seed"));
+        assert_eq!(
+            out.discovery.node_friendly_name.as_deref(),
+            Some("test-node")
+        );
     }
 
     #[test]
@@ -249,10 +252,10 @@ mod tests {
         // Lesson from the ADR-115 integration-test post-mortem: two
         // publishers sharing a `client_id` fight over the broker
         // session and one reconnects forever. The cog must derive
-        // `client_id` from `node_id` so multi-Seed deployments don't
+        // `client_id` from `node_id` so multi-node deployments don't
         // collide.
         let out = build_publisher_inputs("h", 1883, false, id());
-        assert!(out.config.client_id.contains("seed-7"));
+        assert!(out.config.client_id.contains("node-7"));
         assert!(out.config.client_id.starts_with(super::super::COG_ID));
     }
 
@@ -288,7 +291,7 @@ mod tests {
     #[test]
     fn default_state_channel_capacity_is_reasonable() {
         // Lock the default so a regression to e.g. 1 surfaces a named
-        // test. Multi-Seed federation needs headroom for bursty
+        // test. Multi-node federation needs headroom for bursty
         // mesh re-sync events.
         assert!(DEFAULT_STATE_CHANNEL_CAPACITY >= 64);
     }

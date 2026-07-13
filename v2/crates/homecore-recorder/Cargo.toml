@@ -15,7 +15,7 @@ edition = "2021"
 license = "MIT"
 authors = ["rUv <ruv@ruv.net>", "HOMECORE Contributors"]
 description = "SQLite state-history recorder for HOMECORE — HA-compat schema + ruvector semantic search (ADR-132)"
-repository = "https://github.com/ruvnet/RuView"
+repository = "https://github.com/Gestusition/KdView"
 
 [lib]
 name = "homecore_recorder"

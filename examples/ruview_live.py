@@ -321,8 +321,8 @@ class HappinessScorer:
         }
 
 
-class SeedBridge:
-    """HTTP bridge to Cognitum Seed for happiness vector ingestion."""
+class GatewayBridge:
+    """HTTP bridge to a compatible local gateway for vector ingestion."""
 
     def __init__(self, base_url):
         self.base_url = base_url.rstrip("/")
@@ -330,7 +330,7 @@ class SeedBridge:
         self._drift_lock = threading.Lock()
 
     def ingest(self, vector, metadata=None):
-        """POST happiness vector to Seed in a background thread."""
+        """POST a happiness vector to the gateway in a background thread."""
         payload = json.dumps({"vector": vector, "metadata": metadata or {}}).encode()
 
         def _post():
@@ -348,7 +348,7 @@ class SeedBridge:
         threading.Thread(target=_post, daemon=True).start()
 
     def get_drift(self):
-        """GET drift status from Seed. Returns dict or None."""
+        """GET drift status from the gateway. Returns dict or None."""
         try:
             req = urllib.request.Request(
                 f"{self.base_url}/api/v1/sensor/drift/status",
@@ -373,7 +373,7 @@ class SeedBridge:
 # ====================================================================
 
 class SensorHub:
-    def __init__(self, seed_url=None):
+    def __init__(self, gateway_url=None):
         self.lock = threading.Lock()
         self.mw_hr = 0.0
         self.mw_br = 0.0
@@ -398,10 +398,10 @@ class SensorHub:
         self.coherence_mw = CoherenceScorer()
         self.coherence_csi = CoherenceScorer()
         self.bp = BPEstimator()
-        # Happiness + Seed
+        # Happiness + optional local gateway
         self.happiness = HappinessScorer()
-        self.seed = SeedBridge(seed_url) if seed_url else None
-        self._last_seed_ingest = 0.0
+        self.gateway = GatewayBridge(gateway_url) if gateway_url else None
+        self._last_gateway_ingest = 0.0
 
     def update_mw(self, **kw):
         with self.lock:
@@ -497,9 +497,9 @@ class SensorHub:
 
             # Seed ingestion every 5 seconds
             now = time.time()
-            if self.seed and now - self._last_seed_ingest >= 5.0:
-                self._last_seed_ingest = now
-                self.seed.ingest(happy["vector"], {
+            if self.gateway and now - self._last_gateway_ingest >= 5.0:
+                self._last_gateway_ingest = now
+                self.gateway.ingest(happy["vector"], {
                     "hr": fused_hr, "br": fused_br, "rssi": self.csi_rssi,
                     "presence": self.mw_presence or self.csi_presence,
                 })
@@ -611,7 +611,7 @@ def run_display(hub, duration, interval, mode="vitals"):
     print()
     print("=" * 80)
     if mode == "happiness":
-        print("  RuView Live — Happiness + Cognitum Seed Dashboard")
+        print("  RuView Live — Happiness + Local Gateway Dashboard")
     else:
         print("  RuView Live — Ambient Intelligence + RuVector Signal Processing")
     print("=" * 80)
@@ -745,7 +745,8 @@ def main():
     parser.add_argument("--mmwave", default="COM4", help="mmWave port (or 'none')")
     parser.add_argument("--duration", type=int, default=120)
     parser.add_argument("--interval", type=int, default=3)
-    parser.add_argument("--seed", default="none", help="Cognitum Seed HTTP base URL (e.g. 'http://169.254.42.1')")
+    parser.add_argument("--gateway", "--seed", dest="gateway", default="none",
+                        help="Compatible local gateway HTTP base URL (legacy --seed alias accepted)")
     parser.add_argument("--mode", default="vitals", choices=["vitals", "happiness"],
                         help="Dashboard mode: vitals (default) or happiness")
     args = parser.parse_args()
@@ -754,8 +755,8 @@ def main():
     if args.csi is None:
         args.csi = "COM5" if args.mode == "happiness" else "COM7"
 
-    seed_url = args.seed if args.seed.lower() != "none" else None
-    hub = SensorHub(seed_url=seed_url)
+    gateway_url = args.gateway if args.gateway.lower() != "none" else None
+    hub = SensorHub(gateway_url=gateway_url)
     stop = threading.Event()
 
     if args.mmwave.lower() != "none":

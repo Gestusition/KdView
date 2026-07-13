@@ -1,5 +1,7 @@
 # WITNESS-LOG-110 — ADR-110 ESP32-C6 firmware extension
 
+> **Historical upstream witness:** issue, branch, operator, network, and release identifiers below are preserved as evidence from the original run. Current development and new reports belong at [Gestusition/KdView](https://github.com/Gestusition/KdView).
+
 | Field | Value |
 |---|---|
 | **Date** | 2026-05-22 |

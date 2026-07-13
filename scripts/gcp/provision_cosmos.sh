@@ -4,15 +4,15 @@
 #
 # Provisions an a2-ultragpu-1g (1× A100 80GB) in us-central1-a.
 # Cosmos-Transfer2.5-2B requires 32.54 GB VRAM — fits comfortably in 80 GB.
-# GCP project: cognitum-20260110
-# Auth:        ruv@ruv.net (gcloud must already be authenticated)
+# GCP project: set GCP_PROJECT or configure the active gcloud project
+# Auth:        gcloud must already be authenticated
 #
 # ADR reference: ADR-147 §3.2 — Cosmos inference environment setup
 
 set -euo pipefail
 
 # ── Constants ──────────────────────────────────────────────────────────────────
-PROJECT="cognitum-20260110"
+PROJECT="${GCP_PROJECT:-$(gcloud config get-value project 2>/dev/null || true)}"
 INSTANCE_NAME="cosmos-eval-$(date +%Y%m%d)"
 MACHINE_TYPE="a2-ultragpu-1g"
 ZONE="us-central1-a"
@@ -43,6 +43,8 @@ for arg in "$@"; do
       ;;
   esac
 done
+
+: "${PROJECT:?Set GCP_PROJECT or configure a default gcloud project}"
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 run() {

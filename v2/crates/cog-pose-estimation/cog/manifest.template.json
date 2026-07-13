@@ -1,7 +1,7 @@
 {
   "id": "pose-estimation",
   "version": "{{VERSION}}",
-  "binary_url": "https://storage.googleapis.com/cognitum-apps/cogs/{{ARCH}}/cog-pose-estimation-{{ARCH}}",
+  "binary_url": "https://github.com/Gestusition/KdView/releases/download/cog-pose-estimation-v{{VERSION}}/cog-pose-estimation-{{ARCH}}",
   "binary_bytes": 0,
   "binary_sha256": "",
   "binary_signature": "",

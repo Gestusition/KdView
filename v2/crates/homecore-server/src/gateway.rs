@@ -11,8 +11,8 @@
 //!   * `GET /api/homecore/cogs`  — COG supervisor over the apps dir           [W4]
 //!   * `GET /api/homecore/appliance` — host metrics from /proc + port probes  [W6]
 //!
-//! Returns a typed `503 upstream_unavailable` for routes whose upstream is
-//! a SEED device / appliance daemon not present in this repo (§11.2 / §12):
+//! Returns a typed `503 upstream_unavailable` for routes whose optional local
+//! gateway daemon is not present in this repo (§11.2 / §12):
 //! seeds, federation, witness, privacy, settings, automations, events
 //! history, hailo, tokens. The front-end renders these as error states
 //! (it never falls back to mock in production — §2.2).
@@ -43,7 +43,7 @@ pub struct GatewayConfig {
     pub calibration_url: Option<String>,
     /// Bearer token for the calibration service (held server-side only).
     pub calibration_token: Option<String>,
-    /// COG install directory the supervisor reads (`/var/lib/cognitum/apps`).
+    /// Edge-module install directory the supervisor reads (`/var/lib/ruview/apps`).
     pub apps_dir: PathBuf,
     /// Per-proxy timeout so one slow upstream cannot stall the dashboard.
     pub timeout: Duration,
@@ -416,7 +416,18 @@ async fn cogs_list(State(st): State<GatewayState>, headers: HeaderMap) -> Respon
         return r;
     }
     let mut out: Vec<Value> = Vec::new();
-    let rd = match std::fs::read_dir(&st.cfg.apps_dir) {
+    // Read current installations from the neutral path. When an operator has
+    // upgraded in place and has not migrated files yet, retain read-only
+    // discovery of the historical path so no installed module disappears.
+    let apps_dir = if st.cfg.apps_dir == PathBuf::from("/var/lib/ruview/apps")
+        && !st.cfg.apps_dir.exists()
+        && PathBuf::from("/var/lib/cognitum/apps").exists()
+    {
+        PathBuf::from("/var/lib/cognitum/apps")
+    } else {
+        st.cfg.apps_dir.clone()
+    };
+    let rd = match std::fs::read_dir(&apps_dir) {
         Ok(rd) => rd,
         Err(_) => return Json(out).into_response(), // no apps dir yet → empty
     };
@@ -488,6 +499,9 @@ async fn appliance(State(st): State<GatewayState>, headers: HeaderMap) -> Respon
     // for up to `N * timeout` and parked a Tokio worker thread per probe.
     let probes = [
         ("ruview-mcp-brain", 9876u16),
+        // Canonical local-first name first; retain the historical service name
+        // as a separately visible compatibility probe for existing appliances.
+        ("ruview-vector-agent", 9004),
         ("cognitum-rvf-agent", 9004),
         ("ruvector-hailo-worker", 50051),
     ]
@@ -647,8 +661,29 @@ mod tests {
     async fn appliance_returns_metrics_json() {
         let (status, body) = send(gateway_router(gw()), "GET", "/api/homecore/appliance").await;
         assert_eq!(status, StatusCode::OK);
-        assert!(body.contains("\"services\""));
-        assert!(body.contains("\"ram_pct\""));
+        let appliance: Value =
+            serde_json::from_str(&body).expect("appliance response must be JSON");
+        assert!(appliance.get("services").is_some());
+        assert!(appliance.get("ram_pct").is_some());
+
+        let names: Vec<&str> = appliance["services"]
+            .as_array()
+            .expect("services must be an array")
+            .iter()
+            .filter_map(|service| service["name"].as_str())
+            .collect();
+        let local_name = names
+            .iter()
+            .position(|name| *name == "ruview-vector-agent")
+            .expect("new local-first vector-agent name must be reported");
+        let legacy_name = names
+            .iter()
+            .position(|name| *name == "cognitum-rvf-agent")
+            .expect("legacy vector-agent name must remain visible");
+        assert!(
+            local_name < legacy_name,
+            "new installs must prefer the local-first name"
+        );
     }
 
     #[test]

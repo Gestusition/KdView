@@ -1,7 +1,7 @@
 # We audited a state-of-the-art WiFi pose model. Here's what broke, what reproduced, and the 30× smaller model that nearly matches it.
 
 *RuView team, June 2026. All numbers measured; full scripts and forensics in the
-[RuView repo](https://github.com/ruvnet/RuView/tree/main/benchmarks/wiflow-std).*
+[RuView repo](https://github.com/Gestusition/KdView/tree/main/benchmarks/wiflow-std).*
 
 ## The setup
 
@@ -96,4 +96,4 @@ one-line dynamic quantization converts *literally nothing* on this model
 
 *Reproduction scripts, corruption masks, the efficiency-sweep configs, and a
 numerically parity-proven Rust port (max divergence 1.2e-7) are all in
-[`benchmarks/wiflow-std/`](https://github.com/ruvnet/RuView/tree/main/benchmarks/wiflow-std).*
+[`benchmarks/wiflow-std/`](https://github.com/Gestusition/KdView/tree/main/benchmarks/wiflow-std).*

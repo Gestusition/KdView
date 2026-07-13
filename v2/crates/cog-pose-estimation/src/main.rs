@@ -1,4 +1,4 @@
-//! `cog-pose-estimation` — Cognitum Cog binary entrypoint.
+//! `cog-pose-estimation` — portable edge-module binary entrypoint.
 //!
 //! Implements the ADR-100 runtime contract:
 //!     cog-pose-estimation version
@@ -23,7 +23,7 @@ const COG_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Parser)]
 #[command(name = COG_ID, version = COG_VERSION)]
-#[command(about = "Cognitum Cog: 17-keypoint pose estimation from WiFi CSI", long_about = None)]
+#[command(about = "Edge module: 17-keypoint pose estimation from WiFi CSI", long_about = None)]
 struct Cli {
     #[command(subcommand)]
     command: Cmd,

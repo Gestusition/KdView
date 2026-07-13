@@ -190,7 +190,7 @@ A facade hides its failures. We document ours in detail:
 ## 6. Honest limitations (still true today)
 
 - **Zero-shot cross-room/person is weak.** Plan on ~30 s of in-room calibration per deployment.
-- **Single-node spatial resolution is limited.** Use 2+ ESP32 nodes (or add a Cognitum Seed)
+- **Single-node spatial resolution is limited.** Use 2+ ESP32 nodes for cross-viewpoint coverage; add an operator-managed gateway only for persistence, retrieval, or attestation.
   for multi-person / localization.
 - **Multi-person counting is hard.** It was clamped to "1" by two server-side bugs (now fixed —
   see CHANGELOG #803); accuracy beyond that still depends on the per-node estimator and wants

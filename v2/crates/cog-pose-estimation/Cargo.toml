@@ -5,7 +5,7 @@ edition.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Cognitum Cog: 17-keypoint pose estimation from WiFi CSI. See ADR-100 (packaging) + ADR-101 (this Cog)."
+description = "Packaged 17-keypoint pose estimation service for WiFi CSI. See ADR-100 and ADR-101."
 
 [[bin]]
 name = "cog-pose-estimation"
@@ -53,7 +53,6 @@ default = []
 # the GPU-dev path on ruvultra.
 cuda = ["candle-core/cuda", "candle-nn/cuda"]
 # Stub for the future Hailo HEF runtime path. The actual Hailo
-# integration lives in the companion v0-appliance crate `cognitum-hailo`;
-# this crate keeps a feature flag so the binary can compile without the
-# Hailo SDK in CI.
+# integration lives in an external companion appliance crate; this crate keeps
+# a feature flag so the binary can compile without the Hailo SDK in CI.
 hailo = []

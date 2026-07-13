@@ -71,7 +71,7 @@ struct Cli {
     calibration_token: Option<String>,
 
     /// COG install directory the gateway's supervisor reads (ADR-131 §11.6).
-    #[arg(long, env = "HOMECORE_APPS_DIR", default_value = "/var/lib/cognitum/apps")]
+    #[arg(long, env = "HOMECORE_APPS_DIR", default_value = "/var/lib/ruview/apps")]
     apps_dir: String,
 
     /// Per-upstream proxy timeout in milliseconds (ADR-131 §11.1).
@@ -211,7 +211,7 @@ async fn main() -> Result<()> {
         tokens,
     );
     // BFF gateway (ADR-131 §11): single-origin aggregation of the
-    // calibration API + SEED/appliance tiers. Shares the same token store
+    // calibration API + optional local gateway tiers. Shares the same token store
     // for auth; upstream credentials stay server-side.
     let gw = GatewayState::new(
         api_state.clone(),

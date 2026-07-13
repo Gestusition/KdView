@@ -1,4 +1,4 @@
-# ADR-117 P5 — cibuildwheel + PyPI publish workflow for `wifi-densepose`
+# ADR-117 P5 — cibuildwheel + fork-owned GitHub Release workflow.
 #
 # This workflow is **explicitly NOT** triggered on every push. It runs only on:
 #   - a maintainer-dispatched `workflow_dispatch`
@@ -13,10 +13,8 @@
 #   1. cut tag `v1.99.0-pip`  → publishes the tombstone wheel first
 #   2. cut tag `v2.0.0-pip`   → publishes the PyO3 v2 wheel matrix
 #
-# Publishes via the `PYPI_API_TOKEN` GitHub Actions secret. The
-# token-refresh runbook (GCP Secret Manager → gh secret set) lives in
-# docs/integrations/pypi-release.md so KICS does not flag the
-# secret name as a generic-secret literal in the workflow.
+# Manual runs retain workflow artifacts. Matching tags publish the same wheels
+# and source archives to this repository's GitHub Releases page.
 #
 # Q3 (witness hash v2 — open in ADR-117 §11.3) MUST be resolved
 # before the first v2.0.0 publish. When v2 lands, add a parallel
@@ -34,14 +32,19 @@ on:
         options:
           - v2-wheels
           - v1-99-tombstone
-      publish_to:
-        description: "Where to publish"
+      distribution:
+        description: "Distribution target"
         required: true
-        default: testpypi
+        default: artifact-only
         type: choice
         options:
-          - testpypi  # dry-run target
-          - pypi      # production
+          - artifact-only
+          - github-release
+      release_tag:
+        description: "Existing Git tag for a manual GitHub Release"
+        required: false
+        default: ""
+        type: string
   push:
     tags:
       - "v*-pip"
@@ -203,7 +206,7 @@ jobs:
             echo "ERROR: tombstone import succeeded — should have raised ImportError"
             exit 1
           fi
-          if ! grep -q "github.com/ruvnet/RuView" import-output.txt; then
+          if ! grep -q "github.com/Gestusition/KdView" import-output.txt; then
             echo "ERROR: tombstone ImportError missing migration URL"
             cat import-output.txt
             exit 1
@@ -216,11 +219,12 @@ jobs:
           if-no-files-found: error
 
   # ────────────────────────────────────────────────────────────────
-  # Publish — gated by manual dispatch OR by the tag form
+  # Distribute — workflow artifacts for every run; GitHub Release on tags or
+  # an explicitly requested manual release.
   # ────────────────────────────────────────────────────────────────
 
   publish-v2:
-    name: Publish v2 wheels
+    name: Distribute v2 wheels
     needs: [build-wheels, build-sdist]
     if: |
       always() &&
@@ -231,6 +235,8 @@ jobs:
         startsWith(github.ref, 'refs/tags/v2.')
       )
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Gather all artifacts into dist/
         uses: actions/download-artifact@v4
@@ -241,25 +247,27 @@ jobs:
           mkdir -p dist
           find dist-staging -type f \( -name '*.whl' -o -name '*.tar.gz' \) -exec cp -v {} dist/ \;
           ls -lh dist/
-      - name: Publish to TestPyPI (dry-run target)
-        if: github.event_name == 'workflow_dispatch' && inputs.publish_to == 'testpypi'
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          packages-dir: dist
-          skip-existing: true
-      - name: Publish to PyPI
+      - name: Publish fork-owned GitHub Release
         if: |
           startsWith(github.ref, 'refs/tags/v2.') ||
-          (github.event_name == 'workflow_dispatch' && inputs.publish_to == 'pypi')
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          packages-dir: dist
+          (github.event_name == 'workflow_dispatch' && inputs.distribution == 'github-release')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          MANUAL_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          tag="$GITHUB_REF_NAME"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then tag="$MANUAL_TAG"; fi
+          test -n "$tag" || { echo "release_tag is required for a manual GitHub Release"; exit 1; }
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" dist/* --clobber
+          else
+            gh release create "$tag" dist/* --verify-tag --title "$tag" --generate-notes
+          fi
 
   publish-tombstone:
-    name: Publish v1.99 tombstone
+    name: Distribute v1.99 tombstone
     needs: [build-tombstone]
     if: |
       always() &&
@@ -269,24 +277,28 @@ jobs:
         startsWith(github.ref, 'refs/tags/v1.99')
       )
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: tombstone
           path: dist
-      - name: Publish to TestPyPI (dry-run target)
-        if: github.event_name == 'workflow_dispatch' && inputs.publish_to == 'testpypi'
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          packages-dir: dist
-          skip-existing: true
-      - name: Publish to PyPI
+      - name: Publish fork-owned GitHub Release
         if: |
           startsWith(github.ref, 'refs/tags/v1.99') ||
-          (github.event_name == 'workflow_dispatch' && inputs.publish_to == 'pypi')
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          packages-dir: dist
+          (github.event_name == 'workflow_dispatch' && inputs.distribution == 'github-release')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          MANUAL_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          tag="$GITHUB_REF_NAME"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then tag="$MANUAL_TAG"; fi
+          test -n "$tag" || { echo "release_tag is required for a manual GitHub Release"; exit 1; }
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" dist/* --clobber
+          else
+            gh release create "$tag" dist/* --verify-tag --title "$tag" --generate-notes
+          fi

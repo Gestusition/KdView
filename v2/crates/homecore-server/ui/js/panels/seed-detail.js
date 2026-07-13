@@ -12,29 +12,29 @@ import {
 } from '../ui.js';
 
 export default {
-  meta: { title: 'SEED Detail' },
+  meta: { title: 'Gateway Detail' },
   async render(root, ctx) {
     const { api } = ctx;
     let s;
     try {
       s = await api.seed(ctx.params.id);
     } catch (e) {
-      root.appendChild(sectionHeader('SEED Detail', ctx.params.id));
-      root.appendChild(banner('SEED unavailable — ' + (e.message || e) + (e.upstreamUnavailable ? ' (upstream not yet wired — ADR-131 §12)' : ''), 'red'));
+      root.appendChild(sectionHeader('Gateway Detail', ctx.params.id));
+      root.appendChild(banner('Gateway unavailable — ' + (e.message || e) + (e.upstreamUnavailable ? ' (optional service not configured)' : ''), 'red'));
       root.appendChild(card({ children: [button('← Back to fleet', { onClick: () => ctx.navigate('#/fleet') })] }));
       return () => {};
     }
 
     if (!s) {
-      root.appendChild(sectionHeader('SEED Detail', ctx.params.id));
-      root.appendChild(errorCard(`No SEED with device_id "${ctx.params.id}"`));
+      root.appendChild(sectionHeader('Gateway Detail', ctx.params.id));
+      root.appendChild(errorCard(`No gateway with device_id "${ctx.params.id}"`));
       root.appendChild(card({ children: [button('← Back to fleet', { onClick: () => ctx.navigate('#/fleet') })] }));
       return () => {};
     }
 
-    root.appendChild(sectionHeader('SEED Detail', s.zone));
+    root.appendChild(sectionHeader('Gateway Detail', s.zone));
     if (api.isDemo('fleet')) {
-      root.appendChild(banner('DEMO — SEED HTTPS API not served by this binary; showing contract-conformant data (§7.1).', 'amber'));
+      root.appendChild(banner('DEMO — the optional gateway API is not served by this binary; showing contract-conformant data.', 'amber'));
     }
 
     root.appendChild(identityCard(s, ctx));

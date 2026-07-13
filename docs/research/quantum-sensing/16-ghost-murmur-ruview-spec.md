@@ -1,5 +1,7 @@
 # Ghost Murmur on RuView — A Specification for an Open, Honest, Multi-Modal Heartbeat Mesh
 
+> **Provenance:** this research specification predates the KdView fork. Historical upstream clone links are retained for its original context; current source is [Gestusition/KdView](https://github.com/Gestusition/KdView).
+
 ## SOTA Research + Build Spec — Quantum Sensing Series (16/—)
 
 | Field | Value |

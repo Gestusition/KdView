@@ -2,12 +2,14 @@
 
 | Field      | Value                                                    |
 |------------|----------------------------------------------------------|
-| Status     | Accepted                                                 |
+| Status     | Superseded in KdView; retained as historical validation  |
 | Date       | 2026-04-02                                               |
 | Authors    | rUv, claude-flow                                         |
 | Drivers    | #348 (multinode mesh accuracy), Research: Arena Physica   |
 | Supersedes | —                                                        |
 | Related    | ADR-066 (ESP32 swarm + Seed coordinator), ADR-068 (per-node state), ADR-018 (CSI binary protocol), ADR-039 (edge intelligence), ADR-065 (happiness scoring + Seed bridge) |
+
+> **KdView status:** this ADR records an upstream, hardware-specific validation and is not the current deployment architecture. KdView uses an operator-managed local gateway for RVF persistence, kNN search, witness generation, and optional sensor fusion. The `seed_csi_bridge.py`, `--seed-url`, `--seed-token`, `0xC5110003`, and 8-dimensional feature schema names remain documented as compatibility identifiers.
 
 ## Context
 

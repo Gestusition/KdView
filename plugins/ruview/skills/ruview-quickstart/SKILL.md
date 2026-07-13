@@ -1,22 +1,21 @@
 ---
 name: ruview-quickstart
-description: Onboarding and first-run for RuView (WiFi-DensePose) — Docker demo with simulated data, repo build, and the fastest path to a live sensing dashboard. Use when someone is new to RuView or wants the shortest path to "it works on my machine".
-allowed-tools: Bash Read Write Edit Glob Grep
+description: Onboard and run KdView's RuView/WiFi-DensePose stack through a container demo, source build, or live ESP32 sensing path. Use for first-run setup and the shortest path to the WiFi dashboard, Observatory, pose-fusion, visualization, point-cloud, Three.js, and mobile surfaces.
 ---
 
 # RuView Quickstart
 
-Get a newcomer from zero to a running RuView sensing dashboard. Three tiers, pick the one that matches the hardware on hand.
+Get a newcomer from zero to KdView's WiFi sensing UIs. Use [Gestusition/KdView](https://github.com/Gestusition/KdView) as the canonical repository.
 
 ## Tier 0 — Docker, no hardware (2 minutes)
 
 ```bash
-docker pull ruvnet/wifi-densepose:latest
-docker run -p 3000:3000 ruvnet/wifi-densepose:latest
-# open http://localhost:3000  — simulated CSI, full UI
+docker pull ghcr.io/gestusition/kdview:latest
+docker run -p 3000:3000 ghcr.io/gestusition/kdview:latest
+# open http://localhost:3000/ui/index.html or /ui/observatory.html
 ```
 
-Use this to demo the dashboard, explore the API, or develop UI without a sensor.
+Use this to demo the dashboard, Observatory, pose-fusion view, or `viz.html` and to explore the API without a sensor. The point-cloud viewer, Three.js gallery, and mobile client remain in `v2/crates/wifi-densepose-pointcloud/`, `examples/three.js/`, and `ui/mobile/`.
 
 ## Tier 1 — Build the repo from source
 
@@ -39,7 +38,7 @@ python archive/v1/data/proof/verify.py --generate-hash
 python archive/v1/data/proof/verify.py
 ```
 
-## Tier 2 — Live sensing with an ESP32-S3 ($9)
+## Tier 2 — Live sensing with an ESP32-S3
 
 This is the real thing. Hand off to the `ruview-hardware-setup` skill for the flash/provision/monitor loop, then:
 
@@ -55,9 +54,9 @@ node ../scripts/snn-csi-processor.js --port 5006
 ## What to know before you start
 
 - **ESP32-C3 and the original ESP32 are NOT supported** — single-core, can't run the CSI DSP pipeline. Use ESP32-S3 (8MB or 4MB) or ESP32-C6.
-- A **single ESP32** has limited spatial resolution — 2+ nodes (or add a Cognitum Seed) for good results.
+- A **single ESP32** has limited spatial resolution. Use 2+ nodes for cross-viewpoint coverage; an optional operator-managed gateway can add persistence and kNN search.
 - Camera-free pose accuracy is limited (~84s to train, modest PCK). For 92.9% PCK@20 use camera-supervised training (see `ruview-model-training` skill, ADR-079).
-- No cloud, no internet, no cameras required — everything runs on edge hardware.
+- Core sensing and browser runtime assets run on operator-controlled hardware; KdView does not require third-party runtime CDNs.
 
 ## Next steps to suggest
 

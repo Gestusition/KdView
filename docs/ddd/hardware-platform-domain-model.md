@@ -1307,7 +1307,7 @@ All ESP32 UDP packets share a 4-byte magic prefix for demuxing at the aggregator
 |-------|------|--------|------|------|-------------|
 | `0xC5110001` | Raw CSI | Tier 0+ | ~128-404 B | 20-28.5 Hz | Full I/Q per subcarrier |
 | `0xC5110002` | Vitals | Tier 2+ | 32 B | 1 Hz (configurable) | Presence, BPM, fall flag |
-| `0xC5110003` | Feature Vector | Tier 2+ | 48 B | 1 Hz | ADR-069 8-dim normalized features for Cognitum Seed RVF ingest |
+| `0xC5110003` | Feature Vector | Tier 2+ | 48 B | 1 Hz | ADR-069 8-dim normalized features for local RVF ingest; historical Seed compatibility schema |
 | `0xC5110004` | WASM Events | Tier 3 | variable | event-driven | Module event_type + value tuples |
 | `0xC5110005` | Compressed | Tier 1+ | variable | 20-28.5 Hz | XOR+RLE delta-compressed CSI (reassigned from 0xC5110003) |
 

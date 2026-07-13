@@ -1,12 +1,11 @@
 ---
 name: ruview-configure
-description: Configure RuView — ESP32 sdkconfig variants, NVS provisioning, WiFi channel / MAC filter overrides (ADR-060), edge intelligence modules (ADR-041), sensing-server flags, multi-node mesh, and Cognitum Seed integration. Use when adjusting how a deployed RuView system behaves without changing code.
-allowed-tools: Bash Read Write Edit Glob Grep
+description: Configure KdView's RuView firmware, NVS provisioning, WiFi channel and MAC overrides, edge modules, sensing server, complete WiFi web/mobile UI set, and multi-node meshes. Use when adjusting a deployment without changing source code.
 ---
 
 # RuView Configuration
 
-Everything you can tune in a RuView deployment, from a one-line provision flag to a full mesh + Cognitum Seed setup.
+Configure a RuView deployment from one ESP32 node through a full multistatic mesh.
 
 ## 1. Firmware build-time config (sdkconfig)
 
@@ -38,7 +37,7 @@ python firmware/esp32-csi-node/provision.py --port COM8 \
 | Detection thresholds | `--pres-thresh` (50) `--fall-thresh` (15000 → 15.0 rad/s²) | raise `--fall-thresh` to cut false falls in high-traffic areas (issue #263) |
 | Vitals | `--vital-win` (300 frames) `--vital-int` (1000 ms) `--subk-count` (32, top-K subcarriers) | |
 | Channel / hopping | `--channel` (1-14 / 36-177, overrides AP auto-detect) `--filter-mac` `--hop-channels` (`1,6,11`) `--hop-dwell` (200 ms) | omit `--channel` + set `--hop-channels` for ADR-061 multi-freq hopping; omit `--filter-mac` to capture all transmitters |
-| Cognitum Seed | `--seed-url` (`http://10.1.10.236`) `--seed-token` (Bearer, from pairing) `--zone` (`lobby`) | |
+| Optional gateway | `--gateway-url` `--gateway-token` `--zone` | Operator-managed persistence endpoint; never commit tokens. Old `--seed-*` names remain aliases. |
 | Swarm | `--swarm-hb` (30 s) `--swarm-ingest` (5 s) | heartbeat + vector ingest intervals |
 | Mode | `--dry-run` (build NVS bin, don't flash) `--baud` (460800) `--force-partial` | |
 
@@ -64,7 +63,7 @@ cargo run -p wifi-densepose-sensing-server -- --model model.rvf --build-index en
 
 ## 4. Edge intelligence modules (ADR-041)
 
-Small Rust/WASM programs that run on the ESP32 itself — no internet, instant response. See `docs/edge-modules/` and `docs/adr/ADR-041-*`. Each module declares its CSI feature inputs (8-dim feature vectors) and an RVF store target (Cognitum Seed). Configure which modules ship in a build via the firmware component config; configure their thresholds via NVS keys.
+Small Rust/WASM programs run on the ESP32 itself for local, low-latency response. See `docs/edge-modules/` and `docs/adr/ADR-041-*`. Each module declares its CSI feature inputs and may target an operator-managed RVF store. Configure shipped modules through the firmware component config and thresholds through NVS keys.
 
 Helper scripts that mirror edge-module logic on the host (useful for tuning before flashing):
 `scripts/apnea-detector.js`, `gait-analyzer.js`, `material-classifier.js`, `passive-radar.js`, `mincut-person-counter.js`, `device-fingerprint.js`, `mesh-graph-transformer.js`, `material-detector.js`.
@@ -75,22 +74,22 @@ Helper scripts that mirror edge-module logic on the host (useful for tuning befo
 - TDM protocol + channel hopping coordinated by `wifi-densepose-hardware` (`v2/crates/wifi-densepose-hardware/src/esp32/`).
 - Cross-viewpoint fusion combines nodes — see `ruview-advanced-sensing`.
 
-## 6. Cognitum Seed integration ($140 total BOM)
+## 6. Optional local persistence gateway
 
-ESP32 streams CSI → bridge forwards to a Cognitum Seed for persistent RVF memory, kNN over environments, and an Ed25519 witness chain.
+An operator-managed gateway can persist RVF vectors, run kNN environment searches, and maintain an Ed25519 witness chain. The existing bridge retains `seed` in its filename and flags for compatibility.
 
 ```bash
-node scripts/rf-scan.js --port 5006              # live RF room scan → Seed
-node scripts/snn-csi-processor.js --port 5006    # SNN real-time learning on-Seed
+node scripts/rf-scan.js --port 5006
+node scripts/snn-csi-processor.js --port 5006
 ```
 
-See `docs/tutorials/cognitum-seed-pretraining.md` and ADR-028 (capability audit + witness verification).
+See ADR-028 for capability auditing and witness verification. Keep gateway URLs and bearer tokens in operator-controlled runtime configuration.
 
 ## 7. App-level config
 
 - API: `wifi-densepose-api` (Axum) — config via `wifi-densepose-config` crate; see `example.env` / `pyproject.toml` for the v1 Python service.
-- Docker: `docker run -p 3000:3000 ruvnet/wifi-densepose:latest` (env-var overrides documented in `README.md` / `docker/`).
-- Dashboard: served on `:3000`; nvsim dashboard (ADR-092) is separate.
+- Docker: `docker run -p 3000:3000 ghcr.io/gestusition/kdview:latest` (env-var overrides documented in `README.md` / `docker/`).
+- Browser UIs: open `/ui/index.html`, `/ui/observatory.html`, `/ui/pose-fusion.html`, or `/ui/viz.html` on the sensing server; point-cloud, Three.js, and mobile clients remain in their repository paths.
 
 ## Reference
 

@@ -104,7 +104,7 @@ export function run(cmd, args, opts = {}) {
 }
 
 const ONBOARD_PATHS = {
-  'docker-demo': 'Fastest. `docker run -p 8000:8000 ruvnet/wifi-densepose` → open the dashboard. No hardware; replays sample CSI. Good for "what does it look like".',
+  'docker-demo': 'Fastest. `docker run -p 8000:8000 ghcr.io/gestusition/kdview:latest` → open the dashboard. No hardware; replays sample CSI. Good for "what does it look like".',
   'repo-build': 'Build from source. `cd v2 && cargo test --workspace --no-default-features` (1,031+ tests). Then `cargo run -p wifi-densepose-cli -- --help`. Good for developers.',
   'live-esp32': 'Real sensing. Flash an ESP32-S3 (see `provision-node` skill), point it at the sensing-server, then `calibrate → enroll → train-room → room-watch` (see `calibrate-room`). Good for an actual install.',
 };

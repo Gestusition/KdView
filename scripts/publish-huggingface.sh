@@ -1,25 +1,24 @@
 #!/bin/bash
 # Publish WiFi-DensePose pre-trained models to HuggingFace Hub
 #
-# Retrieves the HuggingFace API token from Google Cloud Secrets,
-# then uploads model files from dist/models/ to a HuggingFace repo.
+# Uses HF_TOKEN when available, or retrieves it from a configured Google Cloud
+# Secret Manager project, then uploads models to an explicitly selected repo.
 #
 # Prerequisites:
-#   - gcloud CLI authenticated with access to cognitum-20260110
 #   - Python 3.8+ with pip
 #   - Model files present in dist/models/
 #
 # Usage:
-#   bash scripts/publish-huggingface.sh
-#   bash scripts/publish-huggingface.sh --repo ruvnet/wifi-densepose-pretrained --version v0.5.4
+#   HF_REPO=owner/model HF_TOKEN=hf_xxxxx bash scripts/publish-huggingface.sh
+#   bash scripts/publish-huggingface.sh --repo owner/model --version v0.5.4
 #   bash scripts/publish-huggingface.sh --dry-run
 
 set -euo pipefail
 
 # ---------- defaults ----------
-REPO="ruvnet/wifi-densepose-pretrained"
+REPO="${HF_REPO:-}"
 VERSION=""
-GCLOUD_PROJECT="cognitum-20260110"
+GCLOUD_PROJECT="${GCP_PROJECT:-}"
 SECRET_NAME="HUGGINGFACE_API_KEY"
 MODEL_DIR="dist/models"
 DRY_RUN=false
@@ -37,10 +36,10 @@ while [[ $# -gt 0 ]]; do
       echo "Usage: bash scripts/publish-huggingface.sh [OPTIONS]"
       echo ""
       echo "Options:"
-      echo "  --repo REPO        HuggingFace repo (default: ruvnet/wifi-densepose-pretrained)"
+      echo "  --repo REPO        HuggingFace repo (required unless HF_REPO is set)"
       echo "  --version VERSION  Version tag (default: auto from git describe)"
       echo "  --model-dir DIR    Model directory (default: dist/models)"
-      echo "  --project PROJECT  GCloud project (default: cognitum-20260110)"
+      echo "  --project PROJECT  GCloud project used when HF_TOKEN is unset"
       echo "  --secret SECRET    GCloud secret name (default: HUGGINGFACE_API_KEY)"
       echo "  --dry-run          Show what would be uploaded without uploading"
       echo "  -h, --help         Show this help"
@@ -49,6 +48,11 @@ while [[ $# -gt 0 ]]; do
     *) echo "Unknown option: $1"; exit 1 ;;
   esac
 done
+
+if [ -z "$REPO" ]; then
+  echo "ERROR: --repo or HF_REPO is required." >&2
+  exit 1
+fi
 
 # ---------- auto-detect version ----------
 if [ -z "$VERSION" ]; then
@@ -114,10 +118,19 @@ fi
 
 # ---------- retrieve HuggingFace token ----------
 echo ""
-echo "Retrieving HuggingFace token from GCloud Secrets..."
-HF_TOKEN=$(gcloud secrets versions access latest \
-  --secret="${SECRET_NAME}" \
-  --project="${GCLOUD_PROJECT}" 2>/dev/null)
+if [ -z "${HF_TOKEN:-}" ]; then
+  if [ -z "$GCLOUD_PROJECT" ]; then
+    GCLOUD_PROJECT="$(gcloud config get-value project 2>/dev/null || true)"
+  fi
+  if [ -z "$GCLOUD_PROJECT" ]; then
+    echo "ERROR: set HF_TOKEN, or set GCP_PROJECT/configure gcloud for secret lookup." >&2
+    exit 1
+  fi
+  echo "Retrieving HuggingFace token from configured GCloud Secrets..."
+  HF_TOKEN=$(gcloud secrets versions access latest \
+    --secret="${SECRET_NAME}" \
+    --project="${GCLOUD_PROJECT}" 2>/dev/null)
+fi
 
 if [ -z "$HF_TOKEN" ]; then
   echo "ERROR: Failed to retrieve secret '${SECRET_NAME}' from project '${GCLOUD_PROJECT}'."
@@ -126,6 +139,7 @@ if [ -z "$HF_TOKEN" ]; then
   exit 1
 fi
 echo "Token retrieved successfully."
+export HF_TOKEN
 
 # ---------- install huggingface_hub if needed ----------
 if ! python3 -c "import huggingface_hub" 2>/dev/null; then
@@ -137,14 +151,14 @@ fi
 echo ""
 echo "Uploading to https://huggingface.co/${REPO} ..."
 
-python3 - <<PYEOF
+HF_REPO_ID="$REPO" HF_MODEL_DIR="$MODEL_DIR" HF_VERSION="$VERSION" python3 - <<'PYEOF'
 import os
 from huggingface_hub import HfApi, login
 
-token = os.environ.get("HF_TOKEN_OVERRIDE") or """${HF_TOKEN}"""
-repo_id = "${REPO}"
-model_dir = "${MODEL_DIR}"
-version = "${VERSION}"
+token = os.environ["HF_TOKEN"]
+repo_id = os.environ["HF_REPO_ID"]
+model_dir = os.environ["HF_MODEL_DIR"]
+version = os.environ["HF_VERSION"]
 
 login(token=token, add_to_git_credential=False)
 api = HfApi()

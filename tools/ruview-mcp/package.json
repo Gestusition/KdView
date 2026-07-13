@@ -1,7 +1,7 @@
 {
   "name": "@ruvnet/rvagent",
   "version": "0.2.0",
-  "description": "SENSE-BRIDGE: dual-transport MCP server (stdio default; Streamable HTTP opt-in via RVAGENT_HTTP_PORT) exposing RuView WiFi-DensePose sensing primitives to AI agents",
+  "description": "SENSE-BRIDGE: dual-transport MCP server (stdio default; Streamable HTTP opt-in via RVAGENT_HTTP_PORT) exposing KdView WiFi-DensePose sensing primitives to AI agents",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -35,20 +35,19 @@
     "wifi",
     "csi",
     "pose-estimation",
-    "cognitum",
     "sense-bridge",
-    "ruvnet"
+    "kdview"
   ],
-  "author": "ruv <ruv@ruv.net>",
+  "author": "KdView Contributors",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ruvnet/RuView.git",
+    "url": "https://github.com/Gestusition/KdView.git",
     "directory": "tools/ruview-mcp"
   },
-  "homepage": "https://github.com/ruvnet/RuView/tree/main/tools/ruview-mcp",
+  "homepage": "https://github.com/Gestusition/KdView/tree/main/tools/ruview-mcp",
   "bugs": {
-    "url": "https://github.com/ruvnet/RuView/issues"
+    "url": "https://github.com/Gestusition/KdView/issues"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",

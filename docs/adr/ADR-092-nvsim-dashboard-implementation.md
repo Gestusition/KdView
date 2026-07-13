@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| **Status** | **Implemented (2026-04-27)** — live at https://ruvnet.github.io/RuView/nvsim/. PR #436 open against main. 8/12 §11 gates ✅, 4/12 ⚠ (require external infrastructure). |
+| **Status** | **Superseded in KdView** — implemented upstream on 2026-04-27, then retired from the KdView public browser surface. The simulator architecture and acceptance evidence below remain historical technical documentation. |
 | **Date** | 2026-04-26 |
 | **Authors** | ruv |
 | **Refines** | ADR-089 (`nvsim` simulator), ADR-090 (Lindblad extension), ADR-091 (stand-off radar) |
@@ -11,6 +11,8 @@
 | **Acceptance gates** | Sections §11 and §12 below |
 
 ---
+
+> **KdView disposition:** The deployed nvsim dashboard and its upstream Pages URL are historical. This retirement does not affect KdView's WiFi dashboard, Observatory, pose-fusion, `viz.html`, point-cloud/Three.js, or mobile interfaces. This ADR is retained for simulator architecture and reproducibility evidence.
 
 ## 1. Context
 

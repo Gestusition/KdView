@@ -1,7 +1,7 @@
-# @ruvnet/homecore-frontend
+# KdView HOMECORE frontend example
 
 HOMECORE web UI — built with Lit 3, TypeScript, and Vite.
-Design system mirrors the cognitum-v0 / v0-appliance dashboard (ADR-131).
+The local-first dark design system is documented by ADR-131.
 
 ## Quick start
 
@@ -48,8 +48,8 @@ frontend/
 
 ## Design system
 
-Colors, typography, and components mirror the cognitum-v0 dashboard
-(`http://cognitum-v0:9000/`). Dark-only; no light-mode. Key tokens:
+Colors, typography, and components use KdView's checked-in dark theme. No external
+dashboard or network service is required. Key tokens:
 
 - `--hc-primary` `#19d4e5` — teal (active nav, focus ring, CTA borders)
 - `--hc-accent` `#26d867` — green (success, secondary CTA)

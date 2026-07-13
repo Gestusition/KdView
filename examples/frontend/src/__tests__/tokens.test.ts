@@ -55,7 +55,7 @@ describe('tokens.css', () => {
   });
 
   it('defines the teal primary token with the correct hue value', () => {
-    // --hc-primary must reference HSL hue 185 (teal, from cognitum-v0)
+    // --hc-primary must reference KdView's local HSL hue 185 teal token.
     expect(css).toMatch(/--hc-primary\s*:\s*hsl\(185/);
   });
 

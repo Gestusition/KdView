@@ -1,6 +1,6 @@
 // §4.6 v0 Appliance COG Management — ADR-131.
 // Installed COGs (start/stop/restart/logs/config + sha256+sig shield),
-// COG Store / App Registry (mirrors seed.cognitum.one/store), OTA
+// Local edge-module registry and OTA status
 // Updates diff panels, and Hailo HEF status. Mirrors the Cog Store
 // visual conventions (card layout, category pills, install/details pair).
 

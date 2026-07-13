@@ -1,7 +1,7 @@
 {
-  "name": "@ruv/ruview-cli",
+  "name": "kdview-cli",
   "version": "0.0.1",
-  "description": "RuView CLI — shell access to WiFi-DensePose sensing, inference, and training capabilities. Private/unpublished; the `ruview` bin name belongs to @ruvnet/ruview (ADR-265 D4).",
+  "description": "KdView CLI — shell access to WiFi-DensePose sensing, inference, and training capabilities. Private and unpublished.",
   "private": true,
   "type": "module",
   "main": "dist/index.js",
@@ -15,7 +15,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "test": "node --experimental-vm-modules node_modules/.bin/jest --passWithNoTests",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --passWithNoTests",
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit"
   },
@@ -24,10 +24,9 @@
     "wifi",
     "csi",
     "pose-estimation",
-    "cognitum",
     "cli"
   ],
-  "author": "ruv <ruv@ruv.net>",
+  "author": "KdView Contributors",
   "license": "Apache-2.0",
   "dependencies": {
     "yargs": "^17.7.2"

@@ -4,7 +4,7 @@
 #
 # Downloads all checkpoints/results to ./out/gcp-checkpoints/<instance-name>/,
 # verifies the download, then deletes the instance.
-# GCP project: cognitum-20260110
+# GCP project: set GCP_PROJECT or configure the active gcloud project
 
 set -euo pipefail
 
@@ -25,7 +25,8 @@ fi
 INSTANCE_NAME="$1"
 shift
 
-PROJECT="cognitum-20260110"
+PROJECT="${GCP_PROJECT:-$(gcloud config get-value project 2>/dev/null || true)}"
+: "${PROJECT:?Set GCP_PROJECT or configure a default gcloud project}"
 ZONE=""
 SKIP_DOWNLOAD=false
 

@@ -1,4 +1,4 @@
-//! `cog-person-count` — Cognitum Cog binary entrypoint.
+//! `cog-person-count` — portable edge-module binary entrypoint.
 //!
 //! Implements the ADR-100 runtime contract:
 //!     cog-person-count version

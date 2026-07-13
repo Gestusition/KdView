@@ -2,10 +2,10 @@
  * ADR-124 §2 manifest validation test.
  *
  * Guards that package.json satisfies every structural decision from ADR-124 §2:
- *   1. Package name is @ruvnet/rvagent
+ *   1. Historical package name remains as an API compatibility identifier
  *   2. Version is >= 0.1.0
  *   3. engines.node is >= 20
- *   4. bin includes the "rvagent" key (npx @ruvnet/rvagent invocation)
+ *   4. bin includes the "rvagent" key for local CLI compatibility
  *   5. exports["." ] includes both "import" and "types" keys (ESM + types in tarball)
  *   6. publishConfig.access === "public" (scoped package must be explicit)
  *   7. @modelcontextprotocol/sdk is a runtime dependency (dual-transport server)
@@ -42,8 +42,8 @@ function nested<T>(obj: Record<string, unknown>, ...keys: string[]): T {
   return cur as T;
 }
 
-describe("@ruvnet/rvagent package.json (ADR-124 §2)", () => {
-  it("§2.1 — name is @ruvnet/rvagent", () => {
+describe("rvagent compatibility package.json (ADR-124 §2)", () => {
+  it("§2.1 — retains the stable compatibility package ID", () => {
     assertField("name", "@ruvnet/rvagent");
   });
 
@@ -62,7 +62,7 @@ describe("@ruvnet/rvagent package.json (ADR-124 §2)", () => {
     expect(nodeRange).toMatch(/>=\s*20/);
   });
 
-  it("§2.4 — bin.rvagent is defined (npx @ruvnet/rvagent invocation)", () => {
+  it("§2.4 — bin.rvagent is defined for repository-local execution", () => {
     const bin = nested<Record<string, string>>(pkg, "bin");
     expect(typeof bin["rvagent"]).toBe("string");
     expect(bin["rvagent"]).toMatch(/dist\/index\.js/);

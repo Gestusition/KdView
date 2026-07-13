@@ -5,7 +5,7 @@
  * Arms the C6 LP RISC-V coprocessor as an always-on watchdog that
  * monitors a GPIO (typically a PIR or accelerometer interrupt line) and
  * wakes the HP core only when motion is detected. Targets ~5 µA
- * hibernation current for battery-powered Cognitum Seed nodes.
+ * hibernation current for battery-powered sensing nodes.
  *
  * Only built when CONFIG_IDF_TARGET_ESP32C6 + CONFIG_ULP_COPROC_TYPE_LP_CORE.
  *

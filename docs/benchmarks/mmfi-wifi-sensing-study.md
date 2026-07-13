@@ -1,5 +1,7 @@
 # WiFi-CSI Sensing on MM-Fi — a complete, honest study
 
+> Model IDs under `ruvnet/*` are retained as upstream Hugging Face publication identifiers. Canonical source and new benchmark work live at [Gestusition/KdView](https://github.com/Gestusition/KdView).
+
 **Scope:** what works, what doesn't, and what actually ships — for 2D human **pose** and **action
 recognition** from WiFi Channel State Information on the public [MM-Fi](https://github.com/ybhbingo/MMFi_dataset)
 benchmark (40 subjects × 4 environments, 27 activities, `[3 antennas, 114 subcarriers, 10 frames]`

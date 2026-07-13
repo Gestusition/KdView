@@ -1,22 +1,25 @@
-# @ruvnet/rvagent — SENSE-BRIDGE MCP Server
+# KdView SENSE-BRIDGE MCP Server
 
 **SENSE-BRIDGE** is a dual-transport [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that bridges the RuView WiFi-DensePose sensing stack to AI agents (Claude Code, Cursor, ruflo swarms, and any MCP-compatible client).
 
-Install once; AI agents can then call `ruview_presence_now`, `ruview_vitals_get_heart_rate`, `ruview_bfld_last_scan`, and more — without writing HTTP or WebSocket client code.
+Build the checked-in source once; AI agents can then call `ruview_presence_now`, `ruview_vitals_get_heart_rate`, `ruview_bfld_last_scan`, and more — without writing HTTP or WebSocket client code. The package manifest retains `@ruvnet/rvagent` only as a compatibility identifier; the KdView setup does not fetch that package.
 
 ## Quickstart
 
 ```bash
-# 1. Add to Claude Code (stdio transport — the default)
-claude mcp add rvagent -- npx -y @ruvnet/rvagent
+# 1. Build the repository-local server
+cd tools/ruview-mcp && npm ci && npm run build
 
-# 2. Or run directly
-RUVIEW_SENSING_SERVER_URL=http://cognitum-v0:3000 npx @ruvnet/rvagent
+# 2. Add it to Claude Code (stdio transport — run from the repository root)
+claude mcp add rvagent -- node tools/ruview-mcp/dist/index.js
 
-# 3. Streamable HTTP (remote agents, ruflo swarms) — explicit opt-in
-RUVIEW_SENSING_SERVER_URL=http://cognitum-v0:3000 \
+# 3. Or run directly against your local sensing server
+RUVIEW_SENSING_SERVER_URL=http://localhost:3000 node tools/ruview-mcp/dist/index.js
+
+# 4. Streamable HTTP (remote agents, ruflo swarms) — explicit opt-in
+RUVIEW_SENSING_SERVER_URL=http://localhost:3000 \
 RVAGENT_HTTP_TOKEN=your-secret \
-RVAGENT_HTTP_PORT=3001 npx @ruvnet/rvagent
+RVAGENT_HTTP_PORT=3001 node tools/ruview-mcp/dist/index.js
 # POST JSON-RPC to http://127.0.0.1:3001/mcp (initialize first; then send the
 # returned mcp-session-id header on every request)
 ```
@@ -35,7 +38,7 @@ aliases; `tools/list` advertises the underscore form only.
 | `ruview_csi_latest` | Latest 56×20 CSI window from the sensing-server | ADR-101/102 |
 | `ruview_pose_infer` | Single-shot 17-keypoint pose inference via cog binary | ADR-101 |
 | `ruview_count_infer` | Single-shot person-count inference via cog binary | ADR-103 |
-| `ruview_registry_list` | Cognitum edge module registry (category/search filters) | ADR-102 |
+| `ruview_registry_list` | Bundled KdView edge-module registry (category/search filters) | ADR-102 |
 | `ruview_train_count` | Kick off a count-cog training run (background job) | ADR-103 |
 | `ruview_job_status` | Poll a training job (persists across server restarts) | ADR-103 |
 | `ruview_presence_now` | Current occupancy: `present`, `n_persons`, `confidence` | ADR-124 §4.1 |
@@ -73,4 +76,4 @@ npm test        # jest — 99 tests across 7 suites
 ```
 
 Source: `tools/ruview-mcp/src/`. Tests: `tools/ruview-mcp/tests/`.
-Tracking issue: [#787](https://github.com/ruvnet/RuView/issues/787).
+Issues: [Gestusition/KdView](https://github.com/Gestusition/KdView/issues).

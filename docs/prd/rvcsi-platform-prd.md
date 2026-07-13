@@ -18,7 +18,9 @@
 
 rvCSI is a **Rust-first, TypeScript-accessible, hardware-abstracted Channel State Information (CSI) platform** for WiFi-based spatial sensing.
 
-The goal is to convert CSI from fragile research data into a durable edge sensing runtime that can feed RuView, RuVector, Cognitum, and agentic systems with validated live radio-field observations.
+> **KdView fork note:** This PRD predates the fork and includes a former Cognitum deployment profile as historical design context. Current KdView deployments use operator-managed local gateways; protocol and CLI identifiers are retained where they remain compatibility surfaces.
+
+The goal is to convert CSI from fragile research data into a durable edge sensing runtime that can feed KdView/RuView, RuVector, operator-managed gateways, and agentic systems with validated live radio-field observations.
 
 rvCSI does **not** try to replace Nexmon on day one. It wraps, validates, normalizes, streams, embeds, and learns from CSI produced by Nexmon, ESP32 CSI, Intel CSI, Atheros CSI, SDR pipelines, and future RF sensor sources.
 
@@ -36,7 +38,7 @@ The core invariant:
 | **Rust** | Safety, validation, signal processing, memory discipline, deterministic runtime behavior |
 | **TypeScript** | Developer experience, orchestration, dashboards, SDKs, agent integration |
 | **RuVector** | Memory, similarity, drift, graph relationships, coherence over time |
-| **Cognitum** | Low-power event-driven deployment, local decision loops |
+| **Local gateway** | Low-power event-driven deployment, local decision loops |
 
 ### 1.2 Strategic framing
 
@@ -54,7 +56,7 @@ The right framing is **structural sensing**, not "magic X-ray vision". CSI is ex
 | Researchers working with WiFi CSI and RF sensing | Reproducible ingestion, replay, and benchmark datasets |
 | Smart-building and elder-care solution builders | Privacy-preserving presence/motion/breathing without cameras |
 | Industrial monitoring teams | Camera-free movement/anomaly detection that runs unattended |
-| Developers using RuView / RuVector / Cognitum | A drop-in source of RF observations for the broader ruvnet stack |
+| Developers using KdView / RuView / RuVector compatibility surfaces | A drop-in source of RF observations for local sensing and agent stacks |
 
 ---
 
@@ -107,7 +109,7 @@ The right framing is **structural sensing**, not "magic X-ray vision". CSI is ex
 7. Local MCP tool server
 8. Replayable benchmark datasets
 9. Sensor fusion with RuView
-10. Deployment profile for Cognitum Seed and Appliance
+10. Operator-managed local-gateway deployment profile (including historical Seed/Appliance compatibility flags)
 
 ### 5.3 Version two
 

@@ -20,7 +20,7 @@
  *   npx ruview --version
  *   npx ruview csi tail
  *   npx ruview pose infer --window ./window.json
- *   RUVIEW_SENSING_SERVER_URL=http://cognitum-v0:3000 npx ruview cogs list
+ *   RUVIEW_SENSING_SERVER_URL=http://local-gateway:3000 npx ruview cogs list
  *
  * See ADR-104 for the full design rationale and security model.
  */

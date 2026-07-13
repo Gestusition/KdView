@@ -1,25 +1,28 @@
 #!/usr/bin/env bash
 #
-# rotate-npm-token.sh — push NPM_TOKEN from .env into GCP Secret Manager
-# and (optionally) publish @ruvnet/rvagent.
+# rotate-npm-token.sh — push NPM_TOKEN from .env into a configured GCP Secret
+# Manager project and optionally publish the selected package.
 #
 # Usage:
 #   bash scripts/rotate-npm-token.sh             # rotate only
 #   bash scripts/rotate-npm-token.sh --publish   # rotate + npm publish
 #
 # Env overrides:
-#   GCP_PROJECT          (default: cognitum-20260110)
+#   GCP_PROJECT          (default: active gcloud project)
 #   NPM_TOKEN_SECRET     (default: NPM_TOKEN)
 #   ENV_FILE             (default: <repo-root>/.env)
 #   PUBLISH_PACKAGE_DIR  (default: <repo-root>/tools/ruview-mcp)
+#   NPM_REGISTRY         (default: https://registry.npmjs.org/)
 
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 ENV_FILE="${ENV_FILE:-$REPO_ROOT/.env}"
-PROJECT="${GCP_PROJECT:-cognitum-20260110}"
+PROJECT="${GCP_PROJECT:-$(gcloud config get-value project 2>/dev/null || true)}"
+: "${PROJECT:?Set GCP_PROJECT or configure a default gcloud project}"
 SECRET="${NPM_TOKEN_SECRET:-NPM_TOKEN}"
 PKG_DIR="${PUBLISH_PACKAGE_DIR:-$REPO_ROOT/tools/ruview-mcp}"
+REGISTRY="${NPM_REGISTRY:-https://registry.npmjs.org/}"
 
 [ -f "$ENV_FILE" ] || { echo "ERROR: .env not found at $ENV_FILE" >&2; exit 1; }
 
@@ -62,13 +65,14 @@ echo "OK — secret '$SECRET' updated and verified (length=${#RETRIEVED})."
 
 if [ "${1:-}" = "--publish" ]; then
   [ -d "$PKG_DIR" ] || { echo "ERROR: package dir not found at $PKG_DIR" >&2; exit 1; }
-  echo "Publishing @ruvnet/rvagent from $PKG_DIR..."
+  PACKAGE_NAME="$(node -p "require('$PKG_DIR/package.json').name")"
+  echo "Publishing $PACKAGE_NAME from $PKG_DIR to $REGISTRY..."
   (
     cd "$PKG_DIR"
     if [ -f package.json ] && grep -q '"build"' package.json; then
       npm run build
     fi
-    NODE_AUTH_TOKEN="$RETRIEVED" npm publish --access public
+    NODE_AUTH_TOKEN="$RETRIEVED" npm publish --access public --registry "$REGISTRY"
   )
 fi
 

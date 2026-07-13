@@ -25,14 +25,14 @@ export default {
     try { seeds = await api.seeds(); } catch (e) { seedsErr = e; }
     try { fed = await api.federation(); } catch (e) { fedErr = e; }
 
-    root.appendChild(sectionHeader('Settings & Integration Config', 'SEED fleet, ESP32 provisioning, MQTT / cog-ha-matter, access tokens & federation (ADR-131 §4.10)'));
+    root.appendChild(sectionHeader('Settings & Integration Config', 'Sensor fleet, ESP32 provisioning, MQTT / cog-ha-matter, access tokens & optional federation'));
 
     if (api.isDemo('settings') || api.isDemo('fleet')) {
       root.appendChild(banner('DEMO — settings & fleet are served by the contract-conformant mock layer until their live endpoints land (ADR-131 §7.1). Edits are local-state only.', 'amber'));
     }
 
     // ── §4.10.1 SEED fleet ──
-    if (seedsErr) root.appendChild(cardBanner('SEED Fleet Management', 'SEED fleet unavailable — ' + errText(seedsErr)));
+    if (seedsErr) root.appendChild(cardBanner('Sensor Fleet Management', 'Sensor fleet unavailable — ' + errText(seedsErr)));
     else root.appendChild(seedFleetCard(seeds));
 
     // ── §4.10.2/.3/.4 ESP32 + MQTT + tokens (all from settings) ──
@@ -59,25 +59,25 @@ function seedFleetCard(seeds) {
   const body = h('div');
 
   // PROMINENT USB-only pairing invariant (security invariant).
-  body.appendChild(banner('Pairing window only opens via 169.254.42.1 (USB), never WiFi — security invariant.', 'red'));
+  body.appendChild(banner('Pairing must use the operator-configured local USB endpoint, never an untrusted WiFi interface.', 'red'));
 
   const list = h('div.mt');
   seeds.forEach((sd) => list.appendChild(seedRow(sd)));
   body.appendChild(list);
 
   body.appendChild(h('.flex.wrap.gap-sm.mt',
-    button('Add SEED', { variant: 'ghost', onClick: () => toggleNote(addNote) }),
+    button('Add gateway', { variant: 'ghost', onClick: () => toggleNote(addNote) }),
     button('Reprovision', { variant: 'ghost', onClick: () => toggleNote(addNote) })));
 
   const addNote = inlineNote('Provisioning flow', [
-    '1. Connect the SEED over USB — it presents a link-local pairing endpoint at 169.254.42.1.',
+    '1. Connect the gateway over USB and use its configured link-local pairing endpoint.',
     '2. Pairing NEVER opens over WiFi; the device refuses pairing on any non-USB interface.',
-    '3. Issue a bearer token over the USB link, then attach the SEED to the appliance.',
-    '4. Verify the witness chain before accepting the SEED into the fleet.',
+    '3. Issue a bearer token over the USB link, then attach the gateway to this installation.',
+    '4. Verify the witness chain before accepting the gateway into the sensor fleet.',
   ]);
   body.appendChild(addNote);
 
-  return card({ title: 'SEED Fleet Management', children: [body] });
+  return card({ title: 'Sensor Fleet Management', children: [body] });
 }
 
 function seedRow(sd) {
@@ -85,9 +85,9 @@ function seedRow(sd) {
   const tokenKind = offline ? 'grey' : 'green';
   const tokenLabel = offline ? 'token idle' : 'token valid';
   const note = inlineNote('Secure token rotation — ' + sd.device_id, [
-    '1. Operator confirms physical presence; pairing must be re-opened over USB (169.254.42.1) — never WiFi.',
-    '2. Appliance mints a new bearer token and stages it on the SEED over the USB link.',
-    '3. SEED acknowledges; the appliance flips the active token and revokes the old one.',
+    '1. Operator confirms physical presence; pairing is re-opened over the configured USB endpoint — never an untrusted WiFi interface.',
+    '2. This installation mints a new bearer token and stages it on the gateway over the USB link.',
+    '3. The gateway acknowledges; this installation activates the new token and revokes the old one.',
     '4. Witness chain records the rotation (ed25519); old token rejected on next ingest.',
   ]);
   const head = h('.row',
@@ -152,7 +152,7 @@ function mqttCard(mqtt, haEntities, esp32) {
   // HA-DISCO entities per node with via_device assignments.
   const disco = h('div.mt',
     h('h3', `HA-DISCO entities — ${haEntities} per node`),
-    h('.t3', 'Each ESP32 node publishes its discovery entities with a via_device pointing at its SEED:'));
+    h('.t3', 'Each ESP32 node publishes its discovery entities with a via_device pointing at its gateway:'));
   esp32.forEach((n) => disco.appendChild(h('.row',
     h('span.mono', n.node_id),
     h('.flex.gap-sm', pill(haEntities + ' entities', 'cyan'), h('span.t2', 'via_device'), mono(n.seed)))));
@@ -191,16 +191,16 @@ function federationCard(fed, seeds) {
   body.appendChild(purpleBanner('Federation invariant — ' + fed.invariant + '.'));
 
   body.appendChild(kv([
-    ['Coordinator SEED', mono(fed.coordinator)],
+    ['Coordinator gateway', mono(fed.coordinator)],
     ['Round', h('span.purple', String(fed.round))],
-    ['Healthy SEEDs (k)', String(fed.k_healthy)],
+    ['Healthy gateways (k)', String(fed.k_healthy)],
     ['Delta exchange', statusPill(fed.delta_status === 'exchanging' ? 'updating' : fed.delta_status)],
     ['Round cadence', fed.cadence_min + ' min'],
     ['Krum aggregation', h('.flex.gap-sm', pill('f = ' + fed.krum.f, 'cyan'), pill(fed.krum.multi ? 'multi-Krum' : 'single-Krum', 'purple'), h('span.t3', 'ADR-105'))],
   ]));
 
   // ESP-NOW mesh sync status — rows coloured by health.
-  const mesh = h('div.mt', h('h3', 'ESP-NOW mesh sync — cross-SEED epoch alignment'));
+  const mesh = h('div.mt', h('h3', 'ESP-NOW mesh sync — cross-gateway epoch alignment'));
   fed.mesh_links.forEach((l) => {
     const epochA = epochOf(seeds, l.a);
     const epochB = epochOf(seeds, l.b);

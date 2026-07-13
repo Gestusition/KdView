@@ -1,7 +1,7 @@
 //! `mdns` — pure builder for the cog's mDNS advertisement record.
 //!
 //! ADR-116 §2.2: the cog must advertise itself as `_ruview-ha._tcp`
-//! so HA's discovery integration finds the Seed without manual
+//! so HA's discovery integration finds the service without manual
 //! `broker host` config. This module produces the typed wire-format
 //! shape — no socket I/O, no responder. The actual mDNS responder
 //! (mdns-sd / zeroconf / pnet) lands next iter and consumes this
@@ -12,7 +12,7 @@
 //!   * the responder library can be swapped without touching the
 //!     content of the advertisement;
 //!   * the build-time `--print-manifest` path can include the
-//!     advertisement shape so Seed integration tests can assert on
+//!     advertisement shape so integration tests can assert on
 //!     it without booting tokio;
 //!   * the TXT keys are locked by named unit tests — drift between
 //!     the cog and the HA-side YAML auto-discovery (`hass-wifi-...`)
@@ -22,7 +22,7 @@
 //!
 //! HA's mDNS discovery integration reads TXT records when binding a
 //! manifest to a `homeassistant.<integration>` zeroconf hook. We
-//! publish the minimum set that lets HA distinguish a Seed cog from
+//! publish the minimum set that lets HA distinguish the integration from
 //! a bare sensing-server and pick the right config flow:
 //!
 //! | Key | Value | Purpose |
@@ -46,8 +46,8 @@ use crate::COG_ID;
 
 /// Default mDNS instance name template. `{node_id}` is substituted
 /// at build time. Visible in HA's UI when the integration card is
-/// added — "Cognitum Seed (kitchen)" beats a raw UUID.
-const INSTANCE_TEMPLATE: &str = "Cognitum Seed — {node_id}";
+/// added — "RuView HA (kitchen)" beats a raw UUID.
+const INSTANCE_TEMPLATE: &str = "RuView HA — {node_id}";
 
 /// Wire-format twin of the mDNS service record this cog publishes.
 /// Owned so the responder can move the whole thing into its task.
@@ -85,7 +85,7 @@ impl MdnsService {
     /// into `ServiceDaemon::register` (next iter).
     ///
     /// `hostname` should end in `.local.` per RFC 6762 — e.g.
-    /// `"cognitum-seed-1.local."`. `ipv4` is the LAN-routable
+    /// `"ruview-ha-1.local."`. `ipv4` is the LAN-routable
     /// address HA's discovery will reach back on.
     pub fn to_service_info(
         &self,
@@ -144,8 +144,8 @@ mod tests {
 
     fn id() -> CogIdentity {
         CogIdentity {
-            node_id: "kitchen-seed".into(),
-            friendly_name: "Kitchen Seed".into(),
+            node_id: "kitchen-node".into(),
+            friendly_name: "Kitchen Node".into(),
             sw_version: "0.3.0".into(),
         }
     }
@@ -163,7 +163,7 @@ mod tests {
     #[test]
     fn instance_name_carries_node_id() {
         let svc = build_mdns_service(&id(), 9180, 1883, false);
-        assert!(svc.instance_name.contains("kitchen-seed"));
+        assert!(svc.instance_name.contains("kitchen-node"));
     }
 
     #[test]
@@ -238,7 +238,7 @@ mod tests {
     fn to_service_info_carries_service_type_and_port() {
         let svc = build_mdns_service(&id(), 9180, 1883, false);
         let info = svc
-            .to_service_info("cognitum-seed-1.local.", "192.168.1.50")
+            .to_service_info("ruview-ha-1.local.", "192.168.1.50")
             .expect("valid service info");
         // mdns-sd may rewrite the type with a trailing dot; allow
         // both forms.
@@ -254,7 +254,7 @@ mod tests {
     fn to_service_info_propagates_txt_records() {
         let svc = build_mdns_service(&id(), 9180, 1883, true);
         let info = svc
-            .to_service_info("cognitum-seed-1.local.", "192.168.1.50")
+            .to_service_info("ruview-ha-1.local.", "192.168.1.50")
             .expect("valid service info");
         // Every locked TXT key must reach the wire-format payload.
         assert_eq!(info.get_property_val_str("cog_id"), Some(crate::COG_ID));
@@ -274,16 +274,16 @@ mod tests {
         // surfaces a named test instead of a silent change.
         let svc = build_mdns_service(&id(), 9180, 1883, false);
         let info = svc
-            .to_service_info("cognitum-seed-1.local.", "192.168.1.50")
+            .to_service_info("ruview-ha-1.local.", "192.168.1.50")
             .unwrap();
-        assert!(info.get_hostname().contains("cognitum-seed-1"));
+        assert!(info.get_hostname().contains("ruview-ha-1"));
     }
 
     #[test]
     fn txt_keys_match_locked_surface() {
         // The HA-side YAML auto-discovery binds on these exact keys.
         // Adding a key is fine; removing or renaming one breaks
-        // every deployed Seed. This test catches both directions.
+        // every deployed node. This test catches both directions.
         let svc = build_mdns_service(&id(), 9180, 1883, true);
         let required = ["cog_id", "cog_version", "node_id", "mqtt_port", "privacy", "proto"];
         for key in required {

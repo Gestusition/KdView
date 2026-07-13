@@ -7,7 +7,7 @@ shown — explicitly — as "CLAIMED, not yet reproduced (here's exactly what it
 needs)."** Nothing below is asserted without a command you can run.
 
 ```bash
-git clone https://github.com/ruvnet/RuView && cd RuView
+git clone https://github.com/Gestusition/KdView && cd KdView
 bash scripts/prove.sh          # core gate + the anti-slop assertion tests
 bash scripts/prove.sh --full   # also attempt the feature-gated subset
 ```

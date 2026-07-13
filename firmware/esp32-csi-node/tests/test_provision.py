@@ -27,7 +27,7 @@ class ProvisionConfigValueTests(unittest.TestCase):
     def test_swarm_and_hopping_flags_count_as_config_values(self):
         cases = [
             {"hop_channels": "1,6,11"},
-            {"seed_token": "token-123"},
+            {"gateway_token": "token-123"},
             {"swarm_hb": 15},
             {"swarm_ingest": 3},
         ]
@@ -43,7 +43,7 @@ class ProvisionConfigValueTests(unittest.TestCase):
         args = make_args(
             hop_channels="1,6,11",
             hop_dwell=250,
-            seed_token="token-123",
+            gateway_token="token-123",
             swarm_hb=15,
             swarm_ingest=3,
         )
@@ -54,7 +54,7 @@ class ProvisionConfigValueTests(unittest.TestCase):
         self.assertEqual(values_by_key["hop_count"], "3")
         self.assertEqual(values_by_key["chan_list"], "01060b")
         self.assertEqual(values_by_key["dwell_ms"], "250")
-        self.assertEqual(values_by_key["seed_token"], "token-123")
+        self.assertEqual(values_by_key["gateway_token"], "token-123")
         self.assertEqual(values_by_key["swarm_hb"], "15")
         self.assertEqual(values_by_key["swarm_ingest"], "3")
 

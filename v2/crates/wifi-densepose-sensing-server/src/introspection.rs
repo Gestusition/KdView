@@ -20,7 +20,7 @@
 //! See [`docs/adr/ADR-099-midstream-introspection-tap.md`] for the architectural
 //! contract, the eight decisions, and the phased adoption plan.
 //!
-//! [`docs/adr/ADR-099-midstream-introspection-tap.md`]: https://github.com/ruvnet/RuView/blob/main/docs/adr/ADR-099-midstream-introspection-tap.md
+//! [`docs/adr/ADR-099-midstream-introspection-tap.md`]: https://github.com/Gestusition/KdView/blob/main/docs/adr/ADR-099-midstream-introspection-tap.md
 
 use std::collections::VecDeque;
 

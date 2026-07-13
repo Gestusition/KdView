@@ -4,11 +4,11 @@
 # Supports two usage patterns:
 #
 # 1. No arguments — use defaults from environment:
-#      docker run -e CSI_SOURCE=esp32 ruvnet/wifi-densepose:latest
+#      docker run -e CSI_SOURCE=esp32 ghcr.io/gestusition/kdview:latest
 #
 # 2. Pass CLI flags directly:
-#      docker run ruvnet/wifi-densepose:latest --source esp32 --tick-ms 500
-#      docker run ruvnet/wifi-densepose:latest --model /app/models/my.rvf
+#      docker run ghcr.io/gestusition/kdview:latest --source esp32 --tick-ms 500
+#      docker run ghcr.io/gestusition/kdview:latest --model /app/models/my.rvf
 #
 # Environment variables:
 #   CSI_SOURCE   — data source. Valid values:
@@ -62,7 +62,7 @@ case "${1:-}" in
                     echo "[entrypoint]          docker run -e RUVIEW_API_TOKEN=\$(openssl rand -hex 32) ..." >&2
                     echo "[entrypoint]          docker run -e RUVIEW_BIND_ADDR=127.0.0.1 ..." >&2
                     echo "[entrypoint]          docker run -e RUVIEW_ALLOW_UNAUTHENTICATED=1 ...   # only on trusted network" >&2
-                    echo "[entrypoint]        See https://github.com/ruvnet/RuView/issues/864" >&2
+                    echo "[entrypoint]        See https://github.com/Gestusition/KdView/issues/864" >&2
                     exit 64
                     ;;
             esac

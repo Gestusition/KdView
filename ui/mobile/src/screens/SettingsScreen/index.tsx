@@ -81,6 +81,7 @@ const ScanIntervalPicker = ({
 };
 
 export const SettingsScreen = () => {
+  const projectUrl = process.env.EXPO_PUBLIC_PROJECT_URL?.trim() ?? '';
   const serverUrl = useSettingsStore((state) => state.serverUrl);
   const rssiScanEnabled = useSettingsStore((state) => state.rssiScanEnabled);
   const theme = useSettingsStore((state) => state.theme);
@@ -105,14 +106,15 @@ export const SettingsScreen = () => {
     apiService.setBaseUrl(newUrl);
   };
 
-  const handleOpenGitHub = async () => {
-    const handled = await Linking.canOpenURL('https://github.com');
+  const handleOpenProject = async () => {
+    if (!projectUrl) return;
+    const handled = await Linking.canOpenURL(projectUrl);
     if (!handled) {
-      Alert.alert('Unable to open link', 'Please open https://github.com manually in your browser.');
+      Alert.alert('Unable to open link', 'The configured project URL cannot be opened on this device.');
       return;
     }
 
-    await Linking.openURL('https://github.com');
+    await Linking.openURL(projectUrl);
   };
 
   return (
@@ -137,7 +139,7 @@ export const SettingsScreen = () => {
           </ThemedText>
           {Platform.OS === 'ios' && (
             <ThemedText preset="bodySm" style={{ color: colors.textSecondary, marginTop: spacing.sm }}>
-              iOS: RSSI scanning uses stubbed telemetry in this build.
+              iOS: RSSI scanning uses local compatibility samples in this build; no data is transmitted.
             </ThemedText>
           )}
         </GlowCard>
@@ -150,13 +152,15 @@ export const SettingsScreen = () => {
           <ThemedText preset="bodyMd" style={{ marginBottom: spacing.xs }}>
             WiFi-DensePose Mobile v1.0.0
           </ThemedText>
-          <ThemedText
-            preset="bodySm"
-            style={{ color: colors.accent, marginBottom: spacing.sm }}
-            onPress={handleOpenGitHub}
-          >
-            View on GitHub
-          </ThemedText>
+          {projectUrl ? (
+            <ThemedText
+              preset="bodySm"
+              style={{ color: colors.accent, marginBottom: spacing.sm }}
+              onPress={handleOpenProject}
+            >
+              Project website
+            </ThemedText>
+          ) : null}
           <ThemedText preset="bodySm">WebSocket: {WS_PATH}</ThemedText>
           <ThemedText preset="bodySm" style={{ color: colors.textSecondary }}>
             Triage priority mapping: Immediate/Delayed/Minor/Deceased/Unknown

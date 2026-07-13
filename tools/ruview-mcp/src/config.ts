@@ -27,6 +27,7 @@ function envOrDefault(key: string, fallback: string): string {
  *   RUVIEW_API_TOKEN            — Bearer token for /api/v1/* routes (no default; auth disabled when absent)
  *   RUVIEW_POSE_COG_BINARY      — path to cog-pose-estimation binary
  *   RUVIEW_COUNT_COG_BINARY     — path to cog-person-count binary
+ *   RUVIEW_APPS_DIR             — local edge-module root (default: /var/lib/ruview/apps)
  *   RUVIEW_JOBS_DIR             — directory for job logs (default: ~/.ruview/jobs)
  */
 export function loadConfig(): RuviewConfig {
@@ -65,12 +66,17 @@ export function cogBinaryCandidates(
   arch: string = process.arch
 ): string[] {
   const id = name.replace("cog-", "");
-  const dir = `/var/lib/cognitum/apps/${id}`;
-  const arm = `${dir}/cog-${id}-arm`;
-  const x86 = `${dir}/cog-${id}-x86_64`;
-  // arm64 → prefer -arm; everything else (notably x64) → prefer -x86_64.
-  const archOrdered = arch === "arm64" ? [arm, x86] : [x86, arm];
-  return [...archOrdered, `/usr/local/bin/${name}`];
+  const roots = [envOrDefault("RUVIEW_APPS_DIR", "/var/lib/ruview/apps")];
+  // Read-only compatibility fallback for installations made before the fork
+  // was decoupled. It is never selected as a new default.
+  if (!roots.includes("/var/lib/cognitum/apps")) roots.push("/var/lib/cognitum/apps");
+  const candidates = roots.flatMap((root) => {
+    const dir = `${root}/${id}`;
+    const arm = `${dir}/cog-${id}-arm`;
+    const x86 = `${dir}/cog-${id}-x86_64`;
+    return arch === "arm64" ? [arm, x86] : [x86, arm];
+  });
+  return [...candidates, `/usr/local/bin/${name}`];
 }
 
 /**

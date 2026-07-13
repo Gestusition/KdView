@@ -83,7 +83,7 @@ function parseIqHex(iqHex, nSubcarriers) {
 
 /**
  * Extract 8-dim feature vector from subcarrier amplitudes.
- * Matches the features used by seed_csi_bridge.py (ADR-069).
+ * Matches the features used by gateway_csi_bridge.py (ADR-069).
  * @param {Float32Array} amplitudes
  * @param {number} rssi
  * @returns {Float32Array}

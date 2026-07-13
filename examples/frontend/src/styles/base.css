@@ -1,6 +1,6 @@
 /**
  * HOMECORE base styles — typography reset, page shell, nav layout.
- * Component vocabulary mirrors cognitum-v0 (ADR-131 §3–4).
+ * KdView HOMECORE component vocabulary (ADR-131 §3–4).
  */
 
 @import './tokens.css';

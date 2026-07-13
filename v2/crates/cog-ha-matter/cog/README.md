@@ -1,71 +1,74 @@
-# HA-Matter Cog Packaging
+# HA-Matter Service Packaging
 
-Build / sign / upload pipeline for `cog-ha-matter`, mirroring the
-[`cog-pose-estimation`](../../cog-pose-estimation/cog/) precedent so the
-Seed runtime treats both cogs identically.
+Build, checksum, sign, and release packaging for `cog-ha-matter`.
 
 See [ADR-100 — Cog Packaging Specification](../../../../docs/adr/ADR-100-cog-packaging-specification.md)
-and [ADR-116 — HA-Matter Seed Cog](../../../../docs/adr/ADR-116-cog-ha-matter-seed.md).
+and [ADR-116 — HA-Matter Cog](../../../../docs/adr/ADR-116-cog-ha-matter-seed.md)
+for the related architecture decisions.
 
-## What this cog does
+## What is packaged
 
-Wraps the ADR-115 HA-DISCO + HA-MIND MQTT publisher as a Seed-installable
-artifact with:
+The binary retains the complete sensing integration:
 
 - mDNS auto-discovery (`_ruview-ha._tcp`)
+- Home Assistant and Matter sensing integration
 - Ed25519-signed witness chain for tamper-evident audit logs
-- Privacy-mode flag (only semantic primitives, no biometrics)
-- One-flag deferral to v0.7 for the embedded broker / v0.8 for the Matter Bridge
+- Privacy mode that emits semantic primitives instead of biometrics
 
-## Layout
+## Files
 
 | File | Purpose |
 |---|---|
-| `manifest.template.json` | Build-time manifest with `{{VERSION}}` / `{{ARCH}}` slots; `make manifest` substitutes them |
-| `Makefile` | `build` / `sign` / `upload` / `release` / `verify` / `clean` targets |
-| `dist/` | Created by `make build`; gitignored, holds release binaries + sha256 + sig |
+| `manifest.template.json` | Runtime manifest template with version, architecture, checksum, and signature slots |
+| `Makefile` | Cross-target build, signing, manifest, verification, release, and cleanup targets |
+| `dist/` | Generated binaries and release metadata (gitignored) |
 
-## Local build (dry-run)
+## Local packaging
 
-```sh
-cd v2/crates/cog-ha-matter/cog
-make build          # builds aarch64 + x86_64 release binaries
-make sign           # writes .sha256 + (TODO) .sig sidecars
-make manifest       # prints the manifest the Seed would record
-```
-
-`make sign` is currently a no-op for the signature itself — the
-`COGNITUM_OWNER_SIGNING_KEY` provisioning is the same TODO that
-blocks [`cog-pose-estimation`](../../cog-pose-estimation/cog/Makefile).
-Until then, dev cogs ship unsigned and `app-registry.json` lists
-them with `"binary_signature": ""`.
-
-## Upload (requires `gcloud auth`)
+Run commands from this directory:
 
 ```sh
-gcloud auth login
-make upload         # gsutil cp dist/* gs://cognitum-apps/cogs/{arch}/
+# Build one target, or use `make build` for both.
+make build-x86_64
+make build-arm
+
+# Generate checksums and optional signatures.
+make sign-x86_64
+make sign-arm
+
+# Verify generated checksums and render the manifest.
+make verify
+make manifest
 ```
 
-The GCS bucket is shared with `cog-pose-estimation` and is part of
-the `cognitum-apps` project. Write access requires membership in the
-`cog-publishers` IAM group.
+The ARM build requires the configured `aarch64-unknown-linux-gnu` Rust target
+and cross-linker. `make release` runs `build`, `sign`, and `manifest`; use
+`make clean` to remove generated artifacts.
 
-## app-registry.json
+### Release signing key
 
-Lives in the [`cognitum-one`](https://github.com/ruvnet/cognitum-one)
-repo, **not here**. After `make upload` succeeds, file a PR there
-that appends:
+Set `RELEASE_SIGNING_KEY` to a PEM-encoded private key in the environment when
+detached signatures are required. The Makefile passes the key to OpenSSL over
+standard input and writes a base64-encoded `.sig` beside the binary and its
+`.sha256` file. When the variable is unset, packaging still produces and
+verifies the SHA-256 checksum, but no signature file is created.
 
-```json
-{
-  "id": "ha-matter",
-  "version": "<the version make manifest printed>",
-  "binary_url": "https://storage.googleapis.com/cognitum-apps/cogs/{arch}/cog-ha-matter-{arch}",
-  "binary_sha256": "<from dist/cog-ha-matter-{arch}.sha256>",
-  "binary_signature": "<from dist/cog-ha-matter-{arch}.sig — empty until signing is wired>",
-  "description": "Home Assistant + Matter Cognitum Seed cog (mDNS + witness chain)",
-  "min_seed_version": "0.6.0",
-  "installable_on": ["arm", "x86_64"]
-}
+Never commit a private key or include it in command-line arguments.
+
+## GitHub Actions artifacts and releases
+
+The `Cog HA-Matter Release` workflow validates the crate and builds both Linux
+architectures. Manual workflow runs upload build artifacts for 14 days but do
+not publish a release.
+
+Publishing is tag-gated. Pushing a tag matching
+`cog-ha-matter-v<VERSION>` builds the same artifacts and creates or updates the
+matching GitHub Release. Keep `<VERSION>` aligned with the crate's workspace
+version. Each architecture contributes its binary, `.sha256`, and optional
+`.sig` file.
+
+Release assets are referenced from URLs such as:
+
+```text
+https://github.com/Gestusition/KdView/releases/download/cog-ha-matter-v<VERSION>/cog-ha-matter-<ARCH>
 ```

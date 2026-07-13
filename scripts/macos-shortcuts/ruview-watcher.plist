@@ -3,13 +3,13 @@
   ADR-125 §1.4 Tier 2 — launchd job for the RuView ↔ Shortcuts.app bridge.
 
   Install:
-    cp ruview-watcher.plist ~/Library/LaunchAgents/com.ruvnet.ruview.watcher.plist
-    launchctl load ~/Library/LaunchAgents/com.ruvnet.ruview.watcher.plist
-    launchctl list | grep ruvnet
+    cp ruview-watcher.plist ~/Library/LaunchAgents/io.github.gestusition.kdview.watcher.plist
+    launchctl load ~/Library/LaunchAgents/io.github.gestusition.kdview.watcher.plist
+    launchctl list | grep gestusition
 
   Uninstall:
-    launchctl unload ~/Library/LaunchAgents/com.ruvnet.ruview.watcher.plist
-    rm ~/Library/LaunchAgents/com.ruvnet.ruview.watcher.plist
+    launchctl unload ~/Library/LaunchAgents/io.github.gestusition.kdview.watcher.plist
+    rm ~/Library/LaunchAgents/io.github.gestusition.kdview.watcher.plist
 
   Runs as the *user* (LaunchAgent — not LaunchDaemon) because Shortcuts.app
   is user-scoped on macOS; system-wide invocation requires Full Disk
@@ -22,7 +22,7 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.ruvnet.ruview.watcher</string>
+    <string>io.github.gestusition.kdview.watcher</string>
 
     <key>ProgramArguments</key>
     <array>
