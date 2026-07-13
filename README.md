@@ -8,15 +8,15 @@ Fork deployments use repository-owned `STAGING_URL` and `PRODUCTION_URL` variabl
 
 **Turn ordinary WiFi into a spatial intelligence / sensing system.** Detect people, measure breathing and heart rate, track movement, and monitor rooms — through walls, in the dark, with no cameras or wearables. Just physics.
 
-Works natively with the four major smart-home ecosystems: **[Home Assistant](docs/integrations/home-assistant.md)** via the HA-DISCO MQTT publisher, **[Apple Home & HomePod](docs/user-guide-apple-homepod.md)** as a discoverable HAP-1.1 bridge, **[Google Home](docs/integrations/home-assistant.md)** + **[Amazon Alexa](docs/integrations/home-assistant.md)** via the same HA bridge or a [Matter](docs/adr/ADR-122-bfld-ruview-ha-matter-exposure.md) endpoint. Siri, Google Assistant, and Alexa can voice presence and vitals by room with zero custom skills.
+Works natively with the four major smart-home ecosystems: **[Home Assistant](docs/integrations/home-assistant.md)** via the HA-DISCO MQTT publisher, **[Apple Home & HomePod](docs/user-guide-apple-homepod.md)** as a discoverable HAP-1.1 bridge, **[Google Home](docs/integrations/home-assistant.md)** + **[Amazon Alexa](docs/integrations/home-assistant.md)** via the same HA bridge or a [Matter](docs/adr/ADR-122-bfld-KdView-ha-matter-exposure.md) endpoint. Siri, Google Assistant, and Alexa can voice presence and vitals by room with zero custom skills.
 
-[![Works with Home Assistant](https://img.shields.io/badge/Works%20with-Home%20Assistant-blue?logo=home-assistant&logoColor=white&labelColor=41BDF5)](docs/integrations/home-assistant.md) [![Works with Matter](https://img.shields.io/badge/Works%20with-Matter-blue?labelColor=4285F4)](docs/adr/ADR-122-bfld-ruview-ha-matter-exposure.md) [![Works with Apple Home](https://img.shields.io/badge/Works%20with-Apple%20Home-black?logo=apple)](docs/user-guide-apple-homepod.md) [![Works with Google Home](https://img.shields.io/badge/Works%20with-Google%20Home-blue?logo=googlehome)](docs/integrations/home-assistant.md) [![Works with Alexa](https://img.shields.io/badge/Works%20with-Alexa-blue?logo=amazon&logoColor=white&labelColor=00CAFF)](docs/integrations/home-assistant.md)
+[![Works with Home Assistant](https://img.shields.io/badge/Works%20with-Home%20Assistant-blue?logo=home-assistant&logoColor=white&labelColor=41BDF5)](docs/integrations/home-assistant.md) [![Works with Matter](https://img.shields.io/badge/Works%20with-Matter-blue?labelColor=4285F4)](docs/adr/ADR-122-bfld-KdView-ha-matter-exposure.md) [![Works with Apple Home](https://img.shields.io/badge/Works%20with-Apple%20Home-black?logo=apple)](docs/user-guide-apple-homepod.md) [![Works with Google Home](https://img.shields.io/badge/Works%20with-Google%20Home-blue?logo=googlehome)](docs/integrations/home-assistant.md) [![Works with Alexa](https://img.shields.io/badge/Works%20with-Alexa-blue?logo=amazon&logoColor=white&labelColor=00CAFF)](docs/integrations/home-assistant.md)
 
 > Drop into any **Home Assistant** install with one `--mqtt` flag. Or pair into **Apple Home / Google Home / Alexa / SmartThings** as a Matter Bridge. Ships 21 entities per node (11 raw signals + 10 inferred semantic states: someone-sleeping, possible-distress, room-active, elderly-inactivity-anomaly, meeting-in-progress, bathroom-occupied, fall-risk-elevated, bed-exit, no-movement, multi-room-transition) plus 3 starter HA Blueprints. See [`docs/integrations/home-assistant.md`](docs/integrations/home-assistant.md) · [ADR-115](docs/adr/ADR-115-home-assistant-integration.md).
 
-### π RuView is a WiFi sensing platform that turns radio signals into spatial intelligence.
+### π KdView is a WiFi sensing platform that turns radio signals into spatial intelligence.
 
-Every WiFi router already fills your space with radio waves. When people move, breathe, or even sit still, they disturb those waves in measurable ways. RuView captures these disturbances using Channel State Information (CSI) from low-cost ESP32 sensors and turns them into actionable data: who's there, what they're doing, and whether they're okay.
+Every WiFi router already fills your space with radio waves. When people move, breathe, or even sit still, they disturb those waves in measurable ways. KdView captures these disturbances using Channel State Information (CSI) from low-cost ESP32 sensors and turns them into actionable data: who's there, what they're doing, and whether they're okay.
 
 **What it senses:**
 - **Presence and occupancy** — detect people through walls, count them, track entries and exits
@@ -25,11 +25,11 @@ Every WiFi router already fills your space with radio waves. When people move, b
 - **Environment mapping** — RF fingerprinting identifies rooms, detects moved furniture, spots new objects
 - **Sleep quality** — overnight monitoring with sleep stage classification and apnea screening
 
-Built on [RuVector](https://github.com/ruvnet/ruvector/), RuView runs locally on supported ESP32 nodes and the included Rust sensing stack. CSI capture, signal processing, inference, persistent memory, cryptographic attestation, agent integrations, and the WiFi browser/mobile interfaces can all run on operator-controlled hardware; cameras and hosted services are not required. Browser runtime assets are served locally by KdView.
+Built on [RuVector](https://github.com/ruvnet/ruvector/), KdView runs locally on supported ESP32 nodes and the included Rust sensing stack. CSI capture, signal processing, inference, persistent memory, cryptographic attestation, agent integrations, and the WiFi browser/mobile interfaces can all run on operator-controlled hardware; cameras and hosted services are not required. Browser runtime assets are served locally by KdView.
 
 The system learns each environment locally using spiking neural networks that adapt in under 30 seconds, with multi-frequency mesh scanning across 6 WiFi channels that uses your neighbors' routers as free radar illuminators. Every measurement is cryptographically attested via an Ed25519 witness chain.
 
-RuView turns ordinary WiFi into a contactless sensor. An ESP32 reads radio reflections from people in a room, and a small pretrained model — published on Hugging Face at [`ruvnet/wifi-densepose-pretrained`](https://huggingface.co/ruvnet/wifi-densepose-pretrained) — tells you who's there, how they're breathing, and how their heart rate is trending. The model fits in 8 KB (4-bit quantized) and runs in microseconds on a Raspberry Pi. (The [v2 encoder](https://huggingface.co/ruvnet/wifi-densepose-pretrained) reports an honest, label-free held-out **temporal-triplet accuracy of 82.3%** — up from 66.4% raw; the older "100% presence" figure was measured on a single-class recording and has been retracted in favor of this.) No cameras, no wearables, no app on the user's phone.
+KdView turns ordinary WiFi into a contactless sensor. An ESP32 reads radio reflections from people in a room, and a small pretrained model — published on Hugging Face at [`ruvnet/wifi-densepose-pretrained`](https://huggingface.co/ruvnet/wifi-densepose-pretrained) — tells you who's there, how they're breathing, and how their heart rate is trending. The model fits in 8 KB (4-bit quantized) and runs in microseconds on a Raspberry Pi. (The [v2 encoder](https://huggingface.co/ruvnet/wifi-densepose-pretrained) reports an honest, label-free held-out **temporal-triplet accuracy of 82.3%** — up from 66.4% raw; the older "100% presence" figure was measured on a single-class recording and has been retracted in favor of this.) No cameras, no wearables, no app on the user's phone.
 
 ### Built for low-power edge applications
 
@@ -109,17 +109,17 @@ node scripts/snn-csi-processor.js --port 5006  # SNN real-time learning
 node scripts/mincut-person-counter.js --port 5006  # Correct person counting
 
 # Option 4: Python library (ADR-117)
-pip install ruview                        # or: pip install wifi-densepose
+pip install KdView                        # or: pip install wifi-densepose
 # Both ship the same compiled PyO3 wheel (~250 KB, abi3-py310, Linux/macOS/Windows).
 # Add [client] for the asyncio WebSocket + paho-mqtt clients:
-pip install "ruview[client]"              # or: pip install "wifi-densepose[client]"
+pip install "KdView[client]"              # or: pip install "wifi-densepose[client]"
 
-# from ruview import BreathingExtractor, HeartRateExtractor   # equivalent to:
+# from KdView import BreathingExtractor, HeartRateExtractor   # equivalent to:
 # from wifi_densepose import BreathingExtractor, HeartRateExtractor
-# from ruview.client import SensingClient, RuViewMqttClient
+# from KdView.client import SensingClient, KdViewMqttClient
 ```
 
-[![PyPI ruview](https://img.shields.io/pypi/v/ruview?label=ruview)](https://pypi.org/project/ruview/) [![PyPI wifi-densepose](https://img.shields.io/pypi/v/wifi-densepose?label=wifi-densepose)](https://pypi.org/project/wifi-densepose/)
+[![PyPI KdView](https://img.shields.io/pypi/v/KdView?label=KdView)](https://pypi.org/project/KdView/) [![PyPI wifi-densepose](https://img.shields.io/pypi/v/wifi-densepose?label=wifi-densepose)](https://pypi.org/project/wifi-densepose/)
 
 > [!NOTE]
 > **CSI-capable hardware recommended.** Presence, vital signs, through-wall sensing, and all advanced capabilities require Channel State Information (CSI) from an ESP32-S3 or research NIC. The Docker image runs with simulated data for evaluation. Consumer WiFi laptops provide RSSI-only presence detection.
@@ -139,7 +139,7 @@ pip install "ruview[client]"              # or: pip install "wifi-densepose[clie
 
 
   <a href="https://gestusition.github.io/KdView/">
-    <img src="assets/v2-screen.png" alt="RuView WiFi Observatory" width="800">
+    <img src="assets/v2-screen.png" alt="KdView WiFi Observatory" width="800">
   </a>
   <br>
   <em>Real-time pose skeleton from WiFi CSI signals — no cameras, no wearables</em>
@@ -223,7 +223,7 @@ These modules describe local sensing, automation, security, learning, and signal
 | `cardiac-arrhythmia` | Spots irregular heartbeats and abnormal heart rhythms | 8 KB | Hard |
 | `cough-detect` | Acoustic transient + spectral cough detector with 30s cluster aggregation. Early-warning signal for respiratory illness. | 451 KB | Easy |
 | `dream-stage` | Tracks your sleep stages — light, deep, and dreaming | 14 KB | Hard |
-| `fall-detect` | Two-stage impact + stillness fall detector over ambient feature stream (ESP32 motion / mic). Optional ruview-mode for CSI-based pose reinforcement. | 402 KB | Easy |
+| `fall-detect` | Two-stage impact + stillness fall detector over ambient feature stream (ESP32 motion / mic). Optional KdView-mode for CSI-based pose reinforcement. | 402 KB | Easy |
 | `gait-analysis` | Detects walking problems and scores fall risk | 12 KB | Hard |
 | `health-monitor` | Contactless heart rate, breathing, sleep, and fall alerts | 30 KB | Med |
 | `respiratory-distress` | Alerts when breathing becomes labored or dangerously fast | 10 KB | Hard |
@@ -240,7 +240,7 @@ These modules describe local sensing, automation, security, learning, and signal
 | `behavioral-profiler` | Learns normal behavior and flags anything unusual | 12 KB | Hard |
 | `fleet-auth` | Manage device certificates and access across all edge nodes | 12 KB | Med |
 | `glass-break` | Two-phase bang + shatter acoustic detector. Distinguishes glass break from ordinary impulse noise. | 451 KB | Easy |
-| `gunshot-detect` | Saturating peak + exponential decay acoustic detector with optional ruview CSI motion-drop reinforcement. | 451 KB | Easy |
+| `gunshot-detect` | Saturating peak + exponential decay acoustic detector with optional KdView CSI motion-drop reinforcement. | 451 KB | Easy |
 | `intrusion` | Alerts when an unauthorized person enters a room | 6 KB | Med |
 | `intrusion-detect-ml` | Detect network attacks using machine learning | 14 KB | Hard |
 | `loitering` | Alerts when someone lingers too long in one spot | 3 KB | Easy |
@@ -264,7 +264,7 @@ These modules describe local sensing, automation, security, learning, and signal
 | `meeting-room` | Shows if a meeting room is free or occupied | 5 KB | Easy |
 | `occupancy-zones` | Counts people in each room through walls | 8 KB | Med |
 | `predictive-maintenance` | Vibration harmonic analyzer for rotating equipment. Tracks F1 / 2×F1 / high-order / sideband energy to score degradation severity. | 451 KB | Easy |
-| `smoke-fire` | Multi-signal smoke and fire detector. Fuses acoustic crackle, thermal drift proxy, and optional ruview CSI plume signature. Not a UL-listed replacement for code-required smoke alarms. | 451 KB | Easy |
+| `smoke-fire` | Multi-signal smoke and fire detector. Fuses acoustic crackle, thermal drift proxy, and optional KdView CSI plume signature. Not a UL-listed replacement for code-required smoke alarms. | 451 KB | Easy |
 | `water-leak` | Persistent low-amplitude hiss + periodic drip acoustic detector with multi-minute persistence gate. Two-stage likely → confirmed. | 451 KB | Easy |
 
 ### 🛍️ Retail &mdash; <sub>7 modules</sub>
@@ -273,8 +273,8 @@ These modules describe local sensing, automation, security, learning, and signal
 |----|--------------|-----:|:----------:|
 | `customer-flow` | Counts foot traffic in and out of each entrance | 8 KB | Med |
 | `dwell-heatmap` | Shows where customers spend the most time | 6 KB | Med |
-| `package-detect` | Sustained CSI-shift detector for porch / loading bay package arrivals and departures. Requires ESP32 CSI ruview input. | 451 KB | Easy |
-| `parking-occupancy` | Per-zone parking occupancy via ESP32 CSI subcarrier-amplitude shift. Tracks utilization and churn-per-hour. Requires ruview. | 451 KB | Easy |
+| `package-detect` | Sustained CSI-shift detector for porch / loading bay package arrivals and departures. Requires ESP32 CSI KdView input. | 451 KB | Easy |
+| `parking-occupancy` | Per-zone parking occupancy via ESP32 CSI subcarrier-amplitude shift. Tracks utilization and churn-per-hour. Requires KdView. | 451 KB | Easy |
 | `queue-length` | Estimates line length and wait time | 6 KB | Med |
 | `shelf-engagement` | Detects when customers interact with products | 6 KB | Med |
 | `table-turnover` | Tracks which restaurant tables are free or occupied | 4 KB | Easy |
@@ -287,7 +287,7 @@ These modules describe local sensing, automation, security, learning, and signal
 | `confined-space` | Monitors workers in tight spaces for safety | 5 KB | Med |
 | `forklift-proximity` | Warns if a forklift gets too close to workers | 10 KB | Hard |
 | `livestock-monitor` | Monitors animals for distress, escape, or illness | 6 KB | Med |
-| `ppe-compliance` | Cog-composition layer: alerts when ruview-densepose detects presence in a restricted zone without an accompanying PPE-camera-cog confirmation vector. | 387 KB | Easy |
+| `ppe-compliance` | Cog-composition layer: alerts when KdView-densepose detects presence in a restricted zone without an accompanying PPE-camera-cog confirmation vector. | 387 KB | Easy |
 | `slip-fall-zone` | Pre-fall risk detector. Fires when motion-variance drop, splash audio, and optional cautious-gait CSI all signal elevated slip risk. | 451 KB | Easy |
 | `structural-vibration` | Detects dangerous vibrations in buildings or machines | 8 KB | Hard |
 
@@ -304,7 +304,7 @@ These modules describe local sensing, automation, security, learning, and signal
 | `music-conductor` | Reads a conductor's gestures for tempo and dynamics | 12 KB | Hard |
 | `plant-growth` | Tracks plant growth rate and day/night cycles | 8 KB | Med |
 | `rain-detect` | Detects when rain starts, stops, and how heavy it is | 6 KB | Med |
-| `ruview-densepose` | Full body pose tracking from WiFi — no cameras needed | 50 KB | Hard |
+| `KdView-densepose` | Full body pose tracking from WiFi — no cameras needed | 50 KB | Hard |
 | `sound-classifier` | Identify sounds like glass break, alarm, or baby cry | 16 KB | Hard |
 | `time-crystal` | Experiments with repeating time-pattern symmetry | 12 KB | Hard |
 
@@ -577,31 +577,31 @@ See [`docs/adr/ADR-024-contrastive-csi-embedding-model.md`](docs/adr/ADR-024-con
 
 ## 🧩 Claude Code & Codex Plugin
 
-RuView ships a [Claude Code](https://docs.anthropic.com/en/docs/claude-code) plugin (and Codex prompt mirror) that wraps the whole workflow — onboarding, ESP32 setup, configuration, sensing apps, model training, advanced multistatic sensing, CLI/API/WASM, mmWave radar, and witness verification — as 9 skills, 7 `/ruview-*` commands, and 3 agents. It lives in [`plugins/ruview/`](plugins/ruview/README.md); the marketplace manifest is [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) at the repo root.
+KdView ships a [Claude Code](https://docs.anthropic.com/en/docs/claude-code) plugin (and Codex prompt mirror) that wraps the whole workflow — onboarding, ESP32 setup, configuration, sensing apps, model training, advanced multistatic sensing, CLI/API/WASM, mmWave radar, and witness verification — as 9 skills, 7 `/KdView-*` commands, and 3 agents. It lives in [`plugins/KdView/`](plugins/KdView/README.md); the marketplace manifest is [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) at the repo root.
 
 ```bash
 # In Claude Code — add this repo as a plugin marketplace, then install:
 /plugin marketplace add Gestusition/KdView
-/plugin install ruview@ruview
+/plugin install KdView@KdView
 
 # Or try it for one session without installing (from a local clone of the repo):
-claude --plugin-dir ./plugins/ruview
+claude --plugin-dir ./plugins/KdView
 
 # Then, in Claude Code:
-#   /ruview-start      → onboarding (simulated Observatory / repo build / live ESP32)
-#   /ruview-flash      → build + flash ESP32 firmware
-#   /ruview-provision  → provision WiFi creds, sink IP, channel/MAC, mesh slots
-#   /ruview-app        → run a sensing application (presence / vitals / pose / sleep / MAT / point cloud)
-#   /ruview-train      → train / evaluate / publish a model (incl. GPU on GCloud)
-#   /ruview-advanced   → multistatic / tomography / cross-viewpoint / mesh-security
-#   /ruview-verify     → tests + deterministic proof + witness bundle
+#   /KdView-start      → onboarding (simulated Observatory / repo build / live ESP32)
+#   /KdView-flash      → build + flash ESP32 firmware
+#   /KdView-provision  → provision WiFi creds, sink IP, channel/MAC, mesh slots
+#   /KdView-app        → run a sensing application (presence / vitals / pose / sleep / MAT / point cloud)
+#   /KdView-train      → train / evaluate / publish a model (incl. GPU on GCloud)
+#   /KdView-advanced   → multistatic / tomography / cross-viewpoint / mesh-security
+#   /KdView-verify     → tests + deterministic proof + witness bundle
 ```
 
-**Codex (OpenAI CLI):** `cp plugins/ruview/codex/prompts/*.md ~/.codex/prompts/` — the seven `/ruview-*` commands are mirrored as Codex prompts; [`plugins/ruview/codex/AGENTS.md`](plugins/ruview/codex/AGENTS.md) carries the project rules. See [`plugins/ruview/codex/README.md`](plugins/ruview/codex/README.md).
+**Codex (OpenAI CLI):** `cp plugins/KdView/codex/prompts/*.md ~/.codex/prompts/` — the seven `/KdView-*` commands are mirrored as Codex prompts; [`plugins/KdView/codex/AGENTS.md`](plugins/KdView/codex/AGENTS.md) carries the project rules. See [`plugins/KdView/codex/README.md`](plugins/KdView/codex/README.md).
 
-Verify the plugin structure: `bash plugins/ruview/scripts/smoke.sh`. Full details: [`plugins/ruview/README.md`](plugins/ruview/README.md).
+Verify the plugin structure: `bash plugins/KdView/scripts/smoke.sh`. Full details: [`plugins/KdView/README.md`](plugins/KdView/README.md).
 
-**Repository-local operator harness:** a lighter, host-portable companion to the plugin, minted via [MetaHarness](https://www.npmjs.com/package/metaharness) and hardened per [ADR-182](docs/adr/ADR-182-npx-ruview-harness-via-metaharness.md). KdView runs it directly from [`harness/ruview/`](harness/ruview/README.md) with `node harness/ruview/bin/cli.js`; the old `@ruvnet/ruview` string remains only as a package-compatibility ID.
+**Repository-local operator harness:** a lighter, host-portable companion to the plugin, minted via [MetaHarness](https://www.npmjs.com/package/metaharness) and hardened per [ADR-182](docs/adr/ADR-182-npx-KdView-harness-via-metaharness.md). KdView runs it directly from [`harness/KdView/`](harness/KdView/README.md) with `node harness/KdView/bin/cli.js`; the old `@ruvnet/KdView` string remains only as a package-compatibility ID.
 
 ---
 
@@ -612,16 +612,16 @@ Verify the plugin structure: `bash plugins/ruview/scripts/smoke.sh`. Full detail
 | [User Guide](docs/user-guide.md) | Step-by-step guide: installation, first run, API usage, hardware setup, training |
 | [Build Guide](docs/build-guide.md) | Building from source (Rust and Python) |
 | [**Home Assistant + Matter Integration**](docs/integrations/home-assistant.md) | **Works with Home Assistant** via MQTT auto-discovery + **Works with Matter** (Apple Home / Google Home / Alexa / SmartThings) — full entity set, 3 starter blueprints, Lovelace dashboards, privacy mode, threshold tuning ([ADR-115](docs/adr/ADR-115-home-assistant-integration.md)). |
-| [**BFLD — Beamforming Feedback Layer for Detection**](v2/crates/wifi-densepose-bfld/README.md) | New privacy-gated WiFi sensing layer that measures + structurally prevents identity leakage from 802.11ac/ax Beamforming Feedback Information. Three type-enforced invariants (raw BFI never exits node, identity embedding is in-RAM-only, cross-site correlation cryptographically impossible via per-site BLAKE3 keyed hash + daily rotation). Ships full operator surface (`BfldPipeline`, `BfldPipelineHandle`, the Soul Signature §3.6 per-channel matcher `EnrolledMatcher`/`SoulMatchOracle` — experimental; named identity is data-gated, **measured** as not-separable on WiFi-only channels alone), MQTT topic router + HA-DISCO + availability + LWT, 3 operator HA blueprints, two runnable examples, eclipse-mosquitto:2 CI service container. 327+ tests. [ADR-118](docs/adr/ADR-118-bfld-beamforming-feedback-layer-for-detection.md) umbrella + sub-ADRs [119](docs/adr/ADR-119-bfld-frame-format-and-wire-protocol.md)/[120](docs/adr/ADR-120-bfld-privacy-class-and-hash-rotation.md)/[121](docs/adr/ADR-121-bfld-identity-risk-scoring.md)/[122](docs/adr/ADR-122-bfld-ruview-ha-matter-exposure.md)/[123](docs/adr/ADR-123-bfld-capture-path-nexmon-and-esp32.md). Research dossier: [`docs/research/BFLD/`](docs/research/BFLD/) (11 files, 13,544 words). |
-| [**SENSE-BRIDGE — local rvagent MCP server**](tools/ruview-mcp/README.md) | Dual-transport MCP server bridging the sensing stack to AI agents. Build the checked-in `tools/ruview-mcp/` source and run `node tools/ruview-mcp/dist/index.js`; no upstream npm package is downloaded. The stable `@ruvnet/rvagent` manifest name is retained only for API compatibility. |
+| [**BFLD — Beamforming Feedback Layer for Detection**](v2/crates/wifi-densepose-bfld/README.md) | New privacy-gated WiFi sensing layer that measures + structurally prevents identity leakage from 802.11ac/ax Beamforming Feedback Information. Three type-enforced invariants (raw BFI never exits node, identity embedding is in-RAM-only, cross-site correlation cryptographically impossible via per-site BLAKE3 keyed hash + daily rotation). Ships full operator surface (`BfldPipeline`, `BfldPipelineHandle`, the Soul Signature §3.6 per-channel matcher `EnrolledMatcher`/`SoulMatchOracle` — experimental; named identity is data-gated, **measured** as not-separable on WiFi-only channels alone), MQTT topic router + HA-DISCO + availability + LWT, 3 operator HA blueprints, two runnable examples, eclipse-mosquitto:2 CI service container. 327+ tests. [ADR-118](docs/adr/ADR-118-bfld-beamforming-feedback-layer-for-detection.md) umbrella + sub-ADRs [119](docs/adr/ADR-119-bfld-frame-format-and-wire-protocol.md)/[120](docs/adr/ADR-120-bfld-privacy-class-and-hash-rotation.md)/[121](docs/adr/ADR-121-bfld-identity-risk-scoring.md)/[122](docs/adr/ADR-122-bfld-KdView-ha-matter-exposure.md)/[123](docs/adr/ADR-123-bfld-capture-path-nexmon-and-esp32.md). Research dossier: [`docs/research/BFLD/`](docs/research/BFLD/) (11 files, 13,544 words). |
+| [**SENSE-BRIDGE — local rvagent MCP server**](tools/KdView-mcp/README.md) | Dual-transport MCP server bridging the sensing stack to AI agents. Build the checked-in `tools/KdView-mcp/` source and run `node tools/KdView-mcp/dist/index.js`; no upstream npm package is downloaded. The stable `@ruvnet/rvagent` manifest name is retained only for API compatibility. |
 | [Semantic Primitives — Precision/Recall](docs/integrations/semantic-primitives-metrics.md) | Per-primitive F1 on the held-out paired-capture set: someone-sleeping, possible-distress, room-active, elderly-inactivity-anomaly, meeting, bathroom, fall-risk, bed-exit, no-movement, multi-room. |
-| [Claude Code / Codex Plugin](plugins/ruview/README.md) | The `ruview` plugin + marketplace — skills, `/ruview-*` commands, agents, and the Codex prompt mirror |
-| [Repository-local operator harness](harness/ruview/README.md) | MetaHarness-minted KdView operator harness — local `ruview.*` MCP tools plus the MEASURED-vs-CLAIMED honesty guardrail ([ADR-182](docs/adr/ADR-182-npx-ruview-harness-via-metaharness.md)). |
+| [Claude Code / Codex Plugin](plugins/KdView/README.md) | The `KdView` plugin + marketplace — skills, `/KdView-*` commands, agents, and the Codex prompt mirror |
+| [Repository-local operator harness](harness/KdView/README.md) | MetaHarness-minted KdView operator harness — local `KdView.*` MCP tools plus the MEASURED-vs-CLAIMED honesty guardrail ([ADR-182](docs/adr/ADR-182-npx-KdView-harness-via-metaharness.md)). |
 | [Architecture Decisions](docs/adr/README.md) | 182 ADRs — why each technical choice was made, organized by domain (hardware, signal processing, ML, platform, infrastructure) |
 | [Domain Models](docs/ddd/README.md) | 8 DDD models (RuvSense, Signal Processing, Training Pipeline, Hardware Platform, Sensing Server, WiFi-Mat, CHCI, rvCSI) — bounded contexts, aggregates, domain events, and ubiquitous language |
 | [rvCSI — edge RF sensing runtime](https://github.com/ruvnet/rvcsi) | Rust-first / TypeScript-accessible / hardware-abstracted CSI runtime: multi-source ingestion (incl. real nexmon_csi `.pcap` from a **Raspberry Pi 5** / Pi 4 / Pi 3B+ — CYW43455 / BCM43455c0) → validation → DSP → typed events → RuVector RF memory ([ADR-095](docs/adr/ADR-095-rvcsi-edge-rf-sensing-platform.md), [ADR-096](docs/adr/ADR-096-rvcsi-ffi-crate-layout.md), [domain model](docs/ddd/rvcsi-domain-model.md)). Now its own repo — [`ruvnet/rvcsi`](https://github.com/ruvnet/rvcsi) — vendored here under `vendor/rvcsi`; 9 `rvcsi-*` crates on crates.io, `@ruv/rvcsi` on npm, plus a Claude Code plugin. |
 | [Desktop App](v2/crates/wifi-densepose-desktop/README.md) | **WIP** — Tauri v2 desktop app for node management, OTA updates, WASM deployment, and mesh visualization |
-| `ruview-swarm` | Drone swarm control system (ADR-148) — hierarchical-mesh topology, Raft consensus, MARL, CSI sensing payload, MAVLink/PX4/ArduPilot compatibility, Ruflo AI-agent integration |
+| `KdView-swarm` | Drone swarm control system (ADR-148) — hierarchical-mesh topology, Raft consensus, MARL, CSI sensing payload, MAVLink/PX4/ArduPilot compatibility, Ruflo AI-agent integration |
 | [Medical Examples](examples/medical/README.md) | Contactless blood pressure, heart rate, and breathing rate via 60 GHz mmWave radar, with no wearable |
 | [Extended Documentation](docs/readme-details.md) | Latest additions, key features, installation, quick start, signal processing, training, CLI, testing, deployment, and changelog |
 
