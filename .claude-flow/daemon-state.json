@@ -1,55 +1,55 @@
 {
   "running": true,
-  "startedAt": "2026-05-24T22:26:25.030Z",
+  "startedAt": "2026-07-13T01:19:36.317Z",
   "workers": {
     "map": {
-      "runCount": 64,
-      "successCount": 64,
+      "runCount": 66,
+      "successCount": 66,
       "failureCount": 0,
-      "averageDurationMs": 136.171875,
-      "lastRun": "2026-05-25T06:07:33.387Z",
-      "lastStartedAt": "2026-05-25T06:07:33.381Z",
-      "nextRun": "2026-05-25T06:26:25.410Z",
+      "averageDurationMs": 132.13636363636363,
+      "lastRun": "2026-07-13T01:34:36.320Z",
+      "lastStartedAt": "2026-07-13T01:34:36.317Z",
+      "nextRun": "2026-07-13T01:49:36.321Z",
       "isRunning": false
     },
     "audit": {
-      "runCount": 72,
-      "successCount": 27,
+      "runCount": 74,
+      "successCount": 29,
       "failureCount": 45,
-      "averageDurationMs": 26260.11111111111,
-      "lastRun": "2026-05-25T06:08:29.594Z",
-      "lastStartedAt": "2026-05-25T06:07:33.416Z",
-      "nextRun": "2026-05-25T06:18:32.928Z",
+      "averageDurationMs": 25550.432432432433,
+      "lastRun": "2026-07-13T01:31:36.336Z",
+      "lastStartedAt": "2026-07-13T01:31:36.334Z",
+      "nextRun": "2026-07-13T01:41:36.337Z",
       "isRunning": false
     },
     "optimize": {
-      "runCount": 54,
-      "successCount": 9,
+      "runCount": 56,
+      "successCount": 11,
       "failureCount": 45,
-      "averageDurationMs": 40303.377578766485,
-      "lastRun": "2026-05-25T05:59:05.330Z",
-      "lastStartedAt": "2026-05-25T05:54:05.318Z",
-      "nextRun": "2026-05-25T06:20:15.145Z",
+      "averageDurationMs": 38864.07837952482,
+      "lastRun": "2026-07-13T01:38:36.306Z",
+      "lastStartedAt": "2026-07-13T01:38:36.303Z",
+      "nextRun": "2026-07-13T01:38:36.324Z",
       "isRunning": false
     },
     "consolidate": {
-      "runCount": 32,
-      "successCount": 32,
+      "runCount": 33,
+      "successCount": 33,
       "failureCount": 0,
-      "averageDurationMs": 4.71875,
-      "lastRun": "2026-05-25T05:38:20.449Z",
-      "lastStartedAt": "2026-05-25T05:38:20.443Z",
-      "nextRun": "2026-05-25T06:32:25.248Z",
+      "averageDurationMs": 4.696969696969697,
+      "lastRun": "2026-07-13T01:25:36.335Z",
+      "lastStartedAt": "2026-07-13T01:25:36.331Z",
+      "nextRun": "2026-07-13T01:55:36.337Z",
       "isRunning": false
     },
     "testgaps": {
-      "runCount": 100,
-      "successCount": 63,
+      "runCount": 101,
+      "successCount": 64,
       "failureCount": 37,
-      "averageDurationMs": 108604.0537328991,
-      "lastRun": "2026-05-25T06:11:52.529Z",
-      "lastStartedAt": "2026-05-25T06:07:33.390Z",
-      "nextRun": "2026-05-25T06:14:25.296Z",
+      "averageDurationMs": 107528.79577514764,
+      "lastRun": "2026-07-13T01:27:36.324Z",
+      "lastStartedAt": "2026-07-13T01:27:36.321Z",
+      "nextRun": "2026-07-13T01:47:36.326Z",
       "isRunning": false
     },
     "predict": {
@@ -65,18 +65,40 @@
       "failureCount": 0,
       "averageDurationMs": 0,
       "isRunning": false
+    },
+    "backup": {
+      "runCount": 1,
+      "successCount": 1,
+      "failureCount": 0,
+      "averageDurationMs": 2,
+      "isRunning": false,
+      "nextRun": "2026-07-14T01:29:36.317Z",
+      "lastStartedAt": "2026-07-13T01:29:36.313Z",
+      "lastRun": "2026-07-13T01:29:36.315Z"
+    },
+    "harness": {
+      "runCount": 1,
+      "successCount": 1,
+      "failureCount": 0,
+      "averageDurationMs": 18,
+      "isRunning": false,
+      "nextRun": "2026-07-13T07:31:36.334Z",
+      "lastStartedAt": "2026-07-13T01:31:36.314Z",
+      "lastRun": "2026-07-13T01:31:36.332Z"
     }
   },
   "config": {
     "autoStart": false,
-    "logDir": "C:\\Users\\ruv\\Projects\\wifi-densepose\\.claude-flow\\logs",
-    "stateFile": "C:\\Users\\ruv\\Projects\\wifi-densepose\\.claude-flow\\daemon-state.json",
+    "logDir": "C:\\Users\\kirac\\Desktop\\RuView\\.claude-flow\\logs",
+    "stateFile": "C:\\Users\\kirac\\Desktop\\RuView\\.claude-flow\\daemon-state.json",
     "maxConcurrent": 2,
     "workerTimeoutMs": 300000,
     "resourceThresholds": {
       "maxCpuLoad": 2,
       "minFreeMemoryPercent": 20
     },
+    "ttlMs": 43200000,
+    "idleShutdownMs": 0,
     "workers": [
       {
         "type": "map",
@@ -107,7 +129,7 @@
         "intervalMs": 1800000,
         "offsetMs": 360000,
         "priority": "low",
-        "description": "Memory consolidation",
+        "description": "Memory distillation (ADR-174)",
         "enabled": true
       },
       {
@@ -116,6 +138,22 @@
         "offsetMs": 480000,
         "priority": "normal",
         "description": "Test coverage analysis",
+        "enabled": true
+      },
+      {
+        "type": "backup",
+        "intervalMs": 86400000,
+        "offsetMs": 600000,
+        "priority": "low",
+        "description": "Nightly memory DB backup (WAL-safe, rotated)",
+        "enabled": true
+      },
+      {
+        "type": "harness",
+        "intervalMs": 21600000,
+        "offsetMs": 720000,
+        "priority": "low",
+        "description": "Self-optimizing harness loop (opt-in RUFLO_HARNESS_LOOP, $0-default)",
         "enabled": true
       },
       {
@@ -136,5 +174,5 @@
       }
     ]
   },
-  "savedAt": "2026-05-25T06:11:52.530Z"
+  "savedAt": "2026-07-13T01:38:36.306Z"
 }

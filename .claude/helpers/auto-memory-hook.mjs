@@ -27,9 +27,43 @@ const CYAN = '\x1b[0;36m';
 const DIM = '\x1b[2m';
 const RESET = '\x1b[0m';
 
+const YELLOW = '\x1b[0;33m';
 const log = (msg) => console.log(`${CYAN}[AutoMemory] ${msg}${RESET}`);
 const success = (msg) => console.log(`${GREEN}[AutoMemory] ✓ ${msg}${RESET}`);
 const dim = (msg) => console.log(`  ${DIM}${msg}${RESET}`);
+
+// #2545: fail LOUD instead of a silent dim skip. When @claude-flow/memory cannot
+// be resolved, self-learning imports are a no-op — the user must see this and be
+// told exactly how to fix it (on both stdout, so it shows in the Claude Code hook
+// transcript, and stderr, per the issue's requested channel).
+function warnMemoryUnavailable() {
+  const line1 = `[AutoMemory] @claude-flow/memory not resolvable from ${PROJECT_ROOT} — self-learning imports are DISABLED.`;
+  const line2 = '             Fix: npm i -D @claude-flow/memory   (or re-run: npx ruflo@latest init, then npx ruflo@latest doctor --fix)';
+  console.log(`${YELLOW}${line1}${RESET}`);
+  console.log(`${YELLOW}${line2}${RESET}`);
+  process.stderr.write(`${line1}\n${line2}\n`);
+}
+
+const DEBUG = !!(process.env.RUFLO_DEBUG || process.env.DEBUG);
+
+// ── Graceful shutdown (FIX 3) ───────────────────────────────────────────────
+// Track the backend in use so a SIGTERM/SIGINT mid-run can still flush it
+// (the JSON backend persists; a SQLite-backed one closes/flushes WAL) instead
+// of leaving a half-written store or a stale lock behind.
+let activeBackend = null;
+let shuttingDown = false;
+function trackBackend(b) { activeBackend = b; return b; }
+async function gracefulExit(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  if (DEBUG) process.stderr.write(`[AutoMemory] received ${signal}, flushing backend before exit\n`);
+  try {
+    if (activeBackend && typeof activeBackend.shutdown === 'function') await activeBackend.shutdown();
+  } catch { /* best effort — never block exit on cleanup */ }
+  process.exit(0);
+}
+process.on('SIGTERM', () => { gracefulExit('SIGTERM'); });
+process.on('SIGINT', () => { gracefulExit('SIGINT'); });
 
 // Ensure data dir
 if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
@@ -131,6 +165,21 @@ class JsonFileBackend {
 // ============================================================================
 
 async function loadMemoryPackage() {
+  // Strategy 0 (#2545): sidecar recorded by `init` / `doctor --fix`. On the
+  // documented `npx ruflo` path @claude-flow/memory (an optionalDependency of
+  // the CLI) lands in the npx cache, which is NOT on the walk-up path from the
+  // project — so init resolves it from the CLI's own context and records the
+  // absolute path here. This is the only strategy that works on that install.
+  try {
+    const sidecar = join(PROJECT_ROOT, '.claude-flow', 'memory-package.json');
+    if (existsSync(sidecar)) {
+      const rec = JSON.parse(readFileSync(sidecar, 'utf-8'));
+      if (rec?.distPath && existsSync(rec.distPath)) {
+        return await import(`file://${rec.distPath}`);
+      }
+    }
+  } catch { /* fall through */ }
+
   // Strategy 1: Local dev (built dist)
   const localDist = join(PROJECT_ROOT, 'v3/@claude-flow/memory/dist/index.js');
   if (existsSync(localDist)) {
@@ -139,17 +188,30 @@ async function loadMemoryPackage() {
     } catch { /* fall through */ }
   }
 
-  // Strategy 2: npm installed @claude-flow/memory
+  // Strategy 2: Use createRequire for CJS-style resolution (handles nested node_modules
+  // when installed as a transitive dependency via npx ruflo / npx claude-flow)
+  try {
+    const { createRequire } = await import('module');
+    const require = createRequire(join(PROJECT_ROOT, 'package.json'));
+    return require('@claude-flow/memory');
+  } catch { /* fall through */ }
+
+  // Strategy 3: ESM import (works when @claude-flow/memory is a direct dependency)
   try {
     return await import('@claude-flow/memory');
   } catch { /* fall through */ }
 
-  // Strategy 3: Installed via @claude-flow/cli which includes memory
-  const cliMemory = join(PROJECT_ROOT, 'node_modules/@claude-flow/memory/dist/index.js');
-  if (existsSync(cliMemory)) {
-    try {
-      return await import(`file://${cliMemory}`);
-    } catch { /* fall through */ }
+  // Strategy 4: Walk up from PROJECT_ROOT looking for @claude-flow/memory in any node_modules
+  let searchDir = PROJECT_ROOT;
+  const { parse } = await import('path');
+  while (searchDir !== parse(searchDir).root) {
+    const candidate = join(searchDir, 'node_modules', '@claude-flow', 'memory', 'dist', 'index.js');
+    if (existsSync(candidate)) {
+      try {
+        return await import(`file://${candidate}`);
+      } catch { /* fall through */ }
+    }
+    searchDir = dirname(searchDir);
   }
 
   return null;
@@ -201,12 +263,12 @@ async function doImport() {
 
   const memPkg = await loadMemoryPackage();
   if (!memPkg || !memPkg.AutoMemoryBridge) {
-    dim('Memory package not available — skipping auto memory import');
+    warnMemoryUnavailable();
     return;
   }
 
   const config = readConfig();
-  const backend = new JsonFileBackend(STORE_PATH);
+  const backend = trackBackend(new JsonFileBackend(STORE_PATH));
   await backend.initialize();
 
   const bridgeConfig = {
@@ -254,12 +316,12 @@ async function doSync() {
 
   const memPkg = await loadMemoryPackage();
   if (!memPkg || !memPkg.AutoMemoryBridge) {
-    dim('Memory package not available — skipping sync');
+    warnMemoryUnavailable();
     return;
   }
 
   const config = readConfig();
-  const backend = new JsonFileBackend(STORE_PATH);
+  const backend = trackBackend(new JsonFileBackend(STORE_PATH));
   await backend.initialize();
 
   const entryCount = await backend.count();
@@ -312,8 +374,12 @@ async function doStatus() {
   const memPkg = await loadMemoryPackage();
   const config = readConfig();
 
+  const sidecar = join(PROJECT_ROOT, '.claude-flow', 'memory-package.json');
+  const hasSidecar = existsSync(sidecar);
+
   console.log('\n=== Auto Memory Bridge Status ===\n');
-  console.log(`  Package:        ${memPkg ? '✅ Available' : '❌ Not found'}`);
+  console.log(`  Package:        ${memPkg ? '✅ Available' : '❌ Not found — self-learning DISABLED (fix: npm i -D @claude-flow/memory)'}`);
+  console.log(`  Resolver:       ${hasSidecar ? '✅ .claude-flow/memory-package.json' : '⏸ no sidecar (run: npx ruflo@latest doctor --fix)'}`);
   console.log(`  Store:          ${existsSync(STORE_PATH) ? '✅ ' + STORE_PATH : '⏸ Not initialized'}`);
   console.log(`  LearningBridge: ${config.learningBridge.enabled ? '✅ Enabled' : '⏸ Disabled'}`);
   console.log(`  MemoryGraph:    ${config.memoryGraph.enabled ? '✅ Enabled' : '⏸ Disabled'}`);
@@ -335,6 +401,18 @@ async function doStatus() {
 
 const command = process.argv[2] || 'status';
 
+// Dynamic import() failures can surface as unhandled rejections on a later
+// microtask even when the awaiting call site already caught them, which would
+// otherwise force a non-zero exit. Swallow to keep hooks exit-0, but surface the
+// reason under RUFLO_DEBUG/DEBUG so genuine async bugs aren't silently hidden
+// (FIX 2 — the previous `() => {}` discarded every rejection process-wide).
+process.on('unhandledRejection', (reason) => {
+  if (DEBUG) {
+    const detail = reason && reason.message ? reason.message : String(reason);
+    process.stderr.write(`[AutoMemory] unhandledRejection (suppressed): ${detail}\n`);
+  }
+});
+
 try {
   switch (command) {
     case 'import': await doImport(); break;
@@ -342,9 +420,11 @@ try {
     case 'status': await doStatus(); break;
     default:
       console.log('Usage: auto-memory-hook.mjs <import|sync|status>');
-      process.exit(1);
+      break;
   }
 } catch (err) {
   // Hooks must never crash Claude Code - fail silently
-  dim(`Error (non-critical): ${err.message}`);
+  try { dim(`Error (non-critical): ${err.message}`); } catch (_) {}
 }
+// Force clean exit — process.exitCode alone isn't enough if async errors override it
+process.exit(0);

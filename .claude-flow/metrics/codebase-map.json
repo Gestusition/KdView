@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-05-25T06:07:33.385Z",
-  "projectRoot": "C:\\Users\\ruv\\Projects\\wifi-densepose",
+  "timestamp": "2026-07-13T01:34:36.319Z",
+  "projectRoot": "C:\\Users\\kirac\\Desktop\\RuView",
   "structure": {
     "hasPackageJson": false,
     "hasTsConfig": false,
     "hasClaudeConfig": true,
     "hasClaudeFlow": true
   },
-  "scannedAt": 1779689253386
+  "scannedAt": 1783906476320
 }
