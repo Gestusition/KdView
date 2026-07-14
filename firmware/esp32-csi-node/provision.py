@@ -90,6 +90,18 @@ def has_config_value(args):
     )
 
 
+def missing_wifi_credentials(args):
+    """Return missing WiFi fields, allowing an explicit empty open-network password."""
+    return [
+        name for name, value in [
+            ("--ssid", args.ssid),
+            ("--password", args.password),
+            ("--target-ip", args.target_ip),
+        ]
+        if value is None or (value == "" and name != "--password")
+    ]
+
+
 # ---------------------------------------------------------------------------
 # Per-port state file (additive-by-default merging, #391 / #574)
 # ---------------------------------------------------------------------------
@@ -407,13 +419,7 @@ def main():
     # WiFi-trio sanity check. After the merge, the trio should be present
     # unless the user is intentionally provisioning a brand-new board with
     # partial state. Keep --force-partial as the escape hatch for that case.
-    wifi_trio_missing = [
-        name for name, val in [
-            ("--ssid", args.ssid),
-            ("--password", args.password),
-            ("--target-ip", args.target_ip),
-        ] if val is None or val == ""
-    ]
+    wifi_trio_missing = missing_wifi_credentials(args)
     if wifi_trio_missing and not args.force_partial:
         parser.error(
             f"Missing required WiFi credentials after merging prior state: "

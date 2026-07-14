@@ -39,6 +39,27 @@ class ProvisionConfigValueTests(unittest.TestCase):
     def test_operational_flags_alone_do_not_count_as_config_values(self):
         self.assertFalse(provision.has_config_value(make_args()))
 
+    def test_open_wifi_accepts_and_writes_an_empty_password(self):
+        args = make_args(
+            ssid="OpenWiFi",
+            password="",
+            target_ip="192.168.1.20",
+        )
+
+        self.assertEqual(provision.missing_wifi_credentials(args), [])
+        rows = csv_rows(provision.build_nvs_csv(args))
+        values_by_key = {row["key"]: row["value"] for row in rows}
+        self.assertIn("password", values_by_key)
+        self.assertEqual(values_by_key["password"], "")
+
+    def test_omitted_password_is_still_missing(self):
+        args = make_args(ssid="ProtectedWiFi", target_ip="192.168.1.20")
+
+        self.assertEqual(
+            provision.missing_wifi_credentials(args),
+            ["--password"],
+        )
+
     def test_swarm_and_hopping_values_are_written_to_csv(self):
         args = make_args(
             hop_channels="1,6,11",
