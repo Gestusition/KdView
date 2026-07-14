@@ -40,16 +40,16 @@ CONFIG_LWIP_SO_RCVBUF=y
 # mode is active. These bumps roughly quadruple the relevant pools at
 # ~3 KB extra heap cost, measured live on both targets Jun 8 2026.
 CONFIG_LWIP_UDP_RECVMBOX_SIZE=64
-CONFIG_LWIP_TCPIP_RECVMBOX_SIZE=128
+# ESP-IDF v5.4 caps this at 64 unless LWIP window scaling is enabled.
+CONFIG_LWIP_TCPIP_RECVMBOX_SIZE=64
 CONFIG_ESP_WIFI_DYNAMIC_TX_BUFFER_NUM=128
-CONFIG_ESP_WIFI_STATIC_TX_BUFFER_NUM=16
-CONFIG_LWIP_PBUF_POOL_SIZE=32
-# Performance fix: doubled lwIP/WiFi buffer pools from the previous bump
-# (32/64/64 → 64/128/128) and added static TX buffers + larger pbuf pool.
+# Performance fix: doubled the UDP mailbox and dynamic WiFi TX pool.
+# IDF v5.4 exposes no configurable LWIP pbuf-pool size, and the static TX
+# count is inactive while the dynamic TX-buffer choice is selected.
 # Combined with the reduced send rate (50 Hz → 20 Hz in csi_collector.c),
 # this should eliminate both the csi_collector sendto ENOMEM path AND
 # the residual feature_state ENOMEM that persisted at the old buffer sizes.
-# Extra heap cost: ~6-8 KB over the previous bump. Measured on S3 (COM9):
+# Extra heap cost is bounded by the dynamic allocation demand. Measured on S3 (COM9):
 # the WiFi radio TX airtime saturation that caused the residual ENOMEM is
 # mitigated by the lower send rate, so the larger pools now have headroom.
 
