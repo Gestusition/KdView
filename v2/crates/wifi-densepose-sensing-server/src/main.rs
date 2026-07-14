@@ -26,7 +26,7 @@ mod vital_signs;
 
 // Training pipeline modules (exposed via lib.rs)
 use wifi_densepose_sensing_server::{
-    dataset, embedding, error_response, graph_transformer, rufield_surface, trainer,
+    csi_encoder, dataset, embedding, error_response, graph_transformer, rufield_surface, trainer,
 };
 
 use ruvector_mincut::{DynamicMinCut, MinCutBuilder};
@@ -314,6 +314,11 @@ struct SensingUpdate {
     /// Per-node feature breakdown for multi-node deployments.
     #[serde(skip_serializing_if = "Option::is_none")]
     node_features: Option<Vec<PerNodeFeatureInfo>>,
+    /// EXPERIMENTAL (ADR-024): embedding novelty vs a rolling calm-room baseline,
+    /// `[0, 1]`. Present only when the contrastive CSI encoder is loaded. Additive
+    /// telemetry — does not affect presence/vitals. See `csi_encoder` module.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    csi_novelty: Option<f32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1063,6 +1068,11 @@ struct AppStateInner {
     active_sona_profile: Option<String>,
     /// Whether a trained model is loaded.
     model_loaded: bool,
+    /// EXPERIMENTAL (ADR-024): contrastive CSI encoder for embedding novelty.
+    /// `None` unless the pretrained `csi-embed-v2` bundle is found at startup.
+    csi_encoder: Option<csi_encoder::CsiEncoder>,
+    /// Rolling calm-room baseline + novelty score for the encoder embedding.
+    csi_novelty_tracker: csi_encoder::NoveltyTracker,
     /// Smoothed person count (EMA) for hysteresis — prevents frame-to-frame jumping.
     smoothed_person_score: f64,
     /// Previous person count for hysteresis (asymmetric up/down thresholds).
@@ -2677,6 +2687,7 @@ async fn windows_wifi_task(state: SharedState, tick_ms: u64) {
                 None
             },
             node_features: None,
+            csi_novelty: None,
         };
 
         // Populate persons from the sensing update (Kalman-smoothed via tracker).
@@ -2835,6 +2846,7 @@ async fn windows_wifi_fallback_tick(state: &SharedState, seq: u32) {
             None
         },
         node_features: None,
+        csi_novelty: None,
     };
 
     let raw_persons = derive_pose_from_sensing(&update);
@@ -5801,6 +5813,7 @@ async fn udp_receiver_task(state: SharedState, udp_port: u16) {
                         // can implement model-wake gating without round-
                         // tripping back to the server.
                         node_features: build_node_features(&s.node_states, now),
+                        csi_novelty: None,
                     };
 
                     let raw_persons = derive_pose_from_sensing(&update);
@@ -5816,6 +5829,42 @@ async fn udp_receiver_task(state: SharedState, udp_port: u16) {
                     }
                     // #1050: attach real signal_field-peak positions to each person.
                     attach_field_positions(&mut update);
+
+                    // EXPERIMENTAL (ADR-024): run live features through the contrastive
+                    // encoder and score embedding novelty vs the rolling calm-room
+                    // baseline. Purely additive — nothing above depends on it. The 8-dim
+                    // vector follows the model card's dimension table; dims 4/5/6 (phase
+                    // variance / person count / fall) are zeroed by the recovered
+                    // standardizer (they were constant in the training capture).
+                    let embedding = s.csi_encoder.as_ref().map(|enc| {
+                        let feat8 = [
+                            (vitals.presence_score as f32).clamp(0.0, 1.0), // 0 presence
+                            (vitals.motion_energy as f32).clamp(0.0, 1.0),  // 1 motion
+                            (((vitals.breathing_rate_bpm as f32) - 6.0) / 24.0).clamp(0.0, 1.0), // 2 breathing
+                            (((vitals.heartrate_bpm as f32) - 40.0) / 80.0).clamp(0.0, 1.0), // 3 heart
+                            (fused_features.variance as f32).clamp(0.0, 1.0), // 4 phase var (zeroed)
+                            1.0,                                              // 5 person count (zeroed)
+                            0.0,                                              // 6 fall (zeroed)
+                            (((vitals.rssi as f32) + 90.0) / 60.0).clamp(0.0, 1.0), // 7 rssi
+                        ];
+                        enc.embed(&feat8)
+                    });
+                    if let Some(emb) = embedding {
+                        let warming = s.csi_novelty_tracker.is_warming_up();
+                        let novelty = s.csi_novelty_tracker.update(&emb);
+                        if !warming {
+                            update.csi_novelty = Some(novelty);
+                        }
+                        // EXPERIMENTAL diagnostic: per-frame novelty vs motion so a live
+                        // still/move/still test can be correlated without API sampling gaps.
+                        tracing::info!(
+                            target: "csi_novelty",
+                            "novelty={} motion={:.2} presence={}",
+                            if warming { "warmup".to_string() } else { format!("{novelty:.4}") },
+                            vitals.motion_energy,
+                            vitals.presence
+                        );
+                    }
 
                     if let Ok(json) = serde_json::to_string(&update) {
                         let _ = s.tx.send(json);
@@ -6237,6 +6286,7 @@ async fn udp_receiver_task(state: SharedState, udp_port: u16) {
                         // can implement model-wake gating without round-
                         // tripping back to the server.
                         node_features: build_node_features(&s.node_states, now),
+                        csi_novelty: None,
                     };
 
                     let raw_persons = derive_pose_from_sensing(&update);
@@ -6421,6 +6471,7 @@ async fn simulated_data_task(state: SharedState, tick_ms: u64) {
                 None
             },
             node_features: None,
+            csi_novelty: None,
         };
 
         // Populate persons from the sensing update (Kalman-smoothed via tracker).
@@ -7539,6 +7590,42 @@ async fn main() {
         }
     }
 
+    // EXPERIMENTAL (ADR-024): auto-load the contrastive CSI encoder for embedding
+    // novelty if the pretrained `csi-embed-v2` bundle is present. Additive only —
+    // it never gates presence/vitals. Searched relative to CWD and the repo layout.
+    let csi_encoder = {
+        let candidates = [
+            PathBuf::from("models/wifi-densepose-pretrained"),
+            PathBuf::from("../models/wifi-densepose-pretrained"),
+        ];
+        let mut found = None;
+        for dir in candidates {
+            let st = dir.join("csi-embed-v2.safetensors");
+            let int4 = dir.join("csi-embed-v2-int4.bin");
+            if st.exists() && int4.exists() {
+                match csi_encoder::CsiEncoder::load(&st, &int4) {
+                    Ok(enc) => {
+                        info!(
+                            "CSI encoder loaded (EXPERIMENTAL novelty) from {} — embedding \
+                             novelty enabled; presence/vitals unaffected",
+                            dir.display()
+                        );
+                        found = Some(enc);
+                        break;
+                    }
+                    Err(e) => warn!("CSI encoder present but failed to load: {e}"),
+                }
+            }
+        }
+        if found.is_none() {
+            info!(
+                "CSI encoder not found (models/wifi-densepose-pretrained) — embedding novelty \
+                 disabled"
+            );
+        }
+        found
+    };
+
     // Ensure data directories exist for models and recordings
     let models_dir = effective_models_dir();
     let _ = std::fs::create_dir_all(&models_dir);
@@ -7693,6 +7780,10 @@ async fn main() {
         progressive_loader,
         active_sona_profile: None,
         model_loaded,
+        csi_encoder,
+        // Novelty runs on the 1 Hz vitals path — 30 warm-up frames ≈ 30 s of calm-room
+        // baseline before scoring begins.
+        csi_novelty_tracker: csi_encoder::NoveltyTracker::new(30),
         smoothed_person_score: 0.0,
         prev_person_count: 0,
         smoothed_motion: 0.0,
@@ -8887,6 +8978,7 @@ mod observatory_persons_field_position_tests {
             persons: None,
             estimated_persons: Some(1),
             node_features: None,
+            csi_novelty: None,
         }
     }
 
