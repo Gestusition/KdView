@@ -1,0 +1,162 @@
+{
+  "timestamp": "2026-04-03T13:59:51.684Z",
+  "totalDurationMs": 719674,
+  "data": {
+    "files": [
+      "overnight-1775217646.csi.jsonl"
+    ],
+    "totalFeatures": 60630,
+    "totalVitals": 6063,
+    "totalRawCsi": 132815,
+    "nodes": [
+      2,
+      1
+    ]
+  },
+  "contrastive": {
+    "triplets": 610615,
+    "temporal": 574608,
+    "crossNode": 35807,
+    "hardNegatives": 4281,
+    "initialLoss": 0.13517337199511226,
+    "finalLoss": 0.06543377335206552,
+    "improvement": 51.59270469746694,
+    "durationMs": 12396,
+    "lossHistory": [
+      {
+        "epoch": 1,
+        "loss": 0.13517249387333863
+      },
+      {
+        "epoch": 2,
+        "loss": 0.13517372120302518
+      },
+      {
+        "epoch": 3,
+        "loss": 0.13517242431674364
+      },
+      {
+        "epoch": 4,
+        "loss": 0.13517363238961252
+      },
+      {
+        "epoch": 5,
+        "loss": 0.13517360470273543
+      },
+      {
+        "epoch": 6,
+        "loss": 0.13517317208904908
+      },
+      {
+        "epoch": 7,
+        "loss": 0.13517325534936073
+      },
+      {
+        "epoch": 8,
+        "loss": 0.1351735170740564
+      },
+      {
+        "epoch": 9,
+        "loss": 0.13517326084057218
+      },
+      {
+        "epoch": 10,
+        "loss": 0.13517247811462849
+      },
+      {
+        "epoch": 11,
+        "loss": 0.13517391330821046
+      },
+      {
+        "epoch": 12,
+        "loss": 0.13517263478054217
+      },
+      {
+        "epoch": 13,
+        "loss": 0.13517311152747669
+      },
+      {
+        "epoch": 14,
+        "loss": 0.1351731664032846
+      },
+      {
+        "epoch": 15,
+        "loss": 0.13517440896107477
+      },
+      {
+        "epoch": 16,
+        "loss": 0.13517229082040794
+      },
+      {
+        "epoch": 17,
+        "loss": 0.1351714953647903
+      },
+      {
+        "epoch": 18,
+        "loss": 0.1351734771570791
+      },
+      {
+        "epoch": 19,
+        "loss": 0.13517448957188427
+      },
+      {
+        "epoch": 20,
+        "loss": 0.13517310018820136
+      }
+    ]
+  },
+  "taskHeads": {
+    "samples": 60630,
+    "finalLoss": 0.026100552486452076
+  },
+  "lora": {
+    "adapters": [
+      "node-2",
+      "node-1"
+    ],
+    "totalParameters": 2048
+  },
+  "quantization": {
+    "q2": {
+      "compressionRatio": 16,
+      "rmse": 0.1268553520164218,
+      "sizeKB": 4
+    },
+    "q4": {
+      "compressionRatio": 8,
+      "rmse": 0.032087730426657655,
+      "sizeKB": 8
+    },
+    "q8": {
+      "compressionRatio": 4,
+      "rmse": 0.0027767646652348487,
+      "sizeKB": 16
+    }
+  },
+  "ewc": {
+    "tasksLearned": 4,
+    "fisherComputed": true,
+    "protectionStrength": 2000,
+    "forgettingRate": 0.3296799539643607
+  },
+  "config": {
+    "dataGlob": "data/recordings/overnight-1775217646.csi.jsonl",
+    "outputDir": "models/csi-ruvllm",
+    "benchmark": false,
+    "epochs": 20,
+    "batchSize": 32,
+    "loraRank": 4,
+    "quantizeBits": 4,
+    "verbose": false,
+    "margin": 0.3,
+    "temperature": 0.07,
+    "hardNegativeRatio": 0.7,
+    "learningRate": 0.001,
+    "positiveWindowSec": 1,
+    "negativeWindowSec": 10,
+    "augmentMultiplier": 10,
+    "inputDim": 8,
+    "hiddenDim": 64,
+    "embeddingDim": 128
+  }
+}

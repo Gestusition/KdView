@@ -1,0 +1,5 @@
+{"type":"metadata","name":"wifi-densepose-csi-embedding","version":"1.0.0","architecture":"csi-encoder-8-64-128","training":{"steps":12212300,"loss":0.06543377335206552,"learningRate":0.001},"custom":{"inputDim":8,"hiddenDim":64,"embeddingDim":128,"totalFrames":60630,"totalTriplets":610615,"nodes":[2,1],"quantizationBits":4}}
+{"type":"encoder","w1_shape":[8,64],"w2_shape":[64,128]}
+{"type":"lora","config":{"rank":8,"alpha":16,"dropout":0.05,"targetModules":["encoder","task_heads"]},"parameters":2048}
+{"type":"ewc","stats":{"tasksLearned":4,"fisherComputed":true,"protectionStrength":2000,"forgettingRate":0.3296799539643607}}
+{"type":"quantization","default_bits":4,"variants":[2,4,8]}
