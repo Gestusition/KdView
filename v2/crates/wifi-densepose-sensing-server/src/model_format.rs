@@ -215,7 +215,16 @@ pub fn safetensors_to_rvf(data: &[u8], model_id: &str) -> Result<Vec<u8>, ModelL
             ))
         })?;
 
-    let header: serde_json::Value = serde_json::from_slice(&data[header_start..header_end])
+    // Safetensors writers commonly pad the header with trailing spaces/NULs to
+    // align the tensor data start to a byte boundary; strip that before parsing
+    // so a well-formed header isn't rejected as "trailing characters" JSON.
+    let raw_header = &data[header_start..header_end];
+    let mut trimmed_end = raw_header.len();
+    while trimmed_end > 0 && matches!(raw_header[trimmed_end - 1], b' ' | b'\t' | b'\n' | b'\r' | 0)
+    {
+        trimmed_end -= 1;
+    }
+    let header: serde_json::Value = serde_json::from_slice(&raw_header[..trimmed_end])
         .map_err(|e| fail(format!("safetensors header is not valid JSON: {e}")))?;
     let obj = header
         .as_object()

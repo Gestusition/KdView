@@ -261,7 +261,15 @@ v1/src/sensing/mac_wifi
 
 # Local build scripts
 firmware/esp32-csi-node/build_firmware.batdata/
-models/
+models/*
+# The pretrained CSI encoder bundle IS tracked: 303 KB, MIT licensed, and the
+# sensing-server auto-loads it from this exact path. Without it the encoder
+# silently does nothing on a fresh clone.
+!models/wifi-densepose-pretrained/
+# ...but not HuggingFace's download cache, nor its .gitattributes, which would
+# route these small .bin/.safetensors files through LFS for no benefit.
+models/wifi-densepose-pretrained/.cache/
+models/wifi-densepose-pretrained/.gitattributes
 demo_pointcloud.ply
 demo_splats.json
 

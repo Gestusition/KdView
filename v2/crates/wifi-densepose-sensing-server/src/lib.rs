@@ -10,6 +10,7 @@
 
 pub mod bearer_auth;
 pub mod cli;
+pub mod csi_encoder;
 pub mod dataset;
 pub mod edge_registry;
 #[allow(dead_code)]
